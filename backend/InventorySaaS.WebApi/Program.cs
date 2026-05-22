@@ -1,3 +1,5 @@
+using FluentValidation;
+using InventorySaaS.Application.Categories.Validators;
 using InventorySaaS.Infrastructure;
 using InventorySaaS.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -22,6 +24,7 @@ try
     });
 
     builder.Services.AddControllers();
+    builder.Services.AddValidatorsFromAssemblyContaining<CreateCategoryRequestValidator>();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
     {
