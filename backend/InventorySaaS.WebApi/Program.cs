@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
 using Serilog;
+using System.Text.Json.Serialization;
 using System.Text;
 
 const string frontendCorsPolicy = "FrontendCorsPolicy";
@@ -23,7 +24,12 @@ try
         loggerConfiguration.WriteTo.Console();
     });
 
-    builder.Services.AddControllers();
+    builder.Services
+        .AddControllers()
+        .AddJsonOptions(options =>
+        {
+            options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        });
     builder.Services.AddValidatorsFromAssemblyContaining<CreateCategoryRequestValidator>();
     builder.Services.AddEndpointsApiExplorer();
     builder.Services.AddSwaggerGen(options =>
