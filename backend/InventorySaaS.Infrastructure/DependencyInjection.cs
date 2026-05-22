@@ -1,11 +1,13 @@
 using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Categories.Interfaces;
 using InventorySaaS.Application.Suppliers.Interfaces;
+using InventorySaaS.Application.Warehouses.Interfaces;
 using InventorySaaS.Infrastructure.Authentication;
 using InventorySaaS.Infrastructure.Categories;
 using InventorySaaS.Infrastructure.Identity;
 using InventorySaaS.Infrastructure.Persistence;
 using InventorySaaS.Infrastructure.Suppliers;
+using InventorySaaS.Infrastructure.Warehouses;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -41,6 +43,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ISupplierService, SupplierService>();
+        services.AddScoped<IWarehouseService, WarehouseService>();
 
         return services;
     }
