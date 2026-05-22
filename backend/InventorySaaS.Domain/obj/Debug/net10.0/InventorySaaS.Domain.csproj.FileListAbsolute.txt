@@ -1,0 +1,11 @@
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\bin\Debug\net10.0\InventorySaaS.Domain.deps.json
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\bin\Debug\net10.0\InventorySaaS.Domain.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\bin\Debug\net10.0\InventorySaaS.Domain.pdb
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\obj\Debug\net10.0\InventorySaaS.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\obj\Debug\net10.0\InventorySaaS.Domain.AssemblyInfoInputs.cache
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\obj\Debug\net10.0\InventorySaaS.Domain.AssemblyInfo.cs
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\obj\Debug\net10.0\InventorySaaS.Domain.csproj.CoreCompileInputs.cache
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\obj\Debug\net10.0\InventorySaaS.Domain.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\obj\Debug\net10.0\refint\InventorySaaS.Domain.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\obj\Debug\net10.0\InventorySaaS.Domain.pdb
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Domain\obj\Debug\net10.0\ref\InventorySaaS.Domain.dll

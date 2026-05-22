@@ -1,0 +1,17 @@
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\bin\Debug\net10.0\InventorySaaS.Infrastructure.deps.json
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\bin\Debug\net10.0\InventorySaaS.Infrastructure.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\bin\Debug\net10.0\InventorySaaS.Infrastructure.pdb
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\bin\Debug\net10.0\InventorySaaS.Application.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\bin\Debug\net10.0\InventorySaaS.Domain.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\bin\Debug\net10.0\InventorySaaS.Application.pdb
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\bin\Debug\net10.0\InventorySaaS.Domain.pdb
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\InventorySaaS.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\InventorySaaS.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\InventorySaaS.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\InventorySaaS.Infrastructure.AssemblyInfo.cs
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\InventorySaaS.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\Inventor.3064B837.Up2Date
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\InventorySaaS.Infrastructure.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\refint\InventorySaaS.Infrastructure.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\InventorySaaS.Infrastructure.pdb
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Infrastructure\obj\Debug\net10.0\ref\InventorySaaS.Infrastructure.dll

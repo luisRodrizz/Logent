@@ -1,0 +1,15 @@
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\bin\Debug\net10.0\InventorySaaS.Application.deps.json
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\bin\Debug\net10.0\InventorySaaS.Application.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\bin\Debug\net10.0\InventorySaaS.Application.pdb
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\bin\Debug\net10.0\InventorySaaS.Domain.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\bin\Debug\net10.0\InventorySaaS.Domain.pdb
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\InventorySaaS.Application.csproj.AssemblyReference.cache
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\InventorySaaS.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\InventorySaaS.Application.AssemblyInfoInputs.cache
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\InventorySaaS.Application.AssemblyInfo.cs
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\InventorySaaS.Application.csproj.CoreCompileInputs.cache
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\Inventor.4F31EB31.Up2Date
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\InventorySaaS.Application.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\refint\InventorySaaS.Application.dll
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\InventorySaaS.Application.pdb
+C:\Users\USER\Desktop\Proyectos\MisProyectos\InventorySaaS\backend\InventorySaaS.Application\obj\Debug\net10.0\ref\InventorySaaS.Application.dll
