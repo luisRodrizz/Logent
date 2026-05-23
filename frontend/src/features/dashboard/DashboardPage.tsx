@@ -1,26 +1,357 @@
-import { LayoutDashboard } from 'lucide-react'
+import {
+  Activity,
+  AlertTriangle,
+  ArrowDownCircle,
+  ArrowLeftRight,
+  ArrowUpCircle,
+  Boxes,
+  ClipboardList,
+  DollarSign,
+  Package,
+  Warehouse,
+} from 'lucide-react'
+import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { EmptyState } from '../../components/common/EmptyState'
+import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
+import { Badge } from '../../components/ui/Badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
+import type { MovementType } from '../../types/dashboard'
+import {
+  useDashboardSummary,
+  useLowStockAlerts,
+  useRecentMovements,
+  useStockOverview,
+} from './dashboard.queries'
+
+const numberFormatter = new Intl.NumberFormat('es-PE')
+const currencyFormatter = new Intl.NumberFormat('es-PE', {
+  currency: 'PEN',
+  maximumFractionDigits: 2,
+  style: 'currency',
+})
+const dateFormatter = new Intl.DateTimeFormat('es-PE', {
+  day: '2-digit',
+  hour: '2-digit',
+  minute: '2-digit',
+  month: 'short',
+  year: 'numeric',
+})
+
+const movementLabels: Record<MovementType, string> = {
+  Adjustment: 'Ajuste',
+  Entry: 'Entrada',
+  Exit: 'Salida',
+  Transfer: 'Transferencia',
+}
+
+const movementBadgeVariants: Record<MovementType, 'default' | 'success' | 'warning' | 'danger' | 'muted'> = {
+  Adjustment: 'muted',
+  Entry: 'success',
+  Exit: 'danger',
+  Transfer: 'default',
+}
+
+function formatNumber(value: number): string {
+  return numberFormatter.format(value)
+}
+
+function formatCurrency(value: number): string {
+  return currencyFormatter.format(value)
+}
+
+function SectionError({ text = 'No se pudo cargar esta seccion.' }: { text?: string }) {
+  return (
+    <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
+      {text}
+    </div>
+  )
+}
+
+function MetricCard({
+  description,
+  icon,
+  title,
+  value,
+}: {
+  description: string
+  icon: React.ReactNode
+  title: string
+  value: string
+}) {
+  return (
+    <Card>
+      <CardContent className="flex items-start justify-between gap-4 p-5">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-muted">{title}</p>
+          <p className="mt-2 text-2xl font-semibold tracking-normal text-foreground">{value}</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
+        </div>
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
+          {icon}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 export function DashboardPage() {
+  const summaryQuery = useDashboardSummary()
+  const stockOverviewQuery = useStockOverview()
+  const recentMovementsQuery = useRecentMovements()
+  const lowStockAlertsQuery = useLowStockAlerts()
+
+  const stockOverview = stockOverviewQuery.data ?? []
+  const recentMovements = recentMovementsQuery.data ?? []
+  const lowStockAlerts = lowStockAlertsQuery.data ?? []
+  const chartData = stockOverview.slice(0, 8).map((item) => ({
+    name: item.productCode || item.productName,
+    quantity: item.totalQuantity,
+  }))
+
   return (
     <div className="space-y-6">
-      <PageHeader
-        description="Vista inicial del panel administrativo. Los indicadores reales se conectaran en Fase 22."
-        title="Dashboard"
-      />
+      <PageHeader description="Resumen operativo del inventario" title="Dashboard" />
+
+      {summaryQuery.isLoading ? (
+        <Card>
+          <CardContent>
+            <LoadingState text="Cargando metricas del inventario..." />
+          </CardContent>
+        </Card>
+      ) : summaryQuery.isError ? (
+        <SectionError text="No se pudieron cargar las metricas principales del dashboard." />
+      ) : summaryQuery.data ? (
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            description="Productos registrados"
+            icon={<Package className="h-5 w-5" />}
+            title="Productos"
+            value={formatNumber(summaryQuery.data.totalProducts)}
+          />
+          <MetricCard
+            description="Almacenes operativos"
+            icon={<Warehouse className="h-5 w-5" />}
+            title="Almacenes"
+            value={formatNumber(summaryQuery.data.totalWarehouses)}
+          />
+          <MetricCard
+            description="Items con existencia"
+            icon={<Boxes className="h-5 w-5" />}
+            title="Stock items"
+            value={formatNumber(summaryQuery.data.totalStockItems)}
+          />
+          <MetricCard
+            description="Valor estimado actual"
+            icon={<DollarSign className="h-5 w-5" />}
+            title="Valor inventario"
+            value={formatCurrency(summaryQuery.data.totalInventoryValue)}
+          />
+          <MetricCard
+            description="Items bajo minimo"
+            icon={<AlertTriangle className="h-5 w-5" />}
+            title="Stock bajo"
+            value={formatNumber(summaryQuery.data.lowStockItems)}
+          />
+          <MetricCard
+            description="Movimientos registrados"
+            icon={<ArrowLeftRight className="h-5 w-5" />}
+            title="Movimientos"
+            value={formatNumber(summaryQuery.data.totalMovements)}
+          />
+          <MetricCard
+            description="Categorias activas"
+            icon={<ClipboardList className="h-5 w-5" />}
+            title="Categorias"
+            value={formatNumber(summaryQuery.data.totalCategories)}
+          />
+          <MetricCard
+            description="Proveedores registrados"
+            icon={<Activity className="h-5 w-5" />}
+            title="Proveedores"
+            value={formatNumber(summaryQuery.data.totalSuppliers)}
+          />
+        </div>
+      ) : null}
+
+      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+        <Card>
+          <CardHeader>
+            <CardTitle>Stock overview</CardTitle>
+            <CardDescription>Productos con mayor presencia y valor estimado del inventario.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {stockOverviewQuery.isLoading ? (
+              <LoadingState text="Cargando stock overview..." />
+            ) : stockOverviewQuery.isError ? (
+              <SectionError text="No se pudo cargar el resumen de stock." />
+            ) : stockOverview.length === 0 ? (
+              <EmptyState
+                description="Aun no hay datos de stock para mostrar en el dashboard."
+                icon={<Boxes className="h-6 w-6" />}
+                title="Sin stock registrado"
+              />
+            ) : (
+              <div className="space-y-5">
+                {chartData.length > 0 ? (
+                  <div className="h-64 rounded-lg border border-border bg-slate-50 px-3 py-4">
+                    <ResponsiveContainer height="100%" width="100%">
+                      <BarChart data={chartData}>
+                        <XAxis dataKey="name" fontSize={11} tickLine={false} />
+                        <YAxis allowDecimals={false} fontSize={11} tickLine={false} />
+                        <Tooltip
+                          cursor={{ fill: 'rgb(226 232 240 / 0.45)' }}
+                          formatter={(value) => [formatNumber(Number(value)), 'Cantidad']}
+                        />
+                        <Bar dataKey="quantity" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                      </BarChart>
+                    </ResponsiveContainer>
+                  </div>
+                ) : null}
+
+                <div className="overflow-hidden rounded-lg border border-border">
+                  <div className="grid grid-cols-[1.4fr_0.7fr_0.8fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-muted">
+                    <span>Producto</span>
+                    <span className="text-right">Cantidad</span>
+                    <span className="text-right">Valor</span>
+                  </div>
+                  <div className="divide-y divide-border">
+                    {stockOverview.slice(0, 6).map((item) => (
+                      <div
+                        className="grid grid-cols-[1.4fr_0.7fr_0.8fr] items-center gap-3 px-4 py-3"
+                        key={item.productId}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex min-w-0 items-center gap-2">
+                            <p className="truncate text-sm font-semibold text-foreground">{item.productName}</p>
+                            {item.isLowStock ? <Badge variant="warning">Bajo</Badge> : null}
+                          </div>
+                          <p className="mt-1 text-xs text-muted">{item.productCode}</p>
+                        </div>
+                        <p className="text-right text-sm font-semibold text-foreground">
+                          {formatNumber(item.totalQuantity)}
+                        </p>
+                        <p className="text-right text-sm font-medium text-muted">{formatCurrency(item.estimatedValue)}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Alertas de stock bajo</CardTitle>
+            <CardDescription>Productos por debajo del minimo configurado.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {lowStockAlertsQuery.isLoading ? (
+              <LoadingState text="Cargando alertas..." />
+            ) : lowStockAlertsQuery.isError ? (
+              <SectionError text="No se pudieron cargar las alertas de stock bajo." />
+            ) : lowStockAlerts.length === 0 ? (
+              <EmptyState
+                description="No hay productos por debajo del stock minimo."
+                icon={<AlertTriangle className="h-6 w-6" />}
+                title="Sin alertas"
+              />
+            ) : (
+              <div className="space-y-3">
+                {lowStockAlerts.map((item) => (
+                  <div className="rounded-lg border border-border bg-white p-4" key={`${item.productId}-${item.warehouseId}`}>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">{item.productName}</p>
+                        <p className="mt-1 text-xs text-muted">
+                          {item.productCode} · {item.warehouseName}
+                        </p>
+                      </div>
+                      <Badge variant={item.missingQuantity > 0 ? 'danger' : 'warning'}>Stock bajo</Badge>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+                      <div className="rounded-lg bg-slate-50 px-2 py-2">
+                        <p className="text-xs text-muted">Actual</p>
+                        <p className="text-sm font-semibold text-foreground">{formatNumber(item.quantity)}</p>
+                      </div>
+                      <div className="rounded-lg bg-slate-50 px-2 py-2">
+                        <p className="text-xs text-muted">Minimo</p>
+                        <p className="text-sm font-semibold text-foreground">{formatNumber(item.minimumStock)}</p>
+                      </div>
+                      <div className="rounded-lg bg-red-50 px-2 py-2">
+                        <p className="text-xs text-red-600">Faltan</p>
+                        <p className="text-sm font-semibold text-red-700">{formatNumber(item.missingQuantity)}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
       <Card>
         <CardHeader>
-          <CardTitle>Resumen del sistema</CardTitle>
-          <CardDescription>Este modulo se implementara en una fase posterior.</CardDescription>
+          <CardTitle>Movimientos recientes</CardTitle>
+          <CardDescription>Ultimas entradas, salidas, ajustes y transferencias registradas.</CardDescription>
         </CardHeader>
         <CardContent>
-          <EmptyState
-            description="Aqui se mostraran metricas, alertas de stock y movimientos recientes cuando el dashboard consuma la API."
-            icon={<LayoutDashboard className="h-6 w-6" />}
-            title="Dashboard preparado"
-          />
+          {recentMovementsQuery.isLoading ? (
+            <LoadingState text="Cargando movimientos recientes..." />
+          ) : recentMovementsQuery.isError ? (
+            <SectionError text="No se pudieron cargar los movimientos recientes." />
+          ) : recentMovements.length === 0 ? (
+            <EmptyState
+              description="Aun no hay movimientos para mostrar en el dashboard."
+              icon={<ArrowLeftRight className="h-6 w-6" />}
+              title="Sin movimientos recientes"
+            />
+          ) : (
+            <div className="overflow-hidden rounded-lg border border-border">
+              <div className="grid grid-cols-[0.8fr_1fr_1.2fr_0.6fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-muted">
+                <span>Tipo</span>
+                <span>Fecha</span>
+                <span>Almacenes</span>
+                <span className="text-right">Cantidad</span>
+              </div>
+              <div className="divide-y divide-border">
+                {recentMovements.map((movement) => {
+                  const origin = movement.warehouseOriginName ?? 'Origen no registrado'
+                  const destination = movement.warehouseDestinationName
+                  const warehouseLabel =
+                    movement.type === 'Transfer' && destination ? `${origin} a ${destination}` : origin
+                  const MovementIcon =
+                    movement.type === 'Entry'
+                      ? ArrowUpCircle
+                      : movement.type === 'Exit'
+                        ? ArrowDownCircle
+                        : ArrowLeftRight
+
+                  return (
+                    <div
+                      className="grid grid-cols-[0.8fr_1fr_1.2fr_0.6fr] items-center gap-3 px-4 py-3"
+                      key={movement.id}
+                    >
+                      <div className="flex min-w-0 items-center gap-2">
+                        <MovementIcon className="h-4 w-4 shrink-0 text-muted" />
+                        <Badge variant={movementBadgeVariants[movement.type]}>{movementLabels[movement.type]}</Badge>
+                      </div>
+                      <p className="text-sm text-muted">{dateFormatter.format(new Date(movement.date))}</p>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm font-medium text-foreground">{warehouseLabel}</p>
+                        <p className="mt-1 text-xs text-muted">{formatNumber(movement.totalItems)} items</p>
+                      </div>
+                      <p className="text-right text-sm font-semibold text-foreground">
+                        {formatNumber(movement.totalQuantity)}
+                      </p>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
