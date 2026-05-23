@@ -25,8 +25,8 @@ export function SupplierModal({ isOpen, isSubmitting = false, mode, onClose, onS
       : 'Actualiza los datos administrativos del proveedor.'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-      <Card className="max-h-[92vh] w-full max-w-2xl overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 sm:items-center">
+      <Card aria-modal="true" className="max-h-[92vh] w-full max-w-2xl overflow-y-auto" role="dialog">
         <CardHeader className="relative pr-14">
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>

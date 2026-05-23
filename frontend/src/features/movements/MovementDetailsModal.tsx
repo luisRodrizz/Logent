@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
+import { formatCurrency, formatDateTime } from '../../lib/format'
 import type { Movement, MovementType } from '../../types/movement'
 
 type MovementDetailsModalProps = {
@@ -21,34 +22,20 @@ const movementBadgeVariants: Record<MovementType, 'default' | 'success' | 'warni
   Transfer: 'default',
 }
 
-const dateFormatter = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
-
-const currencyFormatter = new Intl.NumberFormat('es-PE', {
-  currency: 'PEN',
-  maximumFractionDigits: 2,
-  style: 'currency',
-})
-
 export function MovementDetailsModal({ movement, onClose }: MovementDetailsModalProps) {
   if (!movement) {
     return null
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-      <Card className="max-h-[92vh] w-full max-w-4xl overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 sm:items-center">
+      <Card aria-modal="true" className="max-h-[92vh] w-full max-w-4xl overflow-y-auto" role="dialog">
         <CardHeader className="relative pr-14">
           <div className="mb-3">
             <Badge variant={movementBadgeVariants[movement.type]}>{movementLabels[movement.type]}</Badge>
           </div>
           <CardTitle>Detalle de movimiento</CardTitle>
-          <CardDescription>{dateFormatter.format(new Date(movement.date))}</CardDescription>
+          <CardDescription>{formatDateTime(movement.date)}</CardDescription>
           <Button
             aria-label="Cerrar detalle"
             className="absolute right-4 top-4 h-9 w-9 p-0"
@@ -99,7 +86,7 @@ export function MovementDetailsModal({ movement, onClose }: MovementDetailsModal
                     <p className="mt-1 text-xs text-muted">{detail.productCode}</p>
                   </div>
                   <p className="text-right text-sm font-semibold text-foreground">{detail.quantity}</p>
-                  <p className="text-right text-sm font-medium text-muted">{currencyFormatter.format(detail.unitCost)}</p>
+                  <p className="text-right text-sm font-medium text-muted">{formatCurrency(detail.unitCost)}</p>
                 </div>
               ))}
             </div>

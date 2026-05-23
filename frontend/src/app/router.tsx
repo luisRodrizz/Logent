@@ -1,20 +1,68 @@
+import { lazy, Suspense, type ReactNode } from 'react'
 import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
+import { LoadingState } from '../components/common/LoadingState'
 import { ProtectedLayout } from '../components/layout/ProtectedLayout'
+import { routeRoles } from '../components/layout/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
-import { AuditLogsPage } from '../features/audit-logs/AuditLogsPage'
-import { LoginPage } from '../features/auth/LoginPage'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { RequireRole } from '../features/auth/RequireRole'
-import { CategoriesPage } from '../features/categories/CategoriesPage'
-import { DashboardPage } from '../features/dashboard/DashboardPage'
-import { KardexPage } from '../features/kardex/KardexPage'
-import { MovementsPage } from '../features/movements/MovementsPage'
-import { ProductsPage } from '../features/products/ProductsPage'
-import { ReportsPage } from '../features/reports/ReportsPage'
-import { StockPage } from '../features/stock/StockPage'
-import { SuppliersPage } from '../features/suppliers/SuppliersPage'
-import { WarehousesPage } from '../features/warehouses/WarehousesPage'
-import { routeRoles } from '../components/layout/navigation'
+import type { AuthRole } from '../types/auth'
+
+const AuditLogsPage = lazy(() =>
+  import('../features/audit-logs/AuditLogsPage').then((module) => ({ default: module.AuditLogsPage })),
+)
+const CategoriesPage = lazy(() =>
+  import('../features/categories/CategoriesPage').then((module) => ({ default: module.CategoriesPage })),
+)
+const DashboardPage = lazy(() =>
+  import('../features/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage })),
+)
+const KardexPage = lazy(() =>
+  import('../features/kardex/KardexPage').then((module) => ({ default: module.KardexPage })),
+)
+const LoginPage = lazy(() => import('../features/auth/LoginPage').then((module) => ({ default: module.LoginPage })))
+const MovementsPage = lazy(() =>
+  import('../features/movements/MovementsPage').then((module) => ({ default: module.MovementsPage })),
+)
+const ProductsPage = lazy(() =>
+  import('../features/products/ProductsPage').then((module) => ({ default: module.ProductsPage })),
+)
+const ReportsPage = lazy(() =>
+  import('../features/reports/ReportsPage').then((module) => ({ default: module.ReportsPage })),
+)
+const StockPage = lazy(() => import('../features/stock/StockPage').then((module) => ({ default: module.StockPage })))
+const SuppliersPage = lazy(() =>
+  import('../features/suppliers/SuppliersPage').then((module) => ({ default: module.SuppliersPage })),
+)
+const WarehousesPage = lazy(() =>
+  import('../features/warehouses/WarehousesPage').then((module) => ({ default: module.WarehousesPage })),
+)
+
+function FullPageFallback() {
+  return (
+    <main className="flex min-h-screen items-center justify-center bg-background px-6">
+      <LoadingState text="Cargando InventorySaaS..." />
+    </main>
+  )
+}
+
+function RouteFallback() {
+  return (
+    <Card>
+      <CardContent>
+        <LoadingState text="Cargando modulo..." />
+      </CardContent>
+    </Card>
+  )
+}
+
+function lazyRoute(element: ReactNode) {
+  return <Suspense fallback={<RouteFallback />}>{element}</Suspense>
+}
+
+function protectedRoute(element: ReactNode, allowedRoles: AuthRole[]) {
+  return <RequireRole allowedRoles={allowedRoles}>{lazyRoute(element)}</RequireRole>
+}
 
 function NotFoundPage() {
   return (
@@ -41,90 +89,27 @@ export function AppRouter() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/login"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <LoginPage />
+            </Suspense>
+          }
+        />
         <Route element={<RequireAuth />}>
           <Route element={<ProtectedLayout />}>
             <Route index element={<Navigate replace to="/dashboard" />} />
-            <Route
-              path="/dashboard"
-              element={
-                <RequireRole allowedRoles={routeRoles.dashboard}>
-                  <DashboardPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/categories"
-              element={
-                <RequireRole allowedRoles={routeRoles.categories}>
-                  <CategoriesPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/suppliers"
-              element={
-                <RequireRole allowedRoles={routeRoles.suppliers}>
-                  <SuppliersPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/warehouses"
-              element={
-                <RequireRole allowedRoles={routeRoles.warehouses}>
-                  <WarehousesPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/products"
-              element={
-                <RequireRole allowedRoles={routeRoles.products}>
-                  <ProductsPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/stock"
-              element={
-                <RequireRole allowedRoles={routeRoles.stock}>
-                  <StockPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/movements"
-              element={
-                <RequireRole allowedRoles={routeRoles.movements}>
-                  <MovementsPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/kardex"
-              element={
-                <RequireRole allowedRoles={routeRoles.kardex}>
-                  <KardexPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/reports"
-              element={
-                <RequireRole allowedRoles={routeRoles.reports}>
-                  <ReportsPage />
-                </RequireRole>
-              }
-            />
-            <Route
-              path="/audit-logs"
-              element={
-                <RequireRole allowedRoles={routeRoles.auditLogs}>
-                  <AuditLogsPage />
-                </RequireRole>
-              }
-            />
+            <Route path="/dashboard" element={protectedRoute(<DashboardPage />, routeRoles.dashboard)} />
+            <Route path="/categories" element={protectedRoute(<CategoriesPage />, routeRoles.categories)} />
+            <Route path="/suppliers" element={protectedRoute(<SuppliersPage />, routeRoles.suppliers)} />
+            <Route path="/warehouses" element={protectedRoute(<WarehousesPage />, routeRoles.warehouses)} />
+            <Route path="/products" element={protectedRoute(<ProductsPage />, routeRoles.products)} />
+            <Route path="/stock" element={protectedRoute(<StockPage />, routeRoles.stock)} />
+            <Route path="/movements" element={protectedRoute(<MovementsPage />, routeRoles.movements)} />
+            <Route path="/kardex" element={protectedRoute(<KardexPage />, routeRoles.kardex)} />
+            <Route path="/reports" element={protectedRoute(<ReportsPage />, routeRoles.reports)} />
+            <Route path="/audit-logs" element={protectedRoute(<AuditLogsPage />, routeRoles.auditLogs)} />
           </Route>
         </Route>
         <Route path="*" element={<NotFoundPage />} />

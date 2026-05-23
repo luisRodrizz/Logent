@@ -2,6 +2,7 @@ import { X } from 'lucide-react'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
+import { formatCurrency, formatDateTime } from '../../lib/format'
 import type { KardexEntry, KardexMovementType } from '../../types/kardex'
 
 type KardexDetailsModalProps = {
@@ -23,20 +24,6 @@ const movementBadgeVariants: Record<KardexMovementType, 'default' | 'success' | 
   Transfer: 'default',
 }
 
-const dateFormatter = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
-
-const currencyFormatter = new Intl.NumberFormat('es-PE', {
-  currency: 'PEN',
-  maximumFractionDigits: 2,
-  style: 'currency',
-})
-
 function getQuantityIn(entry: KardexEntry): number {
   return entry.stockAfter > entry.stockBefore ? entry.quantity : 0
 }
@@ -55,14 +42,14 @@ export function KardexDetailsModal({ entry, onClose }: KardexDetailsModalProps) 
   const totalCost = entry.quantity * entry.unitCost
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 px-4 py-6">
-      <Card className="max-h-[92vh] w-full max-w-4xl overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 sm:items-center">
+      <Card aria-modal="true" className="max-h-[92vh] w-full max-w-4xl overflow-y-auto" role="dialog">
         <CardHeader className="relative pr-14">
           <div className="mb-3">
             <Badge variant={movementBadgeVariants[entry.movementType]}>{movementLabels[entry.movementType]}</Badge>
           </div>
           <CardTitle>Detalle Kardex</CardTitle>
-          <CardDescription>{dateFormatter.format(new Date(entry.date))}</CardDescription>
+          <CardDescription>{formatDateTime(entry.date)}</CardDescription>
           <Button
             aria-label="Cerrar detalle"
             className="absolute right-4 top-4 h-9 w-9 p-0"
@@ -111,11 +98,11 @@ export function KardexDetailsModal({ entry, onClose }: KardexDetailsModalProps) 
           <div className="grid gap-4 md:grid-cols-3">
             <div className="rounded-lg border border-border bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase text-muted">Costo unitario</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{currencyFormatter.format(entry.unitCost)}</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{formatCurrency(entry.unitCost)}</p>
             </div>
             <div className="rounded-lg border border-border bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase text-muted">Costo total</p>
-              <p className="mt-2 text-sm font-semibold text-foreground">{currencyFormatter.format(totalCost)}</p>
+              <p className="mt-2 text-sm font-semibold text-foreground">{formatCurrency(totalCost)}</p>
             </div>
             <div className="rounded-lg border border-border bg-slate-50 p-4">
               <p className="text-xs font-semibold uppercase text-muted">Usuario</p>

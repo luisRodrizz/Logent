@@ -14,8 +14,10 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recha
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
+import { SectionError } from '../../components/common/SectionError'
 import { Badge } from '../../components/ui/Badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
+import { formatCurrency, formatDateTime, formatNumber } from '../../lib/format'
 import type { MovementType } from '../../types/dashboard'
 import {
   useDashboardSummary,
@@ -23,20 +25,6 @@ import {
   useRecentMovements,
   useStockOverview,
 } from './dashboard.queries'
-
-const numberFormatter = new Intl.NumberFormat('es-PE')
-const currencyFormatter = new Intl.NumberFormat('es-PE', {
-  currency: 'PEN',
-  maximumFractionDigits: 2,
-  style: 'currency',
-})
-const dateFormatter = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
 
 const movementLabels: Record<MovementType, string> = {
   Adjustment: 'Ajuste',
@@ -50,22 +38,6 @@ const movementBadgeVariants: Record<MovementType, 'default' | 'success' | 'warni
   Entry: 'success',
   Exit: 'danger',
   Transfer: 'default',
-}
-
-function formatNumber(value: number): string {
-  return numberFormatter.format(value)
-}
-
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value)
-}
-
-function SectionError({ text = 'No se pudo cargar esta seccion.' }: { text?: string }) {
-  return (
-    <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-      {text}
-    </div>
-  )
 }
 
 function MetricCard({
@@ -338,7 +310,7 @@ export function DashboardPage() {
                         <MovementIcon className="h-4 w-4 shrink-0 text-muted" />
                         <Badge variant={movementBadgeVariants[movement.type]}>{movementLabels[movement.type]}</Badge>
                       </div>
-                      <p className="text-sm text-muted">{dateFormatter.format(new Date(movement.date))}</p>
+                      <p className="text-sm text-muted">{formatDateTime(movement.date)}</p>
                       <div className="min-w-0">
                         <p className="truncate text-sm font-medium text-foreground">{warehouseLabel}</p>
                         <p className="mt-1 text-xs text-muted">{formatNumber(movement.totalItems)} items</p>

@@ -5,19 +5,16 @@ import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
+import { SectionError } from '../../components/common/SectionError'
+import { TableContainer } from '../../components/common/TableContainer'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
+import { formatDate } from '../../lib/format'
 import type { Category, CreateCategoryRequest } from '../../types/category'
 import { CategoryModal } from './CategoryModal'
 import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from './categories.queries'
-
-const dateFormatter = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
 
 const pageSizeOptions = [10, 20, 50]
 
@@ -28,21 +25,11 @@ type ModalState =
     }
   | null
 
-function formatDate(value?: string | null): string {
-  if (!value) {
-    return 'Sin fecha'
-  }
-
-  return dateFormatter.format(new Date(value))
-}
-
 function CategoriesErrorState() {
   return (
     <Card>
       <CardContent className="px-6 py-10">
-        <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          No se pudo cargar el catalogo de categorias.
-        </div>
+        <SectionError text="No se pudo cargar el catalogo de categorias." />
       </CardContent>
     </Card>
   )
@@ -206,7 +193,7 @@ export function CategoriesPage() {
       ) : (
         <Card>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
+            <TableContainer>
               <table className="min-w-full divide-y divide-border">
                 <thead className="bg-slate-50">
                   <tr>
@@ -266,7 +253,7 @@ export function CategoriesPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </TableContainer>
 
             <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted">
