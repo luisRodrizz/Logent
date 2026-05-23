@@ -1,13 +1,17 @@
 import { Boxes } from 'lucide-react'
+import { useAuth } from '../../features/auth/useAuth'
 import { Badge } from '../ui/Badge'
 import { NavItem } from './NavItem'
-import { navigationItems } from './navigation'
+import { getNavigationItemsForRoles } from './navigation'
 
 type SidebarProps = {
   onNavigate?: () => void
 }
 
 export function Sidebar({ onNavigate }: SidebarProps) {
+  const { user } = useAuth()
+  const visibleNavigationItems = getNavigationItemsForRoles(user?.roles ?? [])
+
   return (
     <aside className="flex h-full w-72 flex-col bg-sidebar text-white">
       <div className="border-b border-white/10 px-6 py-5">
@@ -23,7 +27,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-5" aria-label="Navegacion principal">
-        {navigationItems.map((item) => (
+        {visibleNavigationItems.map((item) => (
           <NavItem item={item} key={item.href} onNavigate={onNavigate} />
         ))}
       </nav>
@@ -34,7 +38,7 @@ export function Sidebar({ onNavigate }: SidebarProps) {
             <p className="text-sm font-semibold">Workspace</p>
             <Badge variant="success">Dev</Badge>
           </div>
-          <p className="text-xs leading-5 text-slate-400">Shell administrativo listo para autenticacion en Fase 21.</p>
+          <p className="text-xs leading-5 text-slate-400">Sesion protegida con JWT y navegacion por rol activa.</p>
         </div>
       </div>
     </aside>
