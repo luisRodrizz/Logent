@@ -1,25 +1,25 @@
-using InventorySaaS.Application.Common.Interfaces;
+using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Categories.Interfaces;
+using InventorySaaS.Application.Common.Interfaces;
+using InventorySaaS.Application.Dashboard.Interfaces;
+using InventorySaaS.Application.Kardex.Interfaces;
+using InventorySaaS.Application.Movements.Interfaces;
+using InventorySaaS.Application.Products.Interfaces;
+using InventorySaaS.Application.Reports.Interfaces;
+using InventorySaaS.Application.StockItems.Interfaces;
 using InventorySaaS.Application.Suppliers.Interfaces;
 using InventorySaaS.Application.Warehouses.Interfaces;
-using InventorySaaS.Application.Products.Interfaces;
-using InventorySaaS.Application.StockItems.Interfaces;
-using InventorySaaS.Application.Movements.Interfaces;
-using InventorySaaS.Application.Kardex.Interfaces;
-using InventorySaaS.Application.Reports.Interfaces;
-using InventorySaaS.Application.Dashboard.Interfaces;
-using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Infrastructure.Authentication;
 using InventorySaaS.Infrastructure.AuditLogs;
 using InventorySaaS.Infrastructure.Categories;
 using InventorySaaS.Infrastructure.Dashboard;
 using InventorySaaS.Infrastructure.Identity;
 using InventorySaaS.Infrastructure.Kardex;
+using InventorySaaS.Infrastructure.Movements;
 using InventorySaaS.Infrastructure.Persistence;
 using InventorySaaS.Infrastructure.Products;
 using InventorySaaS.Infrastructure.Reports;
 using InventorySaaS.Infrastructure.StockItems;
-using InventorySaaS.Infrastructure.Movements;
 using InventorySaaS.Infrastructure.Suppliers;
 using InventorySaaS.Infrastructure.Warehouses;
 using Microsoft.AspNetCore.Identity;
@@ -35,11 +35,13 @@ public static class DependencyInjection
         this IServiceCollection services,
         IConfiguration configuration)
     {
+        // DbContext
         services.AddDbContext<ApplicationDbContext>(options =>
         {
             options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"));
         });
 
+        // Identity
         services
             .AddIdentityCore<ApplicationUser>(options =>
             {
@@ -54,7 +56,7 @@ public static class DependencyInjection
             .AddSignInManager()
             .AddDefaultTokenProviders();
 
-        services.AddScoped<IJwtTokenService, JwtTokenService>();
+        // Application services / business services
         services.AddScoped<ICategoryService, CategoryService>();
         services.AddScoped<ISupplierService, SupplierService>();
         services.AddScoped<IWarehouseService, WarehouseService>();
@@ -65,6 +67,9 @@ public static class DependencyInjection
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
+
+        // Authentication / audit helpers
+        services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuditLogWriter, AuditLogWriter>();
 
         return services;

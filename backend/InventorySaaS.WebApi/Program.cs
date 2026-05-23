@@ -2,15 +2,10 @@ using FluentValidation;
 using InventorySaaS.Application.Categories.Validators;
 using InventorySaaS.Infrastructure;
 using InventorySaaS.Infrastructure.Identity;
+using InventorySaaS.WebApi.Extensions;
 using InventorySaaS.WebApi.Middleware;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.IdentityModel.Tokens;
-using Microsoft.OpenApi;
 using Serilog;
 using System.Text.Json.Serialization;
-using System.Text;
-
-const string frontendCorsPolicy = "FrontendCorsPolicy";
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
@@ -32,61 +27,14 @@ try
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
     builder.Services.AddValidatorsFromAssemblyContaining<CreateCategoryRequestValidator>();
-    builder.Services.AddEndpointsApiExplorer();
-    builder.Services.AddSwaggerGen(options =>
-    {
-        options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
-        {
-            Name = "Authorization",
-            Type = SecuritySchemeType.Http,
-            Scheme = "bearer",
-            BearerFormat = "JWT",
-            In = ParameterLocation.Header,
-            Description = "Enter a valid JWT Bearer token."
-        });
-
-        options.AddSecurityRequirement(document => new OpenApiSecurityRequirement
-        {
-            {
-                new OpenApiSecuritySchemeReference("Bearer", document, null),
-                new List<string>()
-            }
-        });
-    });
     builder.Services.AddInfrastructure(builder.Configuration);
-
-    builder.Services
-        .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
-        .AddJwtBearer(options =>
-        {
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidateAudience = true,
-                ValidateLifetime = true,
-                ValidateIssuerSigningKey = true,
-                ValidIssuer = builder.Configuration["Jwt:Issuer"],
-                ValidAudience = builder.Configuration["Jwt:Audience"],
-                IssuerSigningKey = new SymmetricSecurityKey(
-                    Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]
-                        ?? throw new InvalidOperationException("Missing Jwt:Key configuration.")))
-            };
-        });
-
-    builder.Services.AddAuthorization();
-
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy(frontendCorsPolicy, policy =>
-        {
-            policy
-                .WithOrigins("http://localhost:3000", "http://localhost:5173")
-                .AllowAnyHeader()
-                .AllowAnyMethod();
-        });
-    });
+    builder.Services.AddJwtAuthentication(builder.Configuration);
+    builder.Services.AddCorsPolicy();
+    builder.Services.AddSwaggerDocumentation();
 
     var app = builder.Build();
+
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
 
     if (app.Environment.IsDevelopment())
     {
@@ -94,9 +42,8 @@ try
         app.UseSwaggerUI();
     }
 
-    app.UseMiddleware<ExceptionHandlingMiddleware>();
     app.UseHttpsRedirection();
-    app.UseCors(frontendCorsPolicy);
+    app.UseCors(CorsServiceExtensions.FrontendCorsPolicy);
     app.UseAuthentication();
     app.UseAuthorization();
 
