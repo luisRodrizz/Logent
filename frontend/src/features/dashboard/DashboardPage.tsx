@@ -7,14 +7,13 @@ import {
   Boxes,
   ClipboardList,
   DollarSign,
-  Package,
-  Warehouse,
 } from 'lucide-react'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
 import { SectionError } from '../../components/common/SectionError'
+import { TableContainer } from '../../components/common/TableContainer'
 import { Badge } from '../../components/ui/Badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { formatCurrency, formatDateTime, formatNumber } from '../../lib/format'
@@ -40,7 +39,7 @@ const movementBadgeVariants: Record<MovementType, 'default' | 'success' | 'warni
   Transfer: 'default',
 }
 
-function MetricCard({
+function CompactMetric({
   description,
   icon,
   title,
@@ -52,18 +51,14 @@ function MetricCard({
   value: string
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-start justify-between gap-4 p-5">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-muted">{title}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-normal text-foreground">{value}</p>
-          <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
-        </div>
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
-          {icon}
-        </div>
-      </CardContent>
-    </Card>
+    <div className="rounded-lg border border-border bg-white px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm font-medium text-muted">{title}</p>
+        <div className="text-slate-400">{icon}</div>
+      </div>
+      <p className="mt-3 text-xl font-semibold tracking-tight text-foreground">{value}</p>
+      <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
+    </div>
   )
 }
 
@@ -83,7 +78,11 @@ export function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Resumen operativo del inventario" title="Dashboard" />
+      <PageHeader
+        description="Vista ejecutiva para revisar valor, cobertura, alertas y actividad reciente del inventario."
+        eyebrow="Operations overview"
+        title="Dashboard"
+      />
 
       {summaryQuery.isLoading ? (
         <Card>
@@ -94,63 +93,72 @@ export function DashboardPage() {
       ) : summaryQuery.isError ? (
         <SectionError text="No se pudieron cargar las metricas principales del dashboard." />
       ) : summaryQuery.data ? (
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          <MetricCard
-            description="Productos registrados"
-            icon={<Package className="h-5 w-5" />}
-            title="Productos"
-            value={formatNumber(summaryQuery.data.totalProducts)}
-          />
-          <MetricCard
-            description="Almacenes operativos"
-            icon={<Warehouse className="h-5 w-5" />}
-            title="Almacenes"
-            value={formatNumber(summaryQuery.data.totalWarehouses)}
-          />
-          <MetricCard
-            description="Items con existencia"
-            icon={<Boxes className="h-5 w-5" />}
-            title="Stock items"
-            value={formatNumber(summaryQuery.data.totalStockItems)}
-          />
-          <MetricCard
-            description="Valor estimado actual"
-            icon={<DollarSign className="h-5 w-5" />}
-            title="Valor inventario"
-            value={formatCurrency(summaryQuery.data.totalInventoryValue)}
-          />
-          <MetricCard
-            description="Items bajo minimo"
-            icon={<AlertTriangle className="h-5 w-5" />}
-            title="Stock bajo"
-            value={formatNumber(summaryQuery.data.lowStockItems)}
-          />
-          <MetricCard
-            description="Movimientos registrados"
-            icon={<ArrowLeftRight className="h-5 w-5" />}
-            title="Movimientos"
-            value={formatNumber(summaryQuery.data.totalMovements)}
-          />
-          <MetricCard
-            description="Categorias activas"
-            icon={<ClipboardList className="h-5 w-5" />}
-            title="Categorias"
-            value={formatNumber(summaryQuery.data.totalCategories)}
-          />
-          <MetricCard
-            description="Proveedores registrados"
-            icon={<Activity className="h-5 w-5" />}
-            title="Proveedores"
-            value={formatNumber(summaryQuery.data.totalSuppliers)}
-          />
-        </div>
+        <Card className="overflow-hidden">
+          <CardContent className="grid gap-0 p-0 lg:grid-cols-[1fr_1.8fr]">
+            <div className="border-b border-border bg-slate-950 p-6 text-white lg:border-b-0 lg:border-r lg:border-slate-800">
+              <p className="text-sm font-medium text-slate-400">Valor estimado actual</p>
+              <p className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+                {formatCurrency(summaryQuery.data.totalInventoryValue)}
+              </p>
+              <div className="mt-6 grid grid-cols-2 gap-3">
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                  <p className="text-xs text-slate-400">Productos</p>
+                  <p className="mt-2 text-lg font-semibold">{formatNumber(summaryQuery.data.totalProducts)}</p>
+                </div>
+                <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
+                  <p className="text-xs text-slate-400">Almacenes</p>
+                  <p className="mt-2 text-lg font-semibold">{formatNumber(summaryQuery.data.totalWarehouses)}</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid gap-3 bg-slate-50 p-4 sm:grid-cols-2 xl:grid-cols-3">
+              <CompactMetric
+                description="Items con existencia"
+                icon={<Boxes className="h-4 w-4" />}
+                title="Stock items"
+                value={formatNumber(summaryQuery.data.totalStockItems)}
+              />
+              <CompactMetric
+                description="Bajo minimo configurado"
+                icon={<AlertTriangle className="h-4 w-4" />}
+                title="Stock bajo"
+                value={formatNumber(summaryQuery.data.lowStockItems)}
+              />
+              <CompactMetric
+                description="Actividad registrada"
+                icon={<ArrowLeftRight className="h-4 w-4" />}
+                title="Movimientos"
+                value={formatNumber(summaryQuery.data.totalMovements)}
+              />
+              <CompactMetric
+                description="Clasificacion activa"
+                icon={<ClipboardList className="h-4 w-4" />}
+                title="Categorias"
+                value={formatNumber(summaryQuery.data.totalCategories)}
+              />
+              <CompactMetric
+                description="Proveedores maestros"
+                icon={<Activity className="h-4 w-4" />}
+                title="Proveedores"
+                value={formatNumber(summaryQuery.data.totalSuppliers)}
+              />
+              <CompactMetric
+                description="Valor operativo"
+                icon={<DollarSign className="h-4 w-4" />}
+                title="Inventario"
+                value={formatCurrency(summaryQuery.data.totalInventoryValue)}
+              />
+            </div>
+          </CardContent>
+        </Card>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[1.25fr_0.75fr]">
+      <div className="grid gap-6 xl:grid-cols-[1.45fr_0.75fr]">
         <Card>
           <CardHeader>
             <CardTitle>Stock overview</CardTitle>
-            <CardDescription>Productos con mayor presencia y valor estimado del inventario.</CardDescription>
+            <CardDescription>Productos con mayor presencia y valor estimado dentro del inventario.</CardDescription>
           </CardHeader>
           <CardContent>
             {stockOverviewQuery.isLoading ? (
@@ -164,13 +172,13 @@ export function DashboardPage() {
                 title="Sin stock registrado"
               />
             ) : (
-              <div className="space-y-5">
+              <div className="grid gap-5 2xl:grid-cols-[1.2fr_0.8fr]">
                 {chartData.length > 0 ? (
-                  <div className="h-64 rounded-lg border border-border bg-slate-50 px-3 py-4">
+                  <div className="h-80 rounded-lg border border-border bg-white px-3 py-4">
                     <ResponsiveContainer height="100%" width="100%">
                       <BarChart data={chartData}>
-                        <XAxis dataKey="name" fontSize={11} tickLine={false} />
-                        <YAxis allowDecimals={false} fontSize={11} tickLine={false} />
+                        <XAxis axisLine={false} dataKey="name" fontSize={11} tickLine={false} />
+                        <YAxis allowDecimals={false} axisLine={false} fontSize={11} tickLine={false} />
                         <Tooltip
                           cursor={{ fill: 'rgb(226 232 240 / 0.45)' }}
                           formatter={(value) => [formatNumber(Number(value)), 'Cantidad']}
@@ -181,32 +189,22 @@ export function DashboardPage() {
                   </div>
                 ) : null}
 
-                <div className="overflow-hidden rounded-lg border border-border">
-                  <div className="grid grid-cols-[1.4fr_0.7fr_0.8fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-muted">
-                    <span>Producto</span>
-                    <span className="text-right">Cantidad</span>
-                    <span className="text-right">Valor</span>
-                  </div>
-                  <div className="divide-y divide-border">
-                    {stockOverview.slice(0, 6).map((item) => (
-                      <div
-                        className="grid grid-cols-[1.4fr_0.7fr_0.8fr] items-center gap-3 px-4 py-3"
-                        key={item.productId}
-                      >
-                        <div className="min-w-0">
-                          <div className="flex min-w-0 items-center gap-2">
-                            <p className="truncate text-sm font-semibold text-foreground">{item.productName}</p>
-                            {item.isLowStock ? <Badge variant="warning">Bajo</Badge> : null}
-                          </div>
-                          <p className="mt-1 text-xs text-muted">{item.productCode}</p>
+                <div className="divide-y divide-border rounded-lg border border-border bg-white">
+                  {stockOverview.slice(0, 6).map((item) => (
+                    <div className="grid grid-cols-[1fr_auto] gap-4 px-4 py-3" key={item.productId}>
+                      <div className="min-w-0">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <p className="truncate text-sm font-semibold text-foreground">{item.productName}</p>
+                          {item.isLowStock ? <Badge variant="warning">Bajo</Badge> : null}
                         </div>
-                        <p className="text-right text-sm font-semibold text-foreground">
-                          {formatNumber(item.totalQuantity)}
-                        </p>
-                        <p className="text-right text-sm font-medium text-muted">{formatCurrency(item.estimatedValue)}</p>
+                        <p className="mt-1 text-xs text-muted">{item.productCode}</p>
                       </div>
-                    ))}
-                  </div>
+                      <div className="text-right">
+                        <p className="text-sm font-semibold text-foreground">{formatNumber(item.totalQuantity)}</p>
+                        <p className="mt-1 text-xs text-muted">{formatCurrency(item.estimatedValue)}</p>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -215,7 +213,7 @@ export function DashboardPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Alertas de stock bajo</CardTitle>
+            <CardTitle>Alertas operativas</CardTitle>
             <CardDescription>Productos por debajo del minimo configurado.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -242,7 +240,7 @@ export function DashboardPage() {
                       </div>
                       <Badge variant={item.missingQuantity > 0 ? 'danger' : 'warning'}>Stock bajo</Badge>
                     </div>
-                    <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+                    <div className="mt-4 grid grid-cols-3 gap-2 text-center">
                       <div className="rounded-lg bg-slate-50 px-2 py-2">
                         <p className="text-xs text-muted">Actual</p>
                         <p className="text-sm font-semibold text-foreground">{formatNumber(item.quantity)}</p>
@@ -281,48 +279,50 @@ export function DashboardPage() {
               title="Sin movimientos recientes"
             />
           ) : (
-            <div className="overflow-hidden rounded-lg border border-border">
-              <div className="grid grid-cols-[0.8fr_1fr_1.2fr_0.6fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-muted">
-                <span>Tipo</span>
-                <span>Fecha</span>
-                <span>Almacenes</span>
-                <span className="text-right">Cantidad</span>
-              </div>
-              <div className="divide-y divide-border">
-                {recentMovements.map((movement) => {
-                  const origin = movement.warehouseOriginName ?? 'Origen no registrado'
-                  const destination = movement.warehouseDestinationName
-                  const warehouseLabel =
-                    movement.type === 'Transfer' && destination ? `${origin} a ${destination}` : origin
-                  const MovementIcon =
-                    movement.type === 'Entry'
-                      ? ArrowUpCircle
-                      : movement.type === 'Exit'
-                        ? ArrowDownCircle
-                        : ArrowLeftRight
+            <TableContainer>
+              <div className="min-w-[760px]">
+                <div className="grid grid-cols-[0.8fr_1fr_1.4fr_0.6fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-muted">
+                  <span>Tipo</span>
+                  <span>Fecha</span>
+                  <span>Almacenes</span>
+                  <span className="text-right">Cantidad</span>
+                </div>
+                <div className="divide-y divide-border bg-white">
+                  {recentMovements.map((movement) => {
+                    const origin = movement.warehouseOriginName ?? 'Origen no registrado'
+                    const destination = movement.warehouseDestinationName
+                    const warehouseLabel =
+                      movement.type === 'Transfer' && destination ? `${origin} a ${destination}` : origin
+                    const MovementIcon =
+                      movement.type === 'Entry'
+                        ? ArrowUpCircle
+                        : movement.type === 'Exit'
+                          ? ArrowDownCircle
+                          : ArrowLeftRight
 
-                  return (
-                    <div
-                      className="grid grid-cols-[0.8fr_1fr_1.2fr_0.6fr] items-center gap-3 px-4 py-3"
-                      key={movement.id}
-                    >
-                      <div className="flex min-w-0 items-center gap-2">
-                        <MovementIcon className="h-4 w-4 shrink-0 text-muted" />
-                        <Badge variant={movementBadgeVariants[movement.type]}>{movementLabels[movement.type]}</Badge>
+                    return (
+                      <div
+                        className="grid grid-cols-[0.8fr_1fr_1.4fr_0.6fr] items-center gap-3 px-4 py-3.5"
+                        key={movement.id}
+                      >
+                        <div className="flex min-w-0 items-center gap-2">
+                          <MovementIcon className="h-4 w-4 shrink-0 text-muted" />
+                          <Badge variant={movementBadgeVariants[movement.type]}>{movementLabels[movement.type]}</Badge>
+                        </div>
+                        <p className="text-sm text-muted">{formatDateTime(movement.date)}</p>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-medium text-foreground">{warehouseLabel}</p>
+                          <p className="mt-1 text-xs text-muted">{formatNumber(movement.totalItems)} items</p>
+                        </div>
+                        <p className="text-right text-sm font-semibold text-foreground">
+                          {formatNumber(movement.totalQuantity)}
+                        </p>
                       </div>
-                      <p className="text-sm text-muted">{formatDateTime(movement.date)}</p>
-                      <div className="min-w-0">
-                        <p className="truncate text-sm font-medium text-foreground">{warehouseLabel}</p>
-                        <p className="mt-1 text-xs text-muted">{formatNumber(movement.totalItems)} items</p>
-                      </div>
-                      <p className="text-right text-sm font-semibold text-foreground">
-                        {formatNumber(movement.totalQuantity)}
-                      </p>
-                    </div>
-                  )
-                })}
+                    )
+                  })}
+                </div>
               </div>
-            </div>
+            </TableContainer>
           )}
         </CardContent>
       </Card>

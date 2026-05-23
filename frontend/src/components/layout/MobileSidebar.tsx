@@ -20,7 +20,7 @@ export function MobileSidebar({ isOpen, onClose }: MobileSidebarProps) {
       />
       <div
         className={cn(
-          'absolute inset-y-0 left-0 w-72 max-w-[82vw] transition-transform duration-200',
+          'absolute inset-y-0 left-0 w-72 max-w-[86vw] shadow-2xl shadow-slate-950/30 transition-transform duration-200',
           isOpen ? 'translate-x-0' : '-translate-x-full',
         )}
       >

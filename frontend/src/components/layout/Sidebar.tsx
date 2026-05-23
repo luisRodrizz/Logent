@@ -1,4 +1,4 @@
-import { Boxes } from 'lucide-react'
+import { Boxes, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../../features/auth/useAuth'
 import { Badge } from '../ui/Badge'
 import { NavItem } from './NavItem'
@@ -13,32 +13,44 @@ export function Sidebar({ onNavigate }: SidebarProps) {
   const visibleNavigationItems = getNavigationItemsForRoles(user?.roles ?? [])
 
   return (
-    <aside className="flex h-full w-72 flex-col bg-sidebar text-white">
-      <div className="border-b border-white/10 px-6 py-5">
+    <aside className="flex h-full w-72 flex-col border-r border-slate-800 bg-sidebar text-white">
+      <div className="border-b border-white/10 px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white text-sidebar">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sidebar ring-1 ring-white/10">
             <Boxes className="h-5 w-5" />
           </div>
           <div className="min-w-0">
             <p className="truncate text-base font-semibold">InventorySaaS</p>
-            <p className="truncate text-xs text-slate-400">Inventory Platform</p>
+            <p className="truncate text-xs text-slate-400">Operations Console</p>
           </div>
         </div>
       </div>
 
-      <nav className="flex-1 space-y-1 overflow-y-auto px-4 py-5" aria-label="Navegacion principal">
-        {visibleNavigationItems.map((item) => (
-          <NavItem item={item} key={item.href} onNavigate={onNavigate} />
-        ))}
+      <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Navegacion principal">
+        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Modulos</p>
+        <div className="space-y-0.5">
+          {visibleNavigationItems.map((item) => (
+            <NavItem item={item} key={item.href} onNavigate={onNavigate} />
+          ))}
+        </div>
       </nav>
 
-      <div className="border-t border-white/10 p-4">
-        <div className="rounded-xl border border-white/10 bg-slate-900/80 p-4">
-          <div className="mb-3 flex items-center justify-between gap-3">
-            <p className="text-sm font-semibold">Workspace</p>
-            <Badge variant="success">Dev</Badge>
+      <div className="border-t border-white/10 p-3">
+        <div className="rounded-lg border border-white/10 bg-slate-900 px-3 py-3">
+          <div className="flex items-start gap-3">
+            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-300">
+              <ShieldCheck className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="truncate text-sm font-semibold">Workspace</p>
+                <Badge className="bg-emerald-400/10 text-emerald-200 ring-emerald-300/20" variant="success">
+                  Dev
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs leading-5 text-slate-400">Sesion JWT activa y navegacion ajustada por rol.</p>
+            </div>
           </div>
-          <p className="text-xs leading-5 text-slate-400">Sesion protegida con JWT y navegacion por rol activa.</p>
         </div>
       </div>
     </aside>

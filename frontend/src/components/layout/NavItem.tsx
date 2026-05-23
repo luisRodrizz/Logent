@@ -14,14 +14,14 @@ export function NavItem({ item, onNavigate }: NavItemProps) {
     <NavLink
       className={({ isActive }) =>
         cn(
-          'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-300 transition-colors hover:bg-slate-800 hover:text-white',
-          isActive && 'bg-primary text-white shadow-sm shadow-blue-950/20 hover:bg-primary',
+          'group flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-slate-400 transition-colors hover:bg-white/[0.06] hover:text-white',
+          isActive && 'bg-white/[0.08] text-white ring-1 ring-white/10 hover:bg-white/[0.1]',
         )
       }
       onClick={onNavigate}
       to={item.href}
     >
-      <Icon className="h-4 w-4 shrink-0" />
+      <Icon className="h-4 w-4 shrink-0 text-current opacity-70 transition-opacity group-hover:opacity-100" />
       <span className="truncate">{item.label}</span>
     </NavLink>
   )

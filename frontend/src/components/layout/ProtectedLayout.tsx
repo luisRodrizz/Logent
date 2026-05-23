@@ -28,8 +28,8 @@ export function ProtectedLayout() {
           onMenuClick={() => setIsMobileSidebarOpen(true)}
           title={currentPage.label}
         />
-        <main className="px-4 py-6 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
+        <main className="px-4 py-5 sm:px-6 lg:px-8 xl:px-10">
+          <div className="mx-auto w-full max-w-[1560px]">
             <Outlet />
           </div>
         </main>

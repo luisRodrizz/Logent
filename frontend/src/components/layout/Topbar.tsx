@@ -21,8 +21,8 @@ export function Topbar({ description, onMenuClick, title }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-white/90 backdrop-blur">
-      <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
+    <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+      <div className="flex min-h-[68px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex min-w-0 items-center gap-3">
           <Button
             aria-label="Abrir menu"
@@ -33,24 +33,32 @@ export function Topbar({ description, onMenuClick, title }: TopbarProps) {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="min-w-0">
-            <p className="truncate text-sm font-medium text-muted">{description}</p>
-            <h1 className="truncate text-lg font-semibold text-foreground">{title}</h1>
+            <p className="truncate text-xs font-semibold uppercase tracking-wide text-muted">InventorySaaS</p>
+            <div className="flex min-w-0 items-baseline gap-2">
+              <h1 className="truncate text-lg font-semibold text-foreground">{title}</h1>
+              <span className="hidden text-sm text-muted md:inline">{description}</span>
+            </div>
           </div>
         </div>
 
-        <div className="flex shrink-0 items-center gap-2">
-          <div className="hidden items-center gap-1 xl:flex">
+        <div className="flex shrink-0 items-center gap-3">
+          <div className="hidden items-center gap-1.5 xl:flex">
             {user?.roles.map((role) => (
-              <Badge key={role} variant="muted">
+              <Badge className="bg-slate-50 text-slate-600 ring-slate-200" key={role} variant="muted">
                 {role}
               </Badge>
             ))}
           </div>
-          <div className="hidden items-center gap-2 rounded-lg border border-border bg-white px-3 py-2 md:flex">
-            <UserRound className="h-4 w-4 text-muted" />
-            <span className="max-w-44 truncate text-sm font-semibold text-foreground">{displayName}</span>
+          <div className="hidden items-center gap-3 border-l border-border pl-3 md:flex">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600">
+              <UserRound className="h-4 w-4" />
+            </div>
+            <div className="min-w-0">
+              <p className="max-w-44 truncate text-sm font-semibold text-foreground">{displayName}</p>
+              <p className="text-xs text-muted">Sesion activa</p>
+            </div>
           </div>
-          <Button aria-label="Salir" onClick={handleLogout} size="sm" variant="ghost">
+          <Button aria-label="Salir" className="shrink-0" onClick={handleLogout} size="sm" variant="ghost">
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">Salir</span>
           </Button>
