@@ -1,11 +1,14 @@
 using InventorySaaS.Application.AuditLogs.DTOs;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Domain.Enums;
 
 namespace InventorySaaS.Application.AuditLogs.Interfaces;
 
 public interface IAuditLogService
 {
-    Task<IReadOnlyList<AuditLogResponse>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<PagedResponse<AuditLogResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default);
 
     Task<AuditLogResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

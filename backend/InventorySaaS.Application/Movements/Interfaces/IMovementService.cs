@@ -1,10 +1,13 @@
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Movements.DTOs;
 
 namespace InventorySaaS.Application.Movements.Interfaces;
 
 public interface IMovementService
 {
-    Task<IReadOnlyList<MovementResponse>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<PagedResponse<MovementResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default);
 
     Task<MovementResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

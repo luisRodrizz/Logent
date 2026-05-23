@@ -1,5 +1,6 @@
 using InventorySaaS.Application.AuditLogs.DTOs;
 using InventorySaaS.Application.AuditLogs.Interfaces;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Domain.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -12,9 +13,11 @@ namespace InventorySaaS.WebApi.Controllers;
 public class AuditLogsController(IAuditLogService auditLogService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<AuditLogResponse>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<AuditLogResponse>>> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
     {
-        var auditLogs = await auditLogService.GetAllAsync(cancellationToken);
+        var auditLogs = await auditLogService.GetAllAsync(request, cancellationToken);
 
         return Ok(auditLogs);
     }

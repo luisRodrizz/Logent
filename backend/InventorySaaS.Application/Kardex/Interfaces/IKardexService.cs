@@ -1,10 +1,13 @@
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Kardex.DTOs;
 
 namespace InventorySaaS.Application.Kardex.Interfaces;
 
 public interface IKardexService
 {
-    Task<IReadOnlyList<KardexEntryResponse>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<PagedResponse<KardexEntryResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default);
 
     Task<KardexEntryResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

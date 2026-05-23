@@ -1,10 +1,13 @@
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Products.DTOs;
 
 namespace InventorySaaS.Application.Products.Interfaces;
 
 public interface IProductService
 {
-    Task<IReadOnlyList<ProductResponse>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<PagedResponse<ProductResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default);
 
     Task<ProductResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

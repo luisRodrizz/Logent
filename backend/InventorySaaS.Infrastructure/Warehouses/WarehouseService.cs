@@ -1,8 +1,10 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Warehouses.DTOs;
 using InventorySaaS.Application.Warehouses.Interfaces;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
+using InventorySaaS.Infrastructure.Common.Extensions;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +12,29 @@ namespace InventorySaaS.Infrastructure.Warehouses;
 
 public class WarehouseService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : IWarehouseService
 {
-    public async Task<IReadOnlyList<WarehouseResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<WarehouseResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
-        return await context.Warehouses
+        var query = context.Warehouses
             .AsNoTracking()
-            .Where(warehouse => warehouse.IsActive)
+            .Where(warehouse => warehouse.IsActive);
+
+        var search = request.NormalizeSearch();
+
+        if (search is not null)
+        {
+            query = query.Where(
+                warehouse =>
+                    warehouse.Name.ToLower().Contains(search)
+                    || (warehouse.Location != null && warehouse.Location.ToLower().Contains(search))
+                    || (warehouse.Description != null && warehouse.Description.ToLower().Contains(search)));
+        }
+
+        return await query
             .OrderBy(warehouse => warehouse.Name)
             .Select(warehouse => MapToResponse(warehouse))
-            .ToListAsync(cancellationToken);
+            .ToPagedResponseAsync(request, cancellationToken);
     }
 
     public async Task<WarehouseResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

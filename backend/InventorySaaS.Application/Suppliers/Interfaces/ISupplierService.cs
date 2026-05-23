@@ -1,10 +1,13 @@
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Suppliers.DTOs;
 
 namespace InventorySaaS.Application.Suppliers.Interfaces;
 
 public interface ISupplierService
 {
-    Task<IReadOnlyList<SupplierResponse>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<PagedResponse<SupplierResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default);
 
     Task<SupplierResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 

@@ -1,8 +1,10 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Products.DTOs;
 using InventorySaaS.Application.Products.Interfaces;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
+using InventorySaaS.Infrastructure.Common.Extensions;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,16 +12,33 @@ namespace InventorySaaS.Infrastructure.Products;
 
 public class ProductService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : IProductService
 {
-    public async Task<IReadOnlyList<ProductResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<ProductResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
-        return await context.Products
+        var query = context.Products
             .AsNoTracking()
             .Include(product => product.Category)
             .Include(product => product.Supplier)
-            .Where(product => product.IsActive)
+            .Where(product => product.IsActive);
+
+        var search = request.NormalizeSearch();
+
+        if (search is not null)
+        {
+            query = query.Where(
+                product =>
+                    product.Code.ToLower().Contains(search)
+                    || product.Name.ToLower().Contains(search)
+                    || (product.Description != null && product.Description.ToLower().Contains(search))
+                    || (product.Category != null && product.Category.Name.ToLower().Contains(search))
+                    || (product.Supplier != null && product.Supplier.BusinessName.ToLower().Contains(search)));
+        }
+
+        return await query
             .OrderBy(product => product.Name)
             .Select(product => MapToResponse(product))
-            .ToListAsync(cancellationToken);
+            .ToPagedResponseAsync(request, cancellationToken);
     }
 
     public async Task<ProductResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

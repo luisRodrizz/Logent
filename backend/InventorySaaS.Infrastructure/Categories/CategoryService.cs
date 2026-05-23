@@ -1,8 +1,10 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Categories.DTOs;
 using InventorySaaS.Application.Categories.Interfaces;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
+using InventorySaaS.Infrastructure.Common.Extensions;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +12,28 @@ namespace InventorySaaS.Infrastructure.Categories;
 
 public class CategoryService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : ICategoryService
 {
-    public async Task<IReadOnlyList<CategoryResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<CategoryResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
-        return await context.Categories
+        var query = context.Categories
             .AsNoTracking()
-            .Where(category => category.IsActive)
+            .Where(category => category.IsActive);
+
+        var search = request.NormalizeSearch();
+
+        if (search is not null)
+        {
+            query = query.Where(
+                category =>
+                    category.Name.ToLower().Contains(search)
+                    || (category.Description != null && category.Description.ToLower().Contains(search)));
+        }
+
+        return await query
             .OrderBy(category => category.Name)
             .Select(category => MapToResponse(category))
-            .ToListAsync(cancellationToken);
+            .ToPagedResponseAsync(request, cancellationToken);
     }
 
     public async Task<CategoryResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

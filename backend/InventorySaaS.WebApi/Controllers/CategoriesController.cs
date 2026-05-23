@@ -2,6 +2,7 @@ using System.Security.Claims;
 using FluentValidation;
 using InventorySaaS.Application.Categories.DTOs;
 using InventorySaaS.Application.Categories.Interfaces;
+using InventorySaaS.Application.Common.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -17,9 +18,11 @@ public class CategoriesController(
 {
     [HttpGet]
     [Authorize(Roles = "Admin,Almacenero,Consulta")]
-    public async Task<ActionResult<IReadOnlyList<CategoryResponse>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<CategoryResponse>>> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
     {
-        var categories = await categoryService.GetAllAsync(cancellationToken);
+        var categories = await categoryService.GetAllAsync(request, cancellationToken);
 
         return Ok(categories);
     }

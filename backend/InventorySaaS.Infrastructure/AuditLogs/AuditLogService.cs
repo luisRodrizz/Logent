@@ -1,7 +1,9 @@
 using InventorySaaS.Application.AuditLogs.DTOs;
 using InventorySaaS.Application.AuditLogs.Interfaces;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
+using InventorySaaS.Infrastructure.Common.Extensions;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -9,12 +11,27 @@ namespace InventorySaaS.Infrastructure.AuditLogs;
 
 public class AuditLogService(ApplicationDbContext context) : IAuditLogService
 {
-    public async Task<IReadOnlyList<AuditLogResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<AuditLogResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
-        return await GetAuditLogsQuery()
+        var query = GetAuditLogsQuery();
+        var search = request.NormalizeSearch();
+
+        if (search is not null)
+        {
+            query = query.Where(
+                auditLog =>
+                    (auditLog.UserId != null && auditLog.UserId.ToLower().Contains(search))
+                    || auditLog.EntityName.ToLower().Contains(search)
+                    || (auditLog.EntityId != null && auditLog.EntityId.ToLower().Contains(search))
+                    || auditLog.Description.ToLower().Contains(search));
+        }
+
+        return await query
             .OrderByDescending(auditLog => auditLog.CreatedAt)
             .Select(auditLog => MapToResponse(auditLog))
-            .ToListAsync(cancellationToken);
+            .ToPagedResponseAsync(request, cancellationToken);
     }
 
     public async Task<AuditLogResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

@@ -1,8 +1,10 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Suppliers.DTOs;
 using InventorySaaS.Application.Suppliers.Interfaces;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
+using InventorySaaS.Infrastructure.Common.Extensions;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,14 +12,30 @@ namespace InventorySaaS.Infrastructure.Suppliers;
 
 public class SupplierService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : ISupplierService
 {
-    public async Task<IReadOnlyList<SupplierResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<SupplierResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
-        return await context.Suppliers
+        var query = context.Suppliers
             .AsNoTracking()
-            .Where(supplier => supplier.IsActive)
+            .Where(supplier => supplier.IsActive);
+
+        var search = request.NormalizeSearch();
+
+        if (search is not null)
+        {
+            query = query.Where(
+                supplier =>
+                    supplier.BusinessName.ToLower().Contains(search)
+                    || (supplier.Ruc != null && supplier.Ruc.ToLower().Contains(search))
+                    || (supplier.Email != null && supplier.Email.ToLower().Contains(search))
+                    || (supplier.Phone != null && supplier.Phone.ToLower().Contains(search)));
+        }
+
+        return await query
             .OrderBy(supplier => supplier.BusinessName)
             .Select(supplier => MapToResponse(supplier))
-            .ToListAsync(cancellationToken);
+            .ToPagedResponseAsync(request, cancellationToken);
     }
 
     public async Task<SupplierResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

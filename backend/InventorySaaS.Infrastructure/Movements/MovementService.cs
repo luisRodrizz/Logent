@@ -1,8 +1,10 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Movements.DTOs;
 using InventorySaaS.Application.Movements.Interfaces;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
+using InventorySaaS.Infrastructure.Common.Extensions;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,13 +12,34 @@ namespace InventorySaaS.Infrastructure.Movements;
 
 public class MovementService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : IMovementService
 {
-    public async Task<IReadOnlyList<MovementResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<MovementResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
-        var movements = await GetMovementsQuery()
+        var query = GetMovementsQuery();
+        var search = request.NormalizeSearch();
+
+        if (search is not null)
+        {
+            query = query.Where(
+                movement =>
+                    (movement.Observation != null && movement.Observation.ToLower().Contains(search))
+                    || (movement.WarehouseOrigin != null && movement.WarehouseOrigin.Name.ToLower().Contains(search))
+                    || (movement.WarehouseDestination != null
+                        && movement.WarehouseDestination.Name.ToLower().Contains(search)));
+        }
+
+        var totalCount = await query.CountAsync(cancellationToken);
+        var movements = await query
             .OrderByDescending(movement => movement.Date)
+            .Skip((request.PageNumber - 1) * request.PageSize)
+            .Take(request.PageSize)
             .ToListAsync(cancellationToken);
 
-        return movements.Select(MapToResponse).ToList();
+        return movements
+            .Select(MapToResponse)
+            .ToList()
+            .ToPagedResponse(request, totalCount);
     }
 
     public async Task<MovementResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

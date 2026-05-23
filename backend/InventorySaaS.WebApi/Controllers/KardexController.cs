@@ -1,3 +1,4 @@
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Kardex.DTOs;
 using InventorySaaS.Application.Kardex.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -11,9 +12,11 @@ namespace InventorySaaS.WebApi.Controllers;
 public class KardexController(IKardexService kardexService) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<IReadOnlyList<KardexEntryResponse>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<KardexEntryResponse>>> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
     {
-        var entries = await kardexService.GetAllAsync(cancellationToken);
+        var entries = await kardexService.GetAllAsync(request, cancellationToken);
 
         return Ok(entries);
     }

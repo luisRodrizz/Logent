@@ -1,6 +1,8 @@
 using InventorySaaS.Application.Kardex.DTOs;
 using InventorySaaS.Application.Kardex.Interfaces;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Domain.Entities;
+using InventorySaaS.Infrastructure.Common.Extensions;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
@@ -8,12 +10,27 @@ namespace InventorySaaS.Infrastructure.Kardex;
 
 public class KardexService(ApplicationDbContext context) : IKardexService
 {
-    public async Task<IReadOnlyList<KardexEntryResponse>> GetAllAsync(CancellationToken cancellationToken = default)
+    public async Task<PagedResponse<KardexEntryResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default)
     {
-        return await GetKardexEntriesQuery()
+        var query = GetKardexEntriesQuery();
+        var search = request.NormalizeSearch();
+
+        if (search is not null)
+        {
+            query = query.Where(
+                entry =>
+                    (entry.Product != null && entry.Product.Code.ToLower().Contains(search))
+                    || (entry.Product != null && entry.Product.Name.ToLower().Contains(search))
+                    || (entry.Warehouse != null && entry.Warehouse.Name.ToLower().Contains(search))
+                    || (entry.Observation != null && entry.Observation.ToLower().Contains(search)));
+        }
+
+        return await query
             .OrderByDescending(entry => entry.Date)
             .Select(entry => MapToResponse(entry))
-            .ToListAsync(cancellationToken);
+            .ToPagedResponseAsync(request, cancellationToken);
     }
 
     public async Task<KardexEntryResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)

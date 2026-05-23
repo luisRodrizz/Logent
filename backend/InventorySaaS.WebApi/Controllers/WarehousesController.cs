@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FluentValidation;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Warehouses.DTOs;
 using InventorySaaS.Application.Warehouses.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -17,9 +18,11 @@ public class WarehousesController(
 {
     [HttpGet]
     [Authorize(Roles = "Admin,Almacenero,Consulta")]
-    public async Task<ActionResult<IReadOnlyList<WarehouseResponse>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<WarehouseResponse>>> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
     {
-        var warehouses = await warehouseService.GetAllAsync(cancellationToken);
+        var warehouses = await warehouseService.GetAllAsync(request, cancellationToken);
 
         return Ok(warehouses);
     }

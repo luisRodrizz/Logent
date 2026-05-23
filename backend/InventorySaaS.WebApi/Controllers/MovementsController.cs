@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using FluentValidation;
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Movements.DTOs;
 using InventorySaaS.Application.Movements.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -16,9 +17,11 @@ public class MovementsController(
 {
     [HttpGet]
     [Authorize(Roles = "Admin,Almacenero,Consulta")]
-    public async Task<ActionResult<IReadOnlyList<MovementResponse>>> GetAll(CancellationToken cancellationToken)
+    public async Task<ActionResult<PagedResponse<MovementResponse>>> GetAll(
+        [FromQuery] PagedRequest request,
+        CancellationToken cancellationToken)
     {
-        var movements = await movementService.GetAllAsync(cancellationToken);
+        var movements = await movementService.GetAllAsync(request, cancellationToken);
 
         return Ok(movements);
     }

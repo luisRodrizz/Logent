@@ -1,10 +1,13 @@
+using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Categories.DTOs;
 
 namespace InventorySaaS.Application.Categories.Interfaces;
 
 public interface ICategoryService
 {
-    Task<IReadOnlyList<CategoryResponse>> GetAllAsync(CancellationToken cancellationToken = default);
+    Task<PagedResponse<CategoryResponse>> GetAllAsync(
+        PagedRequest request,
+        CancellationToken cancellationToken = default);
 
     Task<CategoryResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
