@@ -95,19 +95,26 @@ export function DashboardPage() {
       ) : summaryQuery.data ? (
         <Card className="overflow-hidden">
           <CardContent className="grid gap-0 p-0 lg:grid-cols-[1fr_1.8fr]">
-            <div className="border-b border-border bg-slate-950 p-6 text-white lg:border-b-0 lg:border-r lg:border-slate-800">
-              <p className="text-sm font-medium text-slate-400">Valor estimado actual</p>
-              <p className="mt-4 text-3xl font-semibold tracking-tight sm:text-4xl">
+            <div className="border-b border-border bg-white p-6 lg:border-b-0 lg:border-r">
+              <p className="text-sm font-medium text-muted">Valor estimado actual</p>
+              <p className="mt-4 text-3xl font-semibold tracking-tight text-foreground sm:text-4xl">
                 {formatCurrency(summaryQuery.data.totalInventoryValue)}
               </p>
+              <p className="mt-3 max-w-sm text-sm leading-6 text-muted">
+                Resumen financiero calculado desde el stock y costos registrados.
+              </p>
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
-                  <p className="text-xs text-slate-400">Productos</p>
-                  <p className="mt-2 text-lg font-semibold">{formatNumber(summaryQuery.data.totalProducts)}</p>
+                <div className="rounded-lg border border-border bg-slate-50 p-3">
+                  <p className="text-xs text-muted">Productos</p>
+                  <p className="mt-2 text-lg font-semibold text-foreground">
+                    {formatNumber(summaryQuery.data.totalProducts)}
+                  </p>
                 </div>
-                <div className="rounded-lg border border-white/10 bg-white/[0.04] p-3">
-                  <p className="text-xs text-slate-400">Almacenes</p>
-                  <p className="mt-2 text-lg font-semibold">{formatNumber(summaryQuery.data.totalWarehouses)}</p>
+                <div className="rounded-lg border border-border bg-slate-50 p-3">
+                  <p className="text-xs text-muted">Almacenes</p>
+                  <p className="mt-2 text-lg font-semibold text-foreground">
+                    {formatNumber(summaryQuery.data.totalWarehouses)}
+                  </p>
                 </div>
               </div>
             </div>

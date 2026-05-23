@@ -1,23 +1,20 @@
-import { Edit3, MapPin, Plus, Search, Trash2, Warehouse } from 'lucide-react'
+import { Edit3, Plus, Search, Trash2, Warehouse } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { ConfirmDialog } from '../../components/common/ConfirmDialog'
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
+import { SectionError } from '../../components/common/SectionError'
+import { TableContainer } from '../../components/common/TableContainer'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
+import { formatDate, formatNumber } from '../../lib/format'
 import type { CreateWarehouseRequest, Warehouse as WarehouseType } from '../../types/warehouse'
 import { WarehouseModal } from './WarehouseModal'
 import { useCreateWarehouse, useDeleteWarehouse, useUpdateWarehouse, useWarehouses } from './warehouses.queries'
-
-const dateFormatter = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
 
 const pageSizeOptions = [10, 20, 50]
 
@@ -28,21 +25,11 @@ type ModalState =
     }
   | null
 
-function formatDate(value?: string | null): string {
-  if (!value) {
-    return 'Sin fecha'
-  }
-
-  return dateFormatter.format(new Date(value))
-}
-
 function WarehousesErrorState() {
   return (
     <Card>
       <CardContent className="px-6 py-10">
-        <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          No se pudo cargar la gestion de almacenes.
-        </div>
+        <SectionError text="No se pudo cargar la gestion de almacenes." />
       </CardContent>
     </Card>
   )
@@ -81,6 +68,7 @@ export function WarehousesPage() {
   const warehouses = warehousesQuery.data?.items ?? []
   const isFormSubmitting = createWarehouseMutation.isPending || updateWarehouseMutation.isPending
   const isSearching = Boolean(search)
+  const visibleActiveWarehouses = warehouses.filter((warehouse) => warehouse.isActive).length
 
   async function handleSubmitWarehouse(payload: CreateWarehouseRequest) {
     try {
@@ -137,18 +125,34 @@ export function WarehousesPage() {
             Nuevo almacen
           </Button>
         }
-        description="Gestiona los almacenes disponibles para controlar el inventario."
+        description="Ubicaciones operativas para control de existencias y movimientos."
+        eyebrow="Master data"
         title="Almacenes"
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Gestion de almacenes</CardTitle>
-          <CardDescription>Listado administrativo con busqueda, paginacion y mantenimiento basico.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="relative w-full lg:max-w-md">
+        <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+              <p className="text-xs font-medium text-muted">Total almacenes</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {formatNumber(warehousesQuery.data?.totalCount ?? warehouses.length)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+              <p className="text-xs font-medium text-muted">Activos en vista</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{formatNumber(visibleActiveWarehouses)}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+              <p className="text-xs font-medium text-muted">Pagina actual</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {formatNumber(warehousesQuery.data?.pageNumber ?? pageNumber)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
+            <div className="relative w-full sm:min-w-80">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
                 className="h-10 w-full rounded-lg border border-border bg-white pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
@@ -159,8 +163,8 @@ export function WarehousesPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted">Filas</span>
+            <label className="flex items-center gap-2 text-sm text-muted">
+              Filas
               <select
                 className="h-10 rounded-lg border border-border bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => handlePageSizeChange(event.target.value)}
@@ -172,7 +176,7 @@ export function WarehousesPage() {
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
           </div>
         </CardContent>
       </Card>
@@ -205,9 +209,13 @@ export function WarehousesPage() {
         />
       ) : (
         <Card>
+          <CardHeader>
+            <CardTitle>Gestion de almacenes</CardTitle>
+            <CardDescription>Ubicaciones listas para consulta y mantenimiento administrativo.</CardDescription>
+          </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
+            <TableContainer>
+              <table className="min-w-[960px] divide-y divide-border">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
@@ -220,24 +228,14 @@ export function WarehousesPage() {
                 </thead>
                 <tbody className="divide-y divide-border bg-white">
                   {warehouses.map((warehouse) => (
-                    <tr className="transition-colors hover:bg-slate-50" key={warehouse.id}>
+                    <tr className="transition-colors hover:bg-slate-50/80" key={warehouse.id}>
                       <td className="px-5 py-4">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
-                            <Warehouse className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-foreground">{warehouse.name}</p>
-                            <p className="mt-1 text-xs text-muted">ID {warehouse.id.slice(0, 8)}</p>
-                          </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">{warehouse.name}</p>
+                          <p className="mt-1 font-mono text-xs text-muted">ID {warehouse.id.slice(0, 8)}</p>
                         </div>
                       </td>
-                      <td className="px-5 py-4">
-                        <p className="flex items-center gap-2 text-sm text-foreground">
-                          <MapPin className="h-3.5 w-3.5 text-muted" />
-                          {warehouse.location || 'Sin ubicacion'}
-                        </p>
-                      </td>
+                      <td className="px-5 py-4 text-sm text-foreground">{warehouse.location || 'Sin ubicacion'}</td>
                       <td className="max-w-md px-5 py-4">
                         <p className="line-clamp-2 text-sm leading-6 text-muted">
                           {warehouse.description || 'Sin descripcion'}
@@ -273,12 +271,12 @@ export function WarehousesPage() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </TableContainer>
 
             <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted">
                 Pagina {warehousesQuery.data?.pageNumber ?? pageNumber} de {warehousesQuery.data?.totalPages ?? 1} ·{' '}
-                {warehousesQuery.data?.totalCount ?? 0} registros
+                {formatNumber(warehousesQuery.data?.totalCount ?? 0)} registros
               </p>
               <div className="flex items-center gap-2">
                 <Button

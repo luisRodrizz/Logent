@@ -11,7 +11,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
-import { formatDate } from '../../lib/format'
+import { formatDate, formatNumber } from '../../lib/format'
 import type { Category, CreateCategoryRequest } from '../../types/category'
 import { CategoryModal } from './CategoryModal'
 import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from './categories.queries'
@@ -68,6 +68,7 @@ export function CategoriesPage() {
   const categories = categoriesQuery.data?.items ?? []
   const isFormSubmitting = createCategoryMutation.isPending || updateCategoryMutation.isPending
   const isSearching = Boolean(search)
+  const visibleActiveCategories = categories.filter((category) => category.isActive).length
 
   async function handleSubmitCategory(payload: CreateCategoryRequest) {
     try {
@@ -124,18 +125,34 @@ export function CategoriesPage() {
             Nueva categoria
           </Button>
         }
-        description="Gestiona las categorias usadas para organizar productos."
+        description="Clasificacion maestra usada para organizar productos y reportes operativos."
+        eyebrow="Master data"
         title="Categorias"
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Catalogo de categorias</CardTitle>
-          <CardDescription>Listado administrativo con busqueda, paginacion y mantenimiento basico.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="relative w-full lg:max-w-md">
+        <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+              <p className="text-xs font-medium text-muted">Total catalogo</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {formatNumber(categoriesQuery.data?.totalCount ?? categories.length)}
+              </p>
+            </div>
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+              <p className="text-xs font-medium text-muted">Activas en vista</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{formatNumber(visibleActiveCategories)}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+              <p className="text-xs font-medium text-muted">Pagina actual</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {formatNumber(categoriesQuery.data?.pageNumber ?? pageNumber)}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
+            <div className="relative w-full sm:min-w-80">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
                 className="h-10 w-full rounded-lg border border-border bg-white pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
@@ -146,8 +163,8 @@ export function CategoriesPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted">Filas</span>
+            <label className="flex items-center gap-2 text-sm text-muted">
+              Filas
               <select
                 className="h-10 rounded-lg border border-border bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => handlePageSizeChange(event.target.value)}
@@ -159,7 +176,7 @@ export function CategoriesPage() {
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
           </div>
         </CardContent>
       </Card>
@@ -192,9 +209,13 @@ export function CategoriesPage() {
         />
       ) : (
         <Card>
+          <CardHeader>
+            <CardTitle>Catalogo de categorias</CardTitle>
+            <CardDescription>Categorias listas para consulta y mantenimiento administrativo.</CardDescription>
+          </CardHeader>
           <CardContent className="p-0">
             <TableContainer>
-              <table className="min-w-full divide-y divide-border">
+              <table className="min-w-[860px] divide-y divide-border">
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Nombre</th>
@@ -206,16 +227,11 @@ export function CategoriesPage() {
                 </thead>
                 <tbody className="divide-y divide-border bg-white">
                   {categories.map((category) => (
-                    <tr className="transition-colors hover:bg-slate-50" key={category.id}>
+                    <tr className="transition-colors hover:bg-slate-50/80" key={category.id}>
                       <td className="px-5 py-4">
-                        <div className="flex min-w-0 items-center gap-3">
-                          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
-                            <Tags className="h-4 w-4" />
-                          </div>
-                          <div className="min-w-0">
-                            <p className="truncate text-sm font-semibold text-foreground">{category.name}</p>
-                            <p className="mt-1 text-xs text-muted">ID {category.id.slice(0, 8)}</p>
-                          </div>
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">{category.name}</p>
+                          <p className="mt-1 font-mono text-xs text-muted">ID {category.id.slice(0, 8)}</p>
                         </div>
                       </td>
                       <td className="max-w-md px-5 py-4">
@@ -258,7 +274,7 @@ export function CategoriesPage() {
             <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted">
                 Pagina {categoriesQuery.data?.pageNumber ?? pageNumber} de {categoriesQuery.data?.totalPages ?? 1} ·{' '}
-                {categoriesQuery.data?.totalCount ?? 0} registros
+                {formatNumber(categoriesQuery.data?.totalCount ?? 0)} registros
               </p>
               <div className="flex items-center gap-2">
                 <Button
