@@ -1,3 +1,4 @@
+using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Movements.DTOs;
 using InventorySaaS.Application.Movements.Interfaces;
 using InventorySaaS.Domain.Entities;
@@ -7,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Movements;
 
-public class MovementService(ApplicationDbContext context) : IMovementService
+public class MovementService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : IMovementService
 {
     public async Task<IReadOnlyList<MovementResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -72,7 +73,13 @@ public class MovementService(ApplicationDbContext context) : IMovementService
             await ApplyStockAsync(movement, detail, userId, now, cancellationToken);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Create,
+            "Movement",
+            movement.Id.ToString(),
+            $"Movement created: {movement.Type} with {movement.Details.Count} detail(s)",
+            cancellationToken);
         await transaction.CommitAsync(cancellationToken);
 
         var createdMovement = await GetByIdAsync(movement.Id, cancellationToken);

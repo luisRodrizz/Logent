@@ -1,12 +1,14 @@
+using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Products.DTOs;
 using InventorySaaS.Application.Products.Interfaces;
 using InventorySaaS.Domain.Entities;
+using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Products;
 
-public class ProductService(ApplicationDbContext context) : IProductService
+public class ProductService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : IProductService
 {
     public async Task<IReadOnlyList<ProductResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -33,6 +35,7 @@ public class ProductService(ApplicationDbContext context) : IProductService
 
     public async Task<ProductResponse> CreateAsync(
         CreateProductRequest request,
+        string userId,
         CancellationToken cancellationToken = default)
     {
         var code = request.Code.Trim();
@@ -59,6 +62,13 @@ public class ProductService(ApplicationDbContext context) : IProductService
 
         context.Products.Add(product);
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Create,
+            "Product",
+            product.Id.ToString(),
+            $"Product created: {product.Code} - {product.Name}",
+            cancellationToken);
 
         var createdProduct = await GetByIdAsync(product.Id, cancellationToken);
 
@@ -69,6 +79,7 @@ public class ProductService(ApplicationDbContext context) : IProductService
     public async Task<bool> UpdateAsync(
         Guid id,
         UpdateProductRequest request,
+        string userId,
         CancellationToken cancellationToken = default)
     {
         var product = await context.Products
@@ -97,11 +108,18 @@ public class ProductService(ApplicationDbContext context) : IProductService
         product.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Update,
+            "Product",
+            product.Id.ToString(),
+            $"Product updated: {product.Code} - {product.Name}",
+            cancellationToken);
 
         return true;
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
         var product = await context.Products
             .FirstOrDefaultAsync(product => product.Id == id && product.IsActive, cancellationToken);
@@ -115,6 +133,13 @@ public class ProductService(ApplicationDbContext context) : IProductService
         product.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Delete,
+            "Product",
+            product.Id.ToString(),
+            $"Product deactivated: {product.Code} - {product.Name}",
+            cancellationToken);
 
         return true;
     }

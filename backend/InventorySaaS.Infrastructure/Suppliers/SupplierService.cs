@@ -1,12 +1,14 @@
+using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Suppliers.DTOs;
 using InventorySaaS.Application.Suppliers.Interfaces;
 using InventorySaaS.Domain.Entities;
+using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Suppliers;
 
-public class SupplierService(ApplicationDbContext context) : ISupplierService
+public class SupplierService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : ISupplierService
 {
     public async Task<IReadOnlyList<SupplierResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -29,6 +31,7 @@ public class SupplierService(ApplicationDbContext context) : ISupplierService
 
     public async Task<SupplierResponse> CreateAsync(
         CreateSupplierRequest request,
+        string userId,
         CancellationToken cancellationToken = default)
     {
         var businessName = request.BusinessName.Trim();
@@ -51,6 +54,13 @@ public class SupplierService(ApplicationDbContext context) : ISupplierService
 
         context.Suppliers.Add(supplier);
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Create,
+            "Supplier",
+            supplier.Id.ToString(),
+            $"Supplier created: {supplier.BusinessName}",
+            cancellationToken);
 
         return MapToResponse(supplier);
     }
@@ -58,6 +68,7 @@ public class SupplierService(ApplicationDbContext context) : ISupplierService
     public async Task<bool> UpdateAsync(
         Guid id,
         UpdateSupplierRequest request,
+        string userId,
         CancellationToken cancellationToken = default)
     {
         var supplier = await context.Suppliers
@@ -82,11 +93,18 @@ public class SupplierService(ApplicationDbContext context) : ISupplierService
         supplier.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Update,
+            "Supplier",
+            supplier.Id.ToString(),
+            $"Supplier updated: {supplier.BusinessName}",
+            cancellationToken);
 
         return true;
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
         var supplier = await context.Suppliers
             .FirstOrDefaultAsync(supplier => supplier.Id == id && supplier.IsActive, cancellationToken);
@@ -100,6 +118,13 @@ public class SupplierService(ApplicationDbContext context) : ISupplierService
         supplier.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Delete,
+            "Supplier",
+            supplier.Id.ToString(),
+            $"Supplier deactivated: {supplier.BusinessName}",
+            cancellationToken);
 
         return true;
     }

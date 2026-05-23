@@ -65,6 +65,7 @@ public static class DependencyInjection
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<IAuditLogWriter, AuditLogWriter>();
 
         return services;
     }

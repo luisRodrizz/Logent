@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using FluentValidation;
 using InventorySaaS.Application.Categories.DTOs;
 using InventorySaaS.Application.Categories.Interfaces;
@@ -47,7 +48,14 @@ public class CategoriesController(
 
         try
         {
-            var category = await categoryService.CreateAsync(request, cancellationToken);
+            var userId = GetCurrentUserId();
+
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+
+            var category = await categoryService.CreateAsync(request, userId, cancellationToken);
 
             return CreatedAtAction(nameof(GetById), new { id = category.Id }, category);
         }
@@ -73,7 +81,14 @@ public class CategoriesController(
 
         try
         {
-            var updated = await categoryService.UpdateAsync(id, request, cancellationToken);
+            var userId = GetCurrentUserId();
+
+            if (userId is null)
+            {
+                return Unauthorized();
+            }
+
+            var updated = await categoryService.UpdateAsync(id, request, userId, cancellationToken);
 
             return updated ? NoContent() : NotFound();
         }
@@ -87,8 +102,22 @@ public class CategoriesController(
     [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
-        var deleted = await categoryService.DeleteAsync(id, cancellationToken);
+        var userId = GetCurrentUserId();
+
+        if (userId is null)
+        {
+            return Unauthorized();
+        }
+
+        var deleted = await categoryService.DeleteAsync(id, userId, cancellationToken);
 
         return deleted ? NoContent() : NotFound();
+    }
+
+    private string? GetCurrentUserId()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        return string.IsNullOrWhiteSpace(userId) ? null : userId;
     }
 }

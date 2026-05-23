@@ -1,12 +1,14 @@
+using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Warehouses.DTOs;
 using InventorySaaS.Application.Warehouses.Interfaces;
 using InventorySaaS.Domain.Entities;
+using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Warehouses;
 
-public class WarehouseService(ApplicationDbContext context) : IWarehouseService
+public class WarehouseService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : IWarehouseService
 {
     public async Task<IReadOnlyList<WarehouseResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -29,6 +31,7 @@ public class WarehouseService(ApplicationDbContext context) : IWarehouseService
 
     public async Task<WarehouseResponse> CreateAsync(
         CreateWarehouseRequest request,
+        string userId,
         CancellationToken cancellationToken = default)
     {
         var name = request.Name.Trim();
@@ -47,6 +50,13 @@ public class WarehouseService(ApplicationDbContext context) : IWarehouseService
 
         context.Warehouses.Add(warehouse);
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Create,
+            "Warehouse",
+            warehouse.Id.ToString(),
+            $"Warehouse created: {warehouse.Name}",
+            cancellationToken);
 
         return MapToResponse(warehouse);
     }
@@ -54,6 +64,7 @@ public class WarehouseService(ApplicationDbContext context) : IWarehouseService
     public async Task<bool> UpdateAsync(
         Guid id,
         UpdateWarehouseRequest request,
+        string userId,
         CancellationToken cancellationToken = default)
     {
         var warehouse = await context.Warehouses
@@ -74,11 +85,18 @@ public class WarehouseService(ApplicationDbContext context) : IWarehouseService
         warehouse.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Update,
+            "Warehouse",
+            warehouse.Id.ToString(),
+            $"Warehouse updated: {warehouse.Name}",
+            cancellationToken);
 
         return true;
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
         var warehouse = await context.Warehouses
             .FirstOrDefaultAsync(warehouse => warehouse.Id == id && warehouse.IsActive, cancellationToken);
@@ -92,6 +110,13 @@ public class WarehouseService(ApplicationDbContext context) : IWarehouseService
         warehouse.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Delete,
+            "Warehouse",
+            warehouse.Id.ToString(),
+            $"Warehouse deactivated: {warehouse.Name}",
+            cancellationToken);
 
         return true;
     }

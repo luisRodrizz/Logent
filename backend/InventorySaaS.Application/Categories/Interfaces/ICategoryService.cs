@@ -8,9 +8,16 @@ public interface ICategoryService
 
     Task<CategoryResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<CategoryResponse> CreateAsync(CreateCategoryRequest request, CancellationToken cancellationToken = default);
+    Task<CategoryResponse> CreateAsync(
+        CreateCategoryRequest request,
+        string userId,
+        CancellationToken cancellationToken = default);
 
-    Task<bool> UpdateAsync(Guid id, UpdateCategoryRequest request, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(
+        Guid id,
+        UpdateCategoryRequest request,
+        string userId,
+        CancellationToken cancellationToken = default);
 
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default);
 }

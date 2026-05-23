@@ -1,12 +1,14 @@
+using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Categories.DTOs;
 using InventorySaaS.Application.Categories.Interfaces;
 using InventorySaaS.Domain.Entities;
+using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Categories;
 
-public class CategoryService(ApplicationDbContext context) : ICategoryService
+public class CategoryService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : ICategoryService
 {
     public async Task<IReadOnlyList<CategoryResponse>> GetAllAsync(CancellationToken cancellationToken = default)
     {
@@ -31,6 +33,7 @@ public class CategoryService(ApplicationDbContext context) : ICategoryService
 
     public async Task<CategoryResponse> CreateAsync(
         CreateCategoryRequest request,
+        string userId,
         CancellationToken cancellationToken = default)
     {
         var name = request.Name.Trim();
@@ -48,6 +51,13 @@ public class CategoryService(ApplicationDbContext context) : ICategoryService
 
         context.Categories.Add(category);
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Create,
+            "Category",
+            category.Id.ToString(),
+            $"Category created: {category.Name}",
+            cancellationToken);
 
         return MapToResponse(category);
     }
@@ -55,6 +65,7 @@ public class CategoryService(ApplicationDbContext context) : ICategoryService
     public async Task<bool> UpdateAsync(
         Guid id,
         UpdateCategoryRequest request,
+        string userId,
         CancellationToken cancellationToken = default)
     {
         var category = await context.Categories
@@ -74,11 +85,18 @@ public class CategoryService(ApplicationDbContext context) : ICategoryService
         category.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Update,
+            "Category",
+            category.Id.ToString(),
+            $"Category updated: {category.Name}",
+            cancellationToken);
 
         return true;
     }
 
-    public async Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default)
+    public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
         var category = await context.Categories
             .FirstOrDefaultAsync(category => category.Id == id && category.IsActive, cancellationToken);
@@ -92,6 +110,13 @@ public class CategoryService(ApplicationDbContext context) : ICategoryService
         category.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync(cancellationToken);
+        await auditLogWriter.WriteAsync(
+            userId,
+            AuditAction.Delete,
+            "Category",
+            category.Id.ToString(),
+            $"Category deactivated: {category.Name}",
+            cancellationToken);
 
         return true;
     }

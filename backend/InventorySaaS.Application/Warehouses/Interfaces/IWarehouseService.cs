@@ -8,9 +8,16 @@ public interface IWarehouseService
 
     Task<WarehouseResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
 
-    Task<WarehouseResponse> CreateAsync(CreateWarehouseRequest request, CancellationToken cancellationToken = default);
+    Task<WarehouseResponse> CreateAsync(
+        CreateWarehouseRequest request,
+        string userId,
+        CancellationToken cancellationToken = default);
 
-    Task<bool> UpdateAsync(Guid id, UpdateWarehouseRequest request, CancellationToken cancellationToken = default);
+    Task<bool> UpdateAsync(
+        Guid id,
+        UpdateWarehouseRequest request,
+        string userId,
+        CancellationToken cancellationToken = default);
 
-    Task<bool> DeleteAsync(Guid id, CancellationToken cancellationToken = default);
+    Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default);
 }
