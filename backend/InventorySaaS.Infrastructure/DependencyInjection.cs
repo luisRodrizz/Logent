@@ -7,8 +7,10 @@ using InventorySaaS.Application.StockItems.Interfaces;
 using InventorySaaS.Application.Movements.Interfaces;
 using InventorySaaS.Application.Kardex.Interfaces;
 using InventorySaaS.Application.Reports.Interfaces;
+using InventorySaaS.Application.Dashboard.Interfaces;
 using InventorySaaS.Infrastructure.Authentication;
 using InventorySaaS.Infrastructure.Categories;
+using InventorySaaS.Infrastructure.Dashboard;
 using InventorySaaS.Infrastructure.Identity;
 using InventorySaaS.Infrastructure.Kardex;
 using InventorySaaS.Infrastructure.Persistence;
@@ -59,6 +61,7 @@ public static class DependencyInjection
         services.AddScoped<IMovementService, MovementService>();
         services.AddScoped<IKardexService, KardexService>();
         services.AddScoped<IReportService, ReportService>();
+        services.AddScoped<IDashboardService, DashboardService>();
 
         return services;
     }
