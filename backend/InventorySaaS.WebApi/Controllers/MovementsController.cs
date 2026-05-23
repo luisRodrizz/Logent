@@ -52,15 +52,8 @@ public class MovementsController(
             return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        try
-        {
-            var movement = await movementService.CreateAsync(request, userId, cancellationToken);
+        var movement = await movementService.CreateAsync(request, userId, cancellationToken);
 
-            return CreatedAtAction(nameof(GetById), new { id = movement.Id }, movement);
-        }
-        catch (InvalidOperationException exception)
-        {
-            return BadRequest(exception.Message);
-        }
+        return CreatedAtAction(nameof(GetById), new { id = movement.Id }, movement);
     }
 }

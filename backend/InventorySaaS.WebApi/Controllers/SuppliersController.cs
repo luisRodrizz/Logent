@@ -46,23 +46,16 @@ public class SuppliersController(
             return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        try
+        var userId = GetCurrentUserId();
+
+        if (userId is null)
         {
-            var userId = GetCurrentUserId();
-
-            if (userId is null)
-            {
-                return Unauthorized();
-            }
-
-            var supplier = await supplierService.CreateAsync(request, userId, cancellationToken);
-
-            return CreatedAtAction(nameof(GetById), new { id = supplier.Id }, supplier);
+            return Unauthorized();
         }
-        catch (InvalidOperationException exception)
-        {
-            return BadRequest(exception.Message);
-        }
+
+        var supplier = await supplierService.CreateAsync(request, userId, cancellationToken);
+
+        return CreatedAtAction(nameof(GetById), new { id = supplier.Id }, supplier);
     }
 
     [HttpPut("{id:guid}")]
@@ -79,23 +72,16 @@ public class SuppliersController(
             return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        try
+        var userId = GetCurrentUserId();
+
+        if (userId is null)
         {
-            var userId = GetCurrentUserId();
-
-            if (userId is null)
-            {
-                return Unauthorized();
-            }
-
-            var updated = await supplierService.UpdateAsync(id, request, userId, cancellationToken);
-
-            return updated ? NoContent() : NotFound();
+            return Unauthorized();
         }
-        catch (InvalidOperationException exception)
-        {
-            return BadRequest(exception.Message);
-        }
+
+        var updated = await supplierService.UpdateAsync(id, request, userId, cancellationToken);
+
+        return updated ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id:guid}")]

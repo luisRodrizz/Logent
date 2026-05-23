@@ -2,6 +2,7 @@ using FluentValidation;
 using InventorySaaS.Application.Categories.Validators;
 using InventorySaaS.Infrastructure;
 using InventorySaaS.Infrastructure.Identity;
+using InventorySaaS.WebApi.Middleware;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
@@ -93,6 +94,7 @@ try
         app.UseSwaggerUI();
     }
 
+    app.UseMiddleware<ExceptionHandlingMiddleware>();
     app.UseHttpsRedirection();
     app.UseCors(frontendCorsPolicy);
     app.UseAuthentication();

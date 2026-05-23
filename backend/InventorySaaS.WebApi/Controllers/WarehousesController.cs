@@ -46,23 +46,16 @@ public class WarehousesController(
             return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        try
+        var userId = GetCurrentUserId();
+
+        if (userId is null)
         {
-            var userId = GetCurrentUserId();
-
-            if (userId is null)
-            {
-                return Unauthorized();
-            }
-
-            var warehouse = await warehouseService.CreateAsync(request, userId, cancellationToken);
-
-            return CreatedAtAction(nameof(GetById), new { id = warehouse.Id }, warehouse);
+            return Unauthorized();
         }
-        catch (InvalidOperationException exception)
-        {
-            return BadRequest(exception.Message);
-        }
+
+        var warehouse = await warehouseService.CreateAsync(request, userId, cancellationToken);
+
+        return CreatedAtAction(nameof(GetById), new { id = warehouse.Id }, warehouse);
     }
 
     [HttpPut("{id:guid}")]
@@ -79,23 +72,16 @@ public class WarehousesController(
             return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        try
+        var userId = GetCurrentUserId();
+
+        if (userId is null)
         {
-            var userId = GetCurrentUserId();
-
-            if (userId is null)
-            {
-                return Unauthorized();
-            }
-
-            var updated = await warehouseService.UpdateAsync(id, request, userId, cancellationToken);
-
-            return updated ? NoContent() : NotFound();
+            return Unauthorized();
         }
-        catch (InvalidOperationException exception)
-        {
-            return BadRequest(exception.Message);
-        }
+
+        var updated = await warehouseService.UpdateAsync(id, request, userId, cancellationToken);
+
+        return updated ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id:guid}")]
