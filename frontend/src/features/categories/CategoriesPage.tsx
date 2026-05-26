@@ -126,7 +126,7 @@ export function CategoriesPage() {
           </Button>
         }
         description="Clasificacion maestra usada para organizar productos y reportes operativos."
-        eyebrow="Master data"
+        eyebrow="Datos maestros"
         title="Categorias"
       />
 
@@ -228,7 +228,7 @@ export function CategoriesPage() {
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Nombre</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Descripcion</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Creacion</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Creación</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
                   </tr>
                 </thead>

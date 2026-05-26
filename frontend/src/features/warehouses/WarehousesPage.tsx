@@ -126,7 +126,7 @@ export function WarehousesPage() {
           </Button>
         }
         description="Ubicaciones operativas para control de existencias y movimientos."
-        eyebrow="Master data"
+        eyebrow="Datos maestros"
         title="Almacenes"
       />
 
@@ -230,7 +230,7 @@ export function WarehousesPage() {
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Ubicacion</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Descripcion</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Creacion</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Creación</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
                   </tr>
                 </thead>

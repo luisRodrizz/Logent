@@ -46,7 +46,7 @@ function getStatusLabel(status: StockStatus): string {
     empty: 'Sin stock',
     low: 'Stock bajo',
     normal: 'Normal',
-    unknown: 'Sin minimo',
+    unknown: 'Sin mínimo',
   }
 
   return labels[status]
@@ -94,7 +94,7 @@ function StockErrorState({ error }: { error: unknown }) {
   return (
     <Card>
       <CardContent className="px-6 py-10">
-        <SectionError text={getApiErrorMessage(error, 'No se pudo cargar la informacion de stock.')} />
+        <SectionError text={getApiErrorMessage(error, 'No se pudo cargar la información de stock.')} />
       </CardContent>
     </Card>
   )
@@ -182,8 +182,8 @@ export function StockPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Consulta operativa de existencias por producto y almacen. Vista solo lectura."
-        eyebrow="Operations"
+        description="Consulta operativa de existencias por producto y almacén. Vista solo lectura."
+        eyebrow="Operación"
         title="Stock"
       />
 
@@ -212,7 +212,7 @@ export function StockPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="stock-warehouse-filter">
-                Almacen
+                Almacén
               </label>
               <select
                 className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-blue-100"
@@ -243,7 +243,7 @@ export function StockPage() {
           ) : null}
 
           <p className="border-t border-border pt-3 text-xs leading-5 text-muted">
-            El stock no se edita manualmente. Las existencias cambian unicamente mediante movimientos.
+            El stock no se edita manualmente. Las existencias cambian únicamente mediante movimientos.
           </p>
         </CardContent>
       </Card>
@@ -261,7 +261,7 @@ export function StockPage() {
           description={
             hasFilters
               ? 'No se encontraron existencias para los filtros seleccionados.'
-              : 'Aun no hay existencias registradas para mostrar.'
+              : 'Aún no hay existencias registradas para mostrar.'
           }
           icon={<Boxes className="h-6 w-6" />}
           title={hasFilters ? 'Sin resultados de stock' : 'Sin stock registrado'}
@@ -298,7 +298,7 @@ export function StockPage() {
           <Card>
             <CardHeader>
               <CardTitle>Existencias actuales</CardTitle>
-              <CardDescription>Vista solo lectura por producto y almacen.</CardDescription>
+              <CardDescription>Vista solo lectura por producto y almacén.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <TableContainer>
@@ -314,11 +314,11 @@ export function StockPage() {
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Almacén</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Cantidad</th>
-                      <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Stock minimo</th>
+                      <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Stock mínimo</th>
                       <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Actualizacion</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Actualización</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border bg-white">

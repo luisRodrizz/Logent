@@ -58,14 +58,14 @@ export const navigationGroups: NavigationGroup[] = [
     items: [
       {
         allowedRoles: routeRoles.categories,
-        description: 'Clasificacion de productos',
+        description: 'Clasificación de productos',
         href: '/categories',
         icon: Tags,
-        label: 'Categorias',
+        label: 'Categorías',
       },
       {
         allowedRoles: routeRoles.suppliers,
-        description: 'Gestion de proveedores',
+        description: 'Gestión de proveedores',
         href: '/suppliers',
         icon: Truck,
         label: 'Proveedores',
@@ -87,7 +87,7 @@ export const navigationGroups: NavigationGroup[] = [
     ],
   },
   {
-    label: 'Operacion',
+    label: 'Operación',
     items: [
       {
         allowedRoles: routeRoles.stock,
@@ -113,11 +113,11 @@ export const navigationGroups: NavigationGroup[] = [
     ],
   },
   {
-    label: 'Analisis',
+    label: 'Análisis',
     items: [
       {
         allowedRoles: routeRoles.reports,
-        description: 'Indicadores y analitica',
+        description: 'Indicadores y analítica',
         href: '/reports',
         icon: BarChart3,
         label: 'Reportes',
@@ -125,14 +125,14 @@ export const navigationGroups: NavigationGroup[] = [
     ],
   },
   {
-    label: 'Administracion',
+    label: 'Administración',
     items: [
       {
         allowedRoles: routeRoles.auditLogs,
         description: 'Registro de acciones',
         href: '/audit-logs',
         icon: ShieldCheck,
-        label: 'Auditoria',
+        label: 'Auditoría',
       },
     ],
   },

@@ -141,7 +141,7 @@ export function MovementsPage() {
           </Button>
         }
         description="Registra y consulta entradas, salidas y transferencias que actualizan stock y Kardex."
-        eyebrow="Operations"
+        eyebrow="Operación"
         title="Movimientos"
       />
 
@@ -168,7 +168,7 @@ export function MovementsPage() {
               <input
                 className="h-10 w-full rounded-lg border border-border bg-white pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => handleSearchChange(event.target.value)}
-                placeholder="Buscar por observacion o almacen"
+                placeholder="Buscar por observación o almacén"
                 type="search"
                 value={searchInput}
               />
@@ -212,7 +212,7 @@ export function MovementsPage() {
           }
           description={
             isSearching
-              ? 'No se encontraron movimientos que coincidan con la busqueda actual.'
+              ? 'No se encontraron movimientos que coincidan con la búsqueda actual.'
               : 'Registra entradas, salidas o transferencias para actualizar stock desde el backend.'
           }
           icon={<ArrowLeftRight className="h-6 w-6" />}
@@ -243,7 +243,7 @@ export function MovementsPage() {
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Destino</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Fecha</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Detalles</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Observacion</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Observación</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
                   </tr>
                 </thead>
@@ -274,7 +274,7 @@ export function MovementsPage() {
                         </td>
                         <td className="max-w-sm px-5 py-4">
                           <p className="line-clamp-2 text-sm leading-6 text-muted">
-                            {movement.observation || 'Sin observacion'}
+                            {movement.observation || 'Sin observación'}
                           </p>
                         </td>
                         <td className="w-20 px-5 py-4">
@@ -298,7 +298,7 @@ export function MovementsPage() {
 
             <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted">
-                Pagina {movementsQuery.data?.pageNumber ?? pageNumber} de {movementsQuery.data?.totalPages ?? 1} ·{' '}
+                Página {movementsQuery.data?.pageNumber ?? pageNumber} de {movementsQuery.data?.totalPages ?? 1} ·{' '}
                 {formatNumber(movementsQuery.data?.totalCount ?? 0)} registros
               </p>
               <div className="flex items-center gap-2">

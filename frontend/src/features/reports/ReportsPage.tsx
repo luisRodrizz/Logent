@@ -69,10 +69,10 @@ function getStockBadge(item: StockSummaryReport) {
 
 function getLowStockBadge(item: LowStockReportItem) {
   if (item.quantity === 0) {
-    return <Badge variant="danger">Critico</Badge>
+    return <Badge variant="danger">Crítico</Badge>
   }
 
-  return <Badge variant="warning">Bajo minimo</Badge>
+  return <Badge variant="warning">Bajo mínimo</Badge>
 }
 
 export function ReportsPage() {
@@ -154,15 +154,15 @@ export function ReportsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Lectura analitica del inventario, alertas operativas, movimientos y Kardex consolidado."
-        eyebrow="Analytics"
+        description="Lectura analítica del inventario, alertas operativas, movimientos y Kardex consolidado."
+        eyebrow="Análisis"
         title="Reportes"
       />
 
       <Card>
         <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
-            <p className="text-sm font-semibold text-foreground">Modulo de consulta</p>
+            <p className="text-sm font-semibold text-foreground">Módulo de consulta</p>
             <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">
               Los reportes son de solo lectura y se calculan desde los datos operativos registrados por el backend.
             </p>
@@ -173,8 +173,8 @@ export function ReportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Stock summary</CardTitle>
-          <CardDescription>Existencias, valor estimado y estado por producto y almacen.</CardDescription>
+          <CardTitle>Resumen de stock</CardTitle>
+          <CardDescription>Existencias, valor estimado y estado por producto y almacén.</CardDescription>
         </CardHeader>
         <CardContent>
           {stockSummaryQuery.isLoading ? (
@@ -183,7 +183,7 @@ export function ReportsPage() {
             <SectionError text="No se pudo cargar el reporte de stock." />
           ) : stockSummary.length === 0 ? (
             <EmptyState
-              description="Aun no hay existencias consolidadas para analizar."
+              description="Aún no hay existencias consolidadas para analizar."
               icon={<Package className="h-6 w-6" />}
               title="Sin datos de stock"
             />
@@ -191,9 +191,9 @@ export function ReportsPage() {
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                 <ReportMetric
-                  description="Registros producto-almacen"
+                  description="Registros producto-almacén"
                   icon={<ClipboardList className="h-4 w-4" />}
-                  title="Items"
+                  title="Registros"
                   value={formatNumber(stockSummary.length)}
                 />
                 <ReportMetric
@@ -250,9 +250,9 @@ export function ReportsPage() {
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
-                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Almacén</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Cantidad</th>
-                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Minimo</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Mínimo</th>
                       <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
                       <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Valor</th>
                     </tr>
@@ -290,8 +290,8 @@ export function ReportsPage() {
       <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Low stock</CardTitle>
-            <CardDescription>Productos por debajo del minimo operativo configurado.</CardDescription>
+            <CardTitle>Stock bajo</CardTitle>
+            <CardDescription>Productos por debajo del mínimo operativo configurado.</CardDescription>
           </CardHeader>
           <CardContent>
             {lowStockQuery.isLoading ? (
@@ -300,7 +300,7 @@ export function ReportsPage() {
               <SectionError text="No se pudo cargar el reporte de stock bajo." />
             ) : lowStock.length === 0 ? (
               <EmptyState
-                description="No hay productos por debajo del stock minimo."
+                description="No hay productos por debajo del stock mínimo."
                 icon={<AlertTriangle className="h-6 w-6" />}
                 title="Sin alertas de stock bajo"
               />
@@ -335,9 +335,9 @@ export function ReportsPage() {
                     <thead className="bg-slate-50">
                       <tr>
                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Almacén</th>
                         <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Actual</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Minimo</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Mínimo</th>
                         <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Faltante</th>
                         <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
                       </tr>
@@ -374,7 +374,7 @@ export function ReportsPage() {
 
         <Card className="min-w-0">
           <CardHeader>
-            <CardTitle>Movements summary</CardTitle>
+            <CardTitle>Resumen de movimientos</CardTitle>
             <CardDescription>Consolidado de entradas, salidas y transferencias registradas.</CardDescription>
           </CardHeader>
           <CardContent>
@@ -384,7 +384,7 @@ export function ReportsPage() {
               <SectionError text="No se pudo cargar el resumen de movimientos." />
             ) : !hasMovementData || !movementsSummary ? (
               <EmptyState
-                description="Aun no hay movimientos registrados para analizar."
+                description="Aún no hay movimientos registrados para analizar."
                 icon={<ArrowLeftRight className="h-6 w-6" />}
                 title="Sin movimientos"
               />
@@ -398,7 +398,7 @@ export function ReportsPage() {
                     value={formatNumber(movementsSummary.totalMovements)}
                   />
                   <ReportMetric
-                    description="Lineas operativas"
+                    description="Líneas operativas"
                     icon={<ClipboardList className="h-4 w-4" />}
                     title="Detalles"
                     value={formatNumber(movementsSummary.totalMovementDetails)}
@@ -459,8 +459,8 @@ export function ReportsPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Kardex summary</CardTitle>
-          <CardDescription>Resumen historico de entradas, salidas, saldos y valor del inventario.</CardDescription>
+          <CardTitle>Resumen Kardex</CardTitle>
+          <CardDescription>Resumen histórico de entradas, salidas, saldos y valor del inventario.</CardDescription>
         </CardHeader>
         <CardContent>
           {kardexSummaryQuery.isLoading ? (
@@ -469,14 +469,14 @@ export function ReportsPage() {
             <SectionError text="No se pudo cargar el resumen de Kardex." />
           ) : !hasKardexData || !kardexSummary ? (
             <EmptyState
-              description="El Kardex se alimentara automaticamente cuando existan movimientos."
+              description="El Kardex se alimentará automáticamente cuando existan movimientos."
               icon={<BarChart3 className="h-6 w-6" />}
-              title="Sin informacion de Kardex"
+              title="Sin información de Kardex"
             />
           ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
               <ReportMetric
-                description="Registros historicos"
+                description="Registros históricos"
                 icon={<ClipboardList className="h-4 w-4" />}
                 title="Entradas Kardex"
                 value={formatNumber(kardexSummary.totalEntries)}
@@ -500,9 +500,9 @@ export function ReportsPage() {
                 value={formatCurrency(kardexSummary.totalInventoryValue)}
               />
               <ReportMetric
-                description="Ultima fecha registrada"
+                description="Última fecha registrada"
                 icon={<BarChart3 className="h-4 w-4" />}
-                title="Ultimo movimiento"
+                title="Último movimiento"
                 value={formatDateTime(kardexSummary.lastMovementDate)}
               />
             </div>

@@ -88,7 +88,7 @@ function KardexErrorState({ error }: { error: unknown }) {
   return (
     <Card>
       <CardContent className="px-6 py-10">
-        <SectionError text={getApiErrorMessage(error, 'No se pudo cargar la informacion del Kardex.')} />
+        <SectionError text={getApiErrorMessage(error, 'No se pudo cargar la información del Kardex.')} />
       </CardContent>
     </Card>
   )
@@ -201,8 +201,8 @@ export function KardexPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Historial operativo de movimientos, saldos y costos generado automaticamente."
-        eyebrow="Operations history"
+        description="Historial operativo de movimientos, saldos y costos generado automáticamente."
+        eyebrow="Historial operativo"
         title="Kardex"
       />
 
@@ -211,7 +211,7 @@ export function KardexPage() {
           <div className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr_auto] xl:items-end">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="kardex-search">
-                Busqueda general
+                Búsqueda general
               </label>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -220,7 +220,7 @@ export function KardexPage() {
                   disabled={hasFilters}
                   id="kardex-search"
                   onChange={(event) => handleSearchChange(event.target.value)}
-                  placeholder="Producto, almacen u observacion"
+                  placeholder="Producto, almacén u observación"
                   type="search"
                   value={searchInput}
                 />
@@ -252,7 +252,7 @@ export function KardexPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="kardex-warehouse-filter">
-                Almacen
+                Almacén
               </label>
               <select
                 className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-blue-100"
@@ -281,8 +281,8 @@ export function KardexPage() {
 
           {hasFilters ? (
             <p className="mt-3 text-xs leading-5 text-muted">
-              La busqueda general se aplica al listado paginado. Los filtros por producto/almacen consultan endpoints
-              historicos especificos.
+              La búsqueda general se aplica al listado paginado. Los filtros por producto/almacén consultan endpoints
+              históricos específicos.
             </p>
           ) : null}
 
@@ -305,7 +305,7 @@ export function KardexPage() {
           description={
             hasFilters || search
               ? 'No se encontraron entradas Kardex para la consulta actual.'
-              : 'Aun no hay entradas Kardex generadas por movimientos.'
+              : 'Aún no hay entradas Kardex generadas por movimientos.'
           }
           icon={<ClipboardList className="h-6 w-6" />}
           title={hasFilters || search ? 'Sin resultados' : 'Sin Kardex registrado'}
@@ -326,7 +326,7 @@ export function KardexPage() {
               value={formatNumber(summary.totalOut)}
             />
             <SummaryCard
-              description="Ultimo saldo del resultado"
+              description="Último saldo del resultado"
               icon={<ClipboardList className="h-4 w-4" />}
               title="Saldo"
               value={formatNumber(summary.currentBalance)}
@@ -342,7 +342,7 @@ export function KardexPage() {
           <Card>
             <CardHeader>
               <CardTitle>Historial Kardex</CardTitle>
-              <CardDescription>Vista historica solo lectura de movimientos y saldos.</CardDescription>
+              <CardDescription>Vista histórica solo lectura de movimientos y saldos.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
               <TableContainer>
@@ -362,7 +362,7 @@ export function KardexPage() {
                     <tr>
                       <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Fecha</th>
                       <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
-                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Almacén</th>
                       <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Tipo</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Entrada</th>
                       <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Salida</th>
@@ -433,7 +433,7 @@ export function KardexPage() {
               {!hasFilters ? (
                 <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm text-muted">
-                    Pagina {generalQuery.data?.pageNumber ?? pageNumber} de {generalQuery.data?.totalPages ?? 1} ·{' '}
+                    Página {generalQuery.data?.pageNumber ?? pageNumber} de {generalQuery.data?.totalPages ?? 1} ·{' '}
                     {formatNumber(generalQuery.data?.totalCount ?? 0)} registros
                   </p>
                   <div className="flex items-center gap-2">

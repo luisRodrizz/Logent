@@ -126,7 +126,7 @@ export function SuppliersPage() {
           </Button>
         }
         description="Directorio maestro para abastecimiento, contacto y mantenimiento administrativo."
-        eyebrow="Master data"
+        eyebrow="Datos maestros"
         title="Proveedores"
       />
 
@@ -230,7 +230,7 @@ export function SuppliersPage() {
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Contacto</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Direccion</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Creacion</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Creación</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
                   </tr>
                 </thead>

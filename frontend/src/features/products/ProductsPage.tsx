@@ -147,7 +147,7 @@ export function ProductsPage() {
           </Button>
         }
         description="Catalogo maestro para productos, precios, proveedores y niveles minimos de stock."
-        eyebrow="Master data"
+        eyebrow="Datos maestros"
         title="Productos"
       />
 
@@ -257,7 +257,7 @@ export function ProductsPage() {
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Venta</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Stock min.</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Creacion</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Creación</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
                   </tr>
                 </thead>

@@ -77,21 +77,21 @@ export function DashboardPage() {
   }))
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <PageHeader
         description="Vista ejecutiva para revisar valor, cobertura, alertas y actividad reciente del inventario."
-        eyebrow="Operations overview"
+        eyebrow="Resumen operativo"
         title="Dashboard"
       />
 
       {summaryQuery.isLoading ? (
         <Card>
           <CardContent>
-            <LoadingState text="Cargando metricas del inventario..." />
+            <LoadingState text="Cargando métricas del inventario..." />
           </CardContent>
         </Card>
       ) : summaryQuery.isError ? (
-        <SectionError text="No se pudieron cargar las metricas principales del dashboard." />
+        <SectionError text="No se pudieron cargar las métricas principales del dashboard." />
       ) : summaryQuery.data ? (
         <Card className="overflow-hidden">
           <CardContent className="grid gap-0 p-0 lg:grid-cols-[1fr_1.8fr]">
@@ -121,13 +121,13 @@ export function DashboardPage() {
 
             <div className="grid gap-3 bg-slate-50 p-4 sm:grid-cols-2 xl:grid-cols-3">
               <CompactMetric
-                description="Items con existencia"
+                description="Registros con existencia"
                 icon={<Boxes className="h-4 w-4" />}
-                title="Stock items"
+                title="Existencias"
                 value={formatNumber(summaryQuery.data.totalStockItems)}
               />
               <CompactMetric
-                description="Bajo minimo configurado"
+                description="Bajo mínimo configurado"
                 icon={<AlertTriangle className="h-4 w-4" />}
                 title="Stock bajo"
                 value={formatNumber(summaryQuery.data.lowStockItems)}
@@ -139,9 +139,9 @@ export function DashboardPage() {
                 value={formatNumber(summaryQuery.data.totalMovements)}
               />
               <CompactMetric
-                description="Clasificacion activa"
+                description="Clasificación activa"
                 icon={<ClipboardList className="h-4 w-4" />}
-                title="Categorias"
+                title="Categorías"
                 value={formatNumber(summaryQuery.data.totalCategories)}
               />
               <CompactMetric
@@ -161,27 +161,27 @@ export function DashboardPage() {
         </Card>
       ) : null}
 
-      <div className="grid gap-6 xl:grid-cols-[1.45fr_0.75fr]">
+      <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] xl:items-start">
         <Card>
           <CardHeader>
-            <CardTitle>Stock overview</CardTitle>
+            <CardTitle>Resumen de stock</CardTitle>
             <CardDescription>Productos con mayor presencia y valor estimado dentro del inventario.</CardDescription>
           </CardHeader>
           <CardContent>
             {stockOverviewQuery.isLoading ? (
-              <LoadingState text="Cargando stock overview..." />
+              <LoadingState text="Cargando resumen de stock..." />
             ) : stockOverviewQuery.isError ? (
               <SectionError text="No se pudo cargar el resumen de stock." />
             ) : stockOverview.length === 0 ? (
               <EmptyState
-                description="Aun no hay datos de stock para mostrar en el dashboard."
+                description="Aún no hay datos de stock para mostrar en el dashboard."
                 icon={<Boxes className="h-6 w-6" />}
                 title="Sin stock registrado"
               />
             ) : (
-              <div className="grid gap-5 2xl:grid-cols-[1.2fr_0.8fr]">
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1.15fr)_minmax(260px,0.85fr)]">
                 {chartData.length > 0 ? (
-                  <div className="h-80 rounded-lg border border-border bg-white px-3 py-4">
+                  <div className="h-72 rounded-lg border border-border bg-white px-3 py-4">
                     <ResponsiveContainer height="100%" width="100%">
                       <BarChart data={chartData}>
                         <XAxis axisLine={false} dataKey="name" fontSize={11} tickLine={false} />
@@ -221,21 +221,21 @@ export function DashboardPage() {
         <Card>
           <CardHeader>
             <CardTitle>Alertas operativas</CardTitle>
-            <CardDescription>Productos por debajo del minimo configurado.</CardDescription>
+            <CardDescription>Productos por debajo del mínimo configurado.</CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="xl:max-h-[440px] xl:overflow-y-auto">
             {lowStockAlertsQuery.isLoading ? (
               <LoadingState text="Cargando alertas..." />
             ) : lowStockAlertsQuery.isError ? (
               <SectionError text="No se pudieron cargar las alertas de stock bajo." />
             ) : lowStockAlerts.length === 0 ? (
               <EmptyState
-                description="No hay productos por debajo del stock minimo."
+                description="No hay productos por debajo del stock mínimo."
                 icon={<AlertTriangle className="h-6 w-6" />}
                 title="Sin alertas"
               />
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-3 pr-1">
                 {lowStockAlerts.map((item) => (
                   <div className="rounded-lg border border-border bg-white p-4" key={`${item.productId}-${item.warehouseId}`}>
                     <div className="flex items-start justify-between gap-3">
@@ -253,7 +253,7 @@ export function DashboardPage() {
                         <p className="text-sm font-semibold text-foreground">{formatNumber(item.quantity)}</p>
                       </div>
                       <div className="rounded-lg bg-slate-50 px-2 py-2">
-                        <p className="text-xs text-muted">Minimo</p>
+                        <p className="text-xs text-muted">Mínimo</p>
                         <p className="text-sm font-semibold text-foreground">{formatNumber(item.minimumStock)}</p>
                       </div>
                       <div className="rounded-lg bg-red-50 px-2 py-2">
@@ -272,7 +272,7 @@ export function DashboardPage() {
       <Card>
         <CardHeader>
           <CardTitle>Movimientos recientes</CardTitle>
-          <CardDescription>Ultimas entradas, salidas, ajustes y transferencias registradas.</CardDescription>
+          <CardDescription>Últimas entradas, salidas, ajustes y transferencias registradas.</CardDescription>
         </CardHeader>
         <CardContent>
           {recentMovementsQuery.isLoading ? (
@@ -281,7 +281,7 @@ export function DashboardPage() {
             <SectionError text="No se pudieron cargar los movimientos recientes." />
           ) : recentMovements.length === 0 ? (
             <EmptyState
-              description="Aun no hay movimientos para mostrar en el dashboard."
+              description="Aún no hay movimientos para mostrar en el dashboard."
               icon={<ArrowLeftRight className="h-6 w-6" />}
               title="Sin movimientos recientes"
             />
@@ -319,7 +319,7 @@ export function DashboardPage() {
                         <p className="text-sm text-muted">{formatDateTime(movement.date)}</p>
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium text-foreground">{warehouseLabel}</p>
-                          <p className="mt-1 text-xs text-muted">{formatNumber(movement.totalItems)} items</p>
+                          <p className="mt-1 text-xs text-muted">{formatNumber(movement.totalItems)} detalles</p>
                         </div>
                         <p className="text-right text-sm font-semibold text-foreground">
                           {formatNumber(movement.totalQuantity)}

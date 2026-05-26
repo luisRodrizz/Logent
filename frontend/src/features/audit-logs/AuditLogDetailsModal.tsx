@@ -16,15 +16,15 @@ type AuditLogDetailsModalProps = {
 }
 
 const actionLabels: Record<AuditAction, string> = {
-  Create: 'Creacion',
-  Delete: 'Eliminacion',
-  Login: 'Login',
-  Logout: 'Logout',
+  Create: 'Creación',
+  Delete: 'Eliminación',
+  Login: 'Inicio de sesión',
+  Logout: 'Cierre de sesión',
   StockAdjustment: 'Ajuste stock',
   StockEntry: 'Entrada stock',
   StockExit: 'Salida stock',
   StockTransfer: 'Transferencia stock',
-  Update: 'Actualizacion',
+  Update: 'Actualización',
 }
 
 const actionBadgeVariants: Record<AuditAction, 'default' | 'success' | 'warning' | 'danger' | 'muted'> = {
@@ -45,7 +45,7 @@ function formatValue(value?: string | null): string {
 
 function formatDescription(value?: string | null): string {
   if (!value) {
-    return 'No hay descripcion registrada para este evento.'
+    return 'No hay descripción registrada para este evento.'
   }
 
   try {
@@ -75,7 +75,7 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
                   <Badge variant={actionBadgeVariants[auditLog.action]}>{actionLabels[auditLog.action]}</Badge>
                 </div>
               ) : null}
-              <CardTitle>Detalle de auditoria</CardTitle>
+              <CardTitle>Detalle de auditoría</CardTitle>
               <CardDescription>
                 {auditLog ? formatDateTime(auditLog.createdAt) : 'Cargando evento auditado'}
               </CardDescription>
@@ -92,14 +92,14 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
         </CardHeader>
         <CardContent className="space-y-5">
           {logQuery.isLoading ? (
-            <LoadingState text="Cargando detalle de auditoria..." />
+            <LoadingState text="Cargando detalle de auditoría..." />
           ) : logQuery.isError ? (
-            <SectionError text={getApiErrorMessage(logQuery.error, 'No se pudo cargar la informacion de auditoria.')} />
+            <SectionError text={getApiErrorMessage(logQuery.error, 'No se pudo cargar la información de auditoría.')} />
           ) : auditLog ? (
             <>
               <div className="grid gap-4 md:grid-cols-3">
                 <div className="rounded-lg border border-border bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase text-muted">Accion</p>
+                  <p className="text-xs font-semibold uppercase text-muted">Acción</p>
                   <p className="mt-2 text-sm font-semibold text-foreground">{actionLabels[auditLog.action]}</p>
                 </div>
                 <div className="rounded-lg border border-border bg-slate-50 p-4">
@@ -114,13 +114,13 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
 
               <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
                 <div className="rounded-lg border border-border bg-white p-4">
-                  <p className="text-xs font-semibold uppercase text-muted">Entity ID</p>
+                  <p className="text-xs font-semibold uppercase text-muted">ID de entidad</p>
                   <p className="mt-2 break-all font-mono text-xs font-semibold leading-5 text-foreground">
                     {formatValue(auditLog.entityId)}
                   </p>
                 </div>
                 <div className="rounded-lg border border-border bg-white p-4">
-                  <p className="text-xs font-semibold uppercase text-muted">Usuario</p>
+                  <p className="text-xs font-semibold uppercase text-muted">ID de usuario</p>
                   <p className="mt-2 break-all font-mono text-xs font-semibold leading-5 text-foreground">
                     {formatValue(auditLog.userId)}
                   </p>
@@ -128,7 +128,7 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
               </div>
 
               <div className="rounded-lg border border-border bg-slate-50 p-4">
-                <p className="text-xs font-semibold uppercase text-muted">Descripcion</p>
+                <p className="text-xs font-semibold uppercase text-muted">Descripción</p>
                 <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-md bg-white p-3 text-xs leading-6 text-foreground">
                   {formatDescription(auditLog.description)}
                 </pre>

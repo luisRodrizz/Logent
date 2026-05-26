@@ -32,15 +32,15 @@ const auditActions: AuditAction[] = [
 ]
 
 const actionLabels: Record<AuditAction, string> = {
-  Create: 'Creacion',
-  Delete: 'Eliminacion',
-  Login: 'Login',
-  Logout: 'Logout',
+  Create: 'Creación',
+  Delete: 'Eliminación',
+  Login: 'Inicio de sesión',
+  Logout: 'Cierre de sesión',
   StockAdjustment: 'Ajuste stock',
   StockEntry: 'Entrada stock',
   StockExit: 'Salida stock',
   StockTransfer: 'Transferencia stock',
-  Update: 'Actualizacion',
+  Update: 'Actualización',
 }
 
 const actionBadgeVariants: Record<AuditAction, 'default' | 'success' | 'warning' | 'danger' | 'muted'> = {
@@ -61,7 +61,7 @@ function AuditLogsErrorState({ error }: { error: unknown }) {
   return (
     <Card>
       <CardContent className="px-6 py-10">
-        <SectionError text={getApiErrorMessage(error, 'No se pudo cargar la informacion de auditoria.')} />
+        <SectionError text={getApiErrorMessage(error, 'No se pudo cargar la información de auditoría.')} />
       </CardContent>
     </Card>
   )
@@ -188,27 +188,27 @@ export function AuditLogsPage() {
     setPageNumber(1)
   }
 
-  const emptyTitle = hasSpecificFilter || search ? 'Sin resultados' : 'Sin logs de auditoria'
+  const emptyTitle = hasSpecificFilter || search ? 'Sin resultados' : 'Sin logs de auditoría'
   const emptyDescription =
     hasSpecificFilter || search
-      ? 'No se encontraron logs para la busqueda o filtro seleccionado.'
-      : 'Aun no hay operaciones auditadas para mostrar.'
+      ? 'No se encontraron logs para la búsqueda o filtro seleccionado.'
+      : 'Aún no hay operaciones auditadas para mostrar.'
 
   return (
     <div className="space-y-6">
       <PageHeader
         description="Trazabilidad administrativa de operaciones, accesos y cambios registrados por el sistema."
-        eyebrow="Administration"
-        title="Auditoria"
+        eyebrow="Administración"
+        title="Auditoría"
       />
 
       <Card>
         <CardContent className="space-y-4 p-4">
           <div className="flex flex-col gap-3 border-b border-border pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold text-foreground">Consulta de auditoria</p>
+              <p className="text-sm font-semibold text-foreground">Consulta de auditoría</p>
               <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">
-                Los logs se generan automaticamente desde backend y se mantienen como evidencia de solo lectura.
+                Los logs se generan automáticamente desde backend y se mantienen como evidencia de solo lectura.
               </p>
             </div>
             <Badge variant="muted">Solo Admin</Badge>
@@ -217,7 +217,7 @@ export function AuditLogsPage() {
           <div className="grid gap-3 xl:grid-cols-[1.2fr_0.75fr_1fr_auto] xl:items-end">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="audit-search">
-                Busqueda general
+                Búsqueda general
               </label>
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
@@ -226,7 +226,7 @@ export function AuditLogsPage() {
                   disabled={Boolean(filterType)}
                   id="audit-search"
                   onChange={(event) => handleSearchChange(event.target.value)}
-                  placeholder="Usuario, entidad, ID o descripcion"
+                  placeholder="Usuario, entidad, ID o descripción"
                   type="search"
                   value={searchInput}
                 />
@@ -235,7 +235,7 @@ export function AuditLogsPage() {
 
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="audit-filter-type">
-                Filtro especifico
+                Filtro específico
               </label>
               <select
                 className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-blue-100"
@@ -245,8 +245,8 @@ export function AuditLogsPage() {
               >
                 <option value="">Sin filtro</option>
                 <option value="entity">Entidad</option>
-                <option value="action">Accion</option>
-                <option value="user">Usuario ID</option>
+                <option value="action">Acción</option>
+                <option value="user">ID de usuario</option>
               </select>
             </div>
 
@@ -261,7 +261,7 @@ export function AuditLogsPage() {
                   onChange={(event) => setActionFilter(event.target.value as AuditAction | '')}
                   value={actionFilter}
                 >
-                  <option value="">Seleccionar accion</option>
+                  <option value="">Seleccionar acción</option>
                   {auditActions.map((action) => (
                     <option key={action} value={action}>
                       {actionLabels[action]}
@@ -278,7 +278,7 @@ export function AuditLogsPage() {
                     filterType === 'entity'
                       ? 'Ej. Product'
                       : filterType === 'user'
-                        ? 'User ID exacto'
+                        ? 'ID de usuario exacto'
                         : 'Selecciona un filtro'
                   }
                   value={filterValue}
@@ -307,21 +307,21 @@ export function AuditLogsPage() {
           value={formatNumber(auditLogs.length)}
         />
         <SummaryCard
-          description="Operaciones de creacion"
+          description="Operaciones de creación"
           icon={<PlusCircle className="h-4 w-4" />}
-          title="Creates"
+          title="Creaciones"
           value={formatNumber(summary.creates)}
         />
         <SummaryCard
-          description="Operaciones de actualizacion"
+          description="Operaciones de actualización"
           icon={<PencilLine className="h-4 w-4" />}
-          title="Updates"
+          title="Actualizaciones"
           value={formatNumber(summary.updates)}
         />
         <SummaryCard
-          description={`${formatNumber(summary.entities)} entidades afectadas`}
+          description="Operaciones de eliminación"
           icon={<Trash2 className="h-4 w-4" />}
-          title="Deletes"
+          title="Eliminaciones"
           value={formatNumber(summary.deletes)}
         />
       </div>
@@ -329,7 +329,7 @@ export function AuditLogsPage() {
       {activeQuery.isLoading ? (
         <Card>
           <CardContent>
-            <LoadingState text="Cargando logs de auditoria..." />
+            <LoadingState text="Cargando logs de auditoría..." />
           </CardContent>
         </Card>
       ) : activeQuery.isError ? (
@@ -339,10 +339,10 @@ export function AuditLogsPage() {
       ) : (
         <Card>
           <CardHeader>
-            <CardTitle>Registro de auditoria</CardTitle>
+            <CardTitle>Registro de auditoría</CardTitle>
             <CardDescription>
               {hasSpecificFilter
-                ? `${formatNumber(auditLogs.length)} registros del filtro especifico.`
+                ? `${formatNumber(auditLogs.length)} registros del filtro específico.`
                 : `${formatNumber(generalQuery.data?.totalCount ?? auditLogs.length)} registros encontrados.`}
             </CardDescription>
           </CardHeader>
@@ -360,9 +360,9 @@ export function AuditLogsPage() {
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Fecha</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Accion</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Acción</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Entidad</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Entity ID</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">ID de entidad</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Usuario</th>
                     <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
                   </tr>
@@ -380,7 +380,7 @@ export function AuditLogsPage() {
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">{log.entityName}</p>
                           <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                            {log.description ?? 'Sin descripcion'}
+                            {log.description ?? 'Sin descripción'}
                           </p>
                         </div>
                       </td>
@@ -398,7 +398,7 @@ export function AuditLogsPage() {
                       <td className="px-5 py-4">
                         <div className="flex justify-end">
                           <Button
-                            aria-label="Ver detalle de auditoria"
+                            aria-label="Ver detalle de auditoría"
                             className="h-9 w-9 p-0"
                             onClick={() => setSelectedLogId(log.id)}
                             variant="secondary"
@@ -432,7 +432,7 @@ export function AuditLogsPage() {
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <p className="text-sm text-muted">
-                    Pagina {generalQuery.data?.pageNumber ?? pageNumber} de {generalQuery.data?.totalPages ?? 1} ·{' '}
+                    Página {generalQuery.data?.pageNumber ?? pageNumber} de {generalQuery.data?.totalPages ?? 1} ·{' '}
                     {formatNumber(generalQuery.data?.totalCount ?? 0)} registros
                   </p>
                   <div className="flex items-center gap-2">
@@ -455,7 +455,7 @@ export function AuditLogsPage() {
               </div>
             ) : (
               <div className="border-t border-border px-5 py-4 text-sm text-muted">
-                Los filtros especificos usan endpoints de consulta sin paginacion.
+                Los filtros específicos usan endpoints de consulta sin paginación.
               </div>
             )}
           </CardContent>
