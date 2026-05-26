@@ -2,7 +2,7 @@ import { Boxes, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../../features/auth/useAuth'
 import { Badge } from '../ui/Badge'
 import { NavItem } from './NavItem'
-import { getNavigationItemsForRoles } from './navigation'
+import { getNavigationGroupsForRoles } from './navigation'
 
 type SidebarProps = {
   onNavigate?: () => void
@@ -10,7 +10,8 @@ type SidebarProps = {
 
 export function Sidebar({ onNavigate }: SidebarProps) {
   const { user } = useAuth()
-  const visibleNavigationItems = getNavigationItemsForRoles(user?.roles ?? [])
+  const visibleNavigationGroups = getNavigationGroupsForRoles(user?.roles ?? [])
+  const visibleNavigationCount = visibleNavigationGroups.reduce((total, group) => total + group.items.length, 0)
   const userRoles = user?.roles ?? []
 
   return (
@@ -31,12 +32,21 @@ export function Sidebar({ onNavigate }: SidebarProps) {
         <div className="mb-3 flex items-center justify-between px-3">
           <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Modulos</p>
           <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
-            {visibleNavigationItems.length}
+            {visibleNavigationCount}
           </span>
         </div>
-        <div className="space-y-1">
-          {visibleNavigationItems.map((item) => (
-            <NavItem item={item} key={item.href} onNavigate={onNavigate} />
+        <div className="space-y-4">
+          {visibleNavigationGroups.map((group, index) => (
+            <div className={index > 0 ? 'border-t border-white/[0.06] pt-4' : undefined} key={group.label}>
+              <p className="px-3 pb-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-600">
+                {group.label}
+              </p>
+              <div className="space-y-1">
+                {group.items.map((item) => (
+                  <NavItem item={item} key={item.href} onNavigate={onNavigate} />
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </nav>

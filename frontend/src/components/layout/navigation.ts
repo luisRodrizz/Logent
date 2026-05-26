@@ -22,6 +22,11 @@ export type NavigationItem = {
   label: string
 }
 
+export type NavigationGroup = {
+  items: NavigationItem[]
+  label: string
+}
+
 export const routeRoles = {
   auditLogs: ['Admin'],
   categories: ['Admin'],
@@ -35,78 +40,105 @@ export const routeRoles = {
   warehouses: ['Admin'],
 } satisfies Record<string, AuthRole[]>
 
-export const navigationItems: NavigationItem[] = [
+export const navigationGroups: NavigationGroup[] = [
   {
-    allowedRoles: routeRoles.dashboard,
-    description: 'Resumen operativo',
-    href: '/dashboard',
-    icon: LayoutDashboard,
-    label: 'Dashboard',
+    label: 'General',
+    items: [
+      {
+        allowedRoles: routeRoles.dashboard,
+        description: 'Resumen operativo',
+        href: '/dashboard',
+        icon: LayoutDashboard,
+        label: 'Dashboard',
+      },
+    ],
   },
   {
-    allowedRoles: routeRoles.categories,
-    description: 'Clasificacion de productos',
-    href: '/categories',
-    icon: Tags,
-    label: 'Categorias',
+    label: 'Datos maestros',
+    items: [
+      {
+        allowedRoles: routeRoles.categories,
+        description: 'Clasificacion de productos',
+        href: '/categories',
+        icon: Tags,
+        label: 'Categorias',
+      },
+      {
+        allowedRoles: routeRoles.suppliers,
+        description: 'Gestion de proveedores',
+        href: '/suppliers',
+        icon: Truck,
+        label: 'Proveedores',
+      },
+      {
+        allowedRoles: routeRoles.warehouses,
+        description: 'Ubicaciones y sedes',
+        href: '/warehouses',
+        icon: Warehouse,
+        label: 'Almacenes',
+      },
+      {
+        allowedRoles: routeRoles.products,
+        description: 'Catalogo maestro',
+        href: '/products',
+        icon: Package,
+        label: 'Productos',
+      },
+    ],
   },
   {
-    allowedRoles: routeRoles.suppliers,
-    description: 'Gestion de proveedores',
-    href: '/suppliers',
-    icon: Truck,
-    label: 'Proveedores',
+    label: 'Operacion',
+    items: [
+      {
+        allowedRoles: routeRoles.stock,
+        description: 'Existencias actuales',
+        href: '/stock',
+        icon: Boxes,
+        label: 'Stock',
+      },
+      {
+        allowedRoles: routeRoles.movements,
+        description: 'Entradas, salidas y transferencias',
+        href: '/movements',
+        icon: ArrowRightLeft,
+        label: 'Movimientos',
+      },
+      {
+        allowedRoles: routeRoles.kardex,
+        description: 'Trazabilidad de inventario',
+        href: '/kardex',
+        icon: ClipboardList,
+        label: 'Kardex',
+      },
+    ],
   },
   {
-    allowedRoles: routeRoles.warehouses,
-    description: 'Ubicaciones y sedes',
-    href: '/warehouses',
-    icon: Warehouse,
-    label: 'Almacenes',
+    label: 'Analisis',
+    items: [
+      {
+        allowedRoles: routeRoles.reports,
+        description: 'Indicadores y analitica',
+        href: '/reports',
+        icon: BarChart3,
+        label: 'Reportes',
+      },
+    ],
   },
   {
-    allowedRoles: routeRoles.products,
-    description: 'Catalogo maestro',
-    href: '/products',
-    icon: Package,
-    label: 'Productos',
-  },
-  {
-    allowedRoles: routeRoles.stock,
-    description: 'Existencias actuales',
-    href: '/stock',
-    icon: Boxes,
-    label: 'Stock',
-  },
-  {
-    allowedRoles: routeRoles.movements,
-    description: 'Entradas, salidas y transferencias',
-    href: '/movements',
-    icon: ArrowRightLeft,
-    label: 'Movimientos',
-  },
-  {
-    allowedRoles: routeRoles.kardex,
-    description: 'Trazabilidad de inventario',
-    href: '/kardex',
-    icon: ClipboardList,
-    label: 'Kardex',
-  },
-  {
-    allowedRoles: routeRoles.reports,
-    description: 'Indicadores y analitica',
-    href: '/reports',
-    icon: BarChart3,
-    label: 'Reportes',
-  },
-  {
-    allowedRoles: routeRoles.auditLogs,
-    description: 'Registro de acciones',
-    href: '/audit-logs',
-    icon: ShieldCheck,
-    label: 'Auditoria',
+    label: 'Administracion',
+    items: [
+      {
+        allowedRoles: routeRoles.auditLogs,
+        description: 'Registro de acciones',
+        href: '/audit-logs',
+        icon: ShieldCheck,
+        label: 'Auditoria',
+      },
+    ],
   },
 ]
+
+export const navigationItems: NavigationItem[] = navigationGroups.flatMap((group) => group.items)
 
 export const defaultNavigationItem: NavigationItem = {
   allowedRoles: routeRoles.dashboard,
@@ -118,4 +150,13 @@ export const defaultNavigationItem: NavigationItem = {
 
 export function getNavigationItemsForRoles(roles: string[]): NavigationItem[] {
   return navigationItems.filter((item) => item.allowedRoles.some((role) => roles.includes(role)))
+}
+
+export function getNavigationGroupsForRoles(roles: string[]): NavigationGroup[] {
+  return navigationGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => item.allowedRoles.some((role) => roles.includes(role))),
+    }))
+    .filter((group) => group.items.length > 0)
 }
