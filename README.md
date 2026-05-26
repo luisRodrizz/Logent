@@ -1,25 +1,57 @@
 # InventorySaaS
 
-InventorySaaS es un sistema SaaS de gestion de inventario con control de stock, movimientos, Kardex, reportes, dashboard, autenticacion JWT, roles y auditoria.
+InventorySaaS es un sistema SaaS de gestión de inventario orientado al control operativo de stock, movimientos, Kardex, reportes y auditoría. El proyecto integra un backend con arquitectura limpia y una interfaz web moderna para administrar catálogos, existencias, trazabilidad y consultas analíticas en un entorno local/demo.
 
-El backend esta construido con Clean Architecture y ASP.NET Core Web API. El frontend esta previsto como una SPA en React + Vite.
+## Objetivo del proyecto
 
-## Stack Tecnico
+InventorySaaS fue desarrollado como un proyecto full-stack avanzado para portafolio, aplicando arquitectura limpia, autenticación con JWT, control de roles, reglas de inventario, trazabilidad mediante auditoría y una UI premium responsive con enfoque enterprise.
+
+## Características principales
+
+- Autenticación con JWT.
+- Control de roles: Admin, Almacenero y Consulta.
+- Dashboard operativo con métricas, stock overview, movimientos recientes y alertas.
+- CRUD de categorías, proveedores, almacenes y productos.
+- Stock por producto y almacén.
+- Movimientos de inventario: entradas, salidas y transferencias.
+- Kardex automático generado desde los movimientos.
+- Reportes operativos de stock, stock bajo, movimientos y Kardex.
+- Auditoría de acciones relevantes del sistema.
+- Seed demo profesional con datos en español.
+- Interfaz responsive, premium y orientada a operaciones reales.
+
+## Reglas de negocio principales
+
+- El stock no se edita manualmente.
+- El stock cambia únicamente mediante movimientos.
+- Una entrada aumenta el stock en el almacén destino.
+- Una salida reduce el stock del almacén origen y valida disponibilidad.
+- Una transferencia descuenta stock del almacén origen y suma stock al almacén destino.
+- El Kardex se genera automáticamente desde los movimientos y es solo lectura.
+- Los reportes son solo lectura.
+- La auditoría es solo lectura y se genera automáticamente desde operaciones auditadas.
+
+## Roles del sistema
+
+- **Admin:** acceso completo a la administración y operación del sistema.
+- **Almacenero:** acceso operativo a módulos permitidos para consulta y registro de movimientos.
+- **Consulta:** acceso de lectura según los permisos configurados.
+
+## Tecnologías utilizadas
 
 ### Backend
 
-- .NET / ASP.NET Core Web API
+- ASP.NET Core Web API
 - Entity Framework Core
 - SQL Server
 - ASP.NET Core Identity
-- JWT Bearer Authentication
-- FluentValidation
-- Swagger / OpenAPI
-- Serilog
+- JWT Bearer
+- Clean Architecture
 
-### Frontend previsto
+### Frontend
 
-- React + Vite
+- React
+- Vite
 - TypeScript
 - Tailwind CSS
 - React Router
@@ -31,63 +63,75 @@ El backend esta construido con Clean Architecture y ASP.NET Core Web API. El fro
 - Lucide React
 - Sonner
 
-## Arquitectura
+## Arquitectura del proyecto
 
-El backend sigue Clean Architecture para separar reglas de dominio, casos de uso, infraestructura y API.
-
-- `InventorySaaS.Domain`: entidades, enums y clases base del dominio.
-- `InventorySaaS.Application`: DTOs, contratos, validators y abstracciones de servicios.
-- `InventorySaaS.Infrastructure`: EF Core, Identity, servicios de negocio, persistencia, auditoria y autenticacion.
-- `InventorySaaS.WebApi`: controllers, middleware, Swagger, JWT, CORS y configuracion HTTP.
-
-## Estructura General
+El backend sigue una organización basada en Clean Architecture, separando dominio, casos de uso, infraestructura y capa HTTP.
 
 ```text
-InventorySaaS/
-├── backend/
-│   ├── InventorySaaS.sln
-│   ├── InventorySaaS.Domain/
-│   ├── InventorySaaS.Application/
-│   ├── InventorySaaS.Infrastructure/
-│   └── InventorySaaS.WebApi/
-├── frontend/
-└── README.md
+backend/
+├── InventorySaaS.Domain
+├── InventorySaaS.Application
+├── InventorySaaS.Infrastructure
+└── InventorySaaS.WebApi
 ```
 
-## Requisitos
+El frontend usa una arquitectura modular por features, con componentes comunes, clientes de API, tipos compartidos y páginas especializadas por dominio.
+
+```text
+frontend/
+└── src/
+    ├── app
+    ├── components
+    ├── features
+    ├── lib
+    └── types
+```
+
+## Módulos principales
+
+- **Dashboard:** resumen ejecutivo de inventario, alertas y actividad reciente.
+- **Categorías:** administración de clasificaciones de productos.
+- **Proveedores:** administración de proveedores y datos comerciales.
+- **Almacenes:** administración de ubicaciones y sedes de inventario.
+- **Productos:** catálogo maestro con precios, stock mínimo, categoría y proveedor.
+- **Stock:** consulta solo lectura de existencias por producto y almacén.
+- **Movimientos:** registro de entradas, salidas y transferencias de inventario.
+- **Kardex:** historial solo lectura de movimientos, saldos y costos.
+- **Reportes:** análisis operativo de stock, stock bajo, movimientos y Kardex.
+- **Auditoría:** trazabilidad administrativa de operaciones registradas.
+
+## Credenciales demo
+
+```text
+Email: admin@inventorysaas.com
+Password: Admin123
+```
+
+Estas credenciales son solo para ambiente local/demo.
+
+## Requisitos previos
 
 - .NET SDK
+- Node.js
+- npm
 - SQL Server o SQL Server Express
-- Visual Studio 2022 o VS Code
-- Herramienta `dotnet-ef`
+- Git
 
-Instalacion de `dotnet-ef` si hace falta:
+## Configuración backend
 
-```powershell
-dotnet tool install --global dotnet-ef
-```
+Desde la raíz del proyecto:
 
-## Configuracion de Base de Datos
-
-Connection string de desarrollo esperada:
-
-```json
-"ConnectionStrings": {
-  "DefaultConnection": "Server=localhost\\SQLEXPRESS;Database=InventorySaaSDb;Trusted_Connection=True;TrustServerCertificate=True;"
-}
-```
-
-La instancia local usada para desarrollo es `localhost\SQLEXPRESS` con autenticacion de Windows.
-
-## Comandos Principales
-
-Desde la carpeta `backend`:
-
-```powershell
+```bash
+cd backend
 dotnet restore
-dotnet build .\InventorySaaS.sln
-dotnet ef database update --project .\InventorySaaS.Infrastructure --startup-project .\InventorySaaS.WebApi
-dotnet run --project .\InventorySaaS.WebApi --urls http://localhost:5088
+dotnet build
+dotnet run --project InventorySaaS.WebApi/InventorySaaS.WebApi.csproj --launch-profile http --urls http://localhost:5088
+```
+
+La API queda disponible en:
+
+```text
+http://localhost:5088
 ```
 
 Swagger queda disponible en:
@@ -96,48 +140,34 @@ Swagger queda disponible en:
 http://localhost:5088/swagger
 ```
 
-## Credenciales Iniciales
+## Configuración frontend
 
-Usuario administrador de desarrollo:
+Desde la raíz del proyecto:
 
-```text
-Email: admin@inventorysaas.com
-Password: Admin123
+```bash
+cd frontend
+npm install
+npm run dev
 ```
 
-Estas credenciales son solo para desarrollo y deben cambiarse antes de usar el sistema en produccion.
+El frontend queda disponible en:
 
-## Roles
+```text
+http://localhost:5173
+```
 
-- `Admin`: acceso completo a administracion y operaciones.
-- `Almacenero`: acceso operativo a consultas y movimientos permitidos.
-- `Consulta`: acceso de solo lectura a informacion autorizada.
+## Seed demo profesional
 
-## Modulos Implementados
+El sistema incluye un `DemoDataSeeder` pensado para ambiente local/demo.
 
-- Auth
-- Categories
-- Suppliers
-- Warehouses
-- Products
-- StockItems
-- Movements
-- Kardex
-- Reports
-- Dashboard
-- AuditLogs
+- Se ejecuta automáticamente en Development.
+- Es idempotente.
+- Evita duplicar datos demo.
+- Crea categorías, proveedores, almacenes, productos y movimientos demo.
+- El stock se genera mediante la lógica de movimientos.
+- El Kardex se genera automáticamente desde los movimientos.
 
-## Flujo de Inventario
-
-- `Entry`: aumenta stock en el almacen destino.
-- `Exit`: disminuye stock en el almacen origen.
-- `Transfer`: descuenta stock del almacen origen y suma stock en el almacen destino.
-- Cada movimiento genera registros de Kardex automaticamente.
-- El stock no se edita manualmente.
-- Kardex es solo lectura.
-- Reports y Dashboard son solo lectura.
-
-## Endpoints Principales
+## Endpoints principales
 
 ### Auth
 
@@ -145,83 +175,6 @@ Estas credenciales son solo para desarrollo y deben cambiarse antes de usar el s
 POST /api/auth/login
 POST /api/auth/register
 GET  /api/auth/me
-```
-
-### Categories
-
-```text
-GET    /api/categories
-GET    /api/categories/{id}
-POST   /api/categories
-PUT    /api/categories/{id}
-DELETE /api/categories/{id}
-```
-
-### Suppliers
-
-```text
-GET    /api/suppliers
-GET    /api/suppliers/{id}
-POST   /api/suppliers
-PUT    /api/suppliers/{id}
-DELETE /api/suppliers/{id}
-```
-
-### Warehouses
-
-```text
-GET    /api/warehouses
-GET    /api/warehouses/{id}
-POST   /api/warehouses
-PUT    /api/warehouses/{id}
-DELETE /api/warehouses/{id}
-```
-
-### Products
-
-```text
-GET    /api/products
-GET    /api/products/{id}
-POST   /api/products
-PUT    /api/products/{id}
-DELETE /api/products/{id}
-```
-
-### StockItems
-
-```text
-GET /api/stock-items
-GET /api/stock-items/{id}
-GET /api/stock-items/by-product/{productId}
-GET /api/stock-items/by-warehouse/{warehouseId}
-GET /api/stock-items/by-product/{productId}/warehouse/{warehouseId}
-```
-
-### Movements
-
-```text
-GET  /api/movements
-GET  /api/movements/{id}
-POST /api/movements
-```
-
-### Kardex
-
-```text
-GET /api/kardex
-GET /api/kardex/{id}
-GET /api/kardex/by-product/{productId}
-GET /api/kardex/by-warehouse/{warehouseId}
-GET /api/kardex/by-product/{productId}/warehouse/{warehouseId}
-```
-
-### Reports
-
-```text
-GET /api/reports/stock-summary
-GET /api/reports/low-stock
-GET /api/reports/movements-summary
-GET /api/reports/kardex-summary
 ```
 
 ### Dashboard
@@ -233,92 +186,60 @@ GET /api/dashboard/recent-movements
 GET /api/dashboard/low-stock-alerts
 ```
 
-### AuditLogs
+### Catálogos
 
 ```text
-GET /api/audit-logs
-GET /api/audit-logs/{id}
-GET /api/audit-logs/by-user/{userId}
-GET /api/audit-logs/by-entity/{entityName}
-GET /api/audit-logs/by-action/{action}
+/api/categories
+/api/suppliers
+/api/warehouses
+/api/products
 ```
 
-## Paginacion y Busqueda
-
-Los listados principales aceptan:
+### Operación
 
 ```text
-?pageNumber=1&pageSize=10&search=texto
+/api/stock-items
+/api/movements
+/api/kardex
 ```
 
-Disponible en:
+### Reportes
 
-- `GET /api/categories`
-- `GET /api/suppliers`
-- `GET /api/warehouses`
-- `GET /api/products`
-- `GET /api/movements`
-- `GET /api/kardex`
-- `GET /api/audit-logs`
-
-Respuesta paginada:
-
-```json
-{
-  "items": [],
-  "pageNumber": 1,
-  "pageSize": 10,
-  "totalCount": 0,
-  "totalPages": 0,
-  "hasPreviousPage": false,
-  "hasNextPage": false
-}
+```text
+GET /api/reports/stock-summary
+GET /api/reports/low-stock
+GET /api/reports/movements-summary
+GET /api/reports/kardex-summary
 ```
 
-## Manejo de Errores
+### Auditoría
 
-El backend usa un middleware global de excepciones con formato estandar:
-
-```json
-{
-  "statusCode": 400,
-  "message": "Mensaje claro",
-  "detail": "...",
-  "traceId": "...",
-  "timestamp": "2026-05-23T00:00:00Z"
-}
+```text
+/api/audit-logs
 ```
 
-Campos:
+## Capturas
 
-- `statusCode`: codigo HTTP.
-- `message`: mensaje claro para el cliente.
-- `detail`: detalle tecnico en ambiente de desarrollo.
-- `traceId`: identificador de trazabilidad de la solicitud.
-- `timestamp`: fecha y hora UTC de la respuesta.
+Pendiente agregar imágenes:
 
-## Seguridad
+- Dashboard
+- Productos
+- Stock
+- Movimientos
+- Kardex
+- Reportes
+- Auditoría
 
-- Autenticacion con JWT Bearer.
-- Autorizacion por roles.
-- Swagger soporta `Authorize` con Bearer token.
-- CORS configurado para futuros clientes React locales.
-- Las credenciales iniciales son de desarrollo y deben cambiarse en produccion.
+## Estado del proyecto
 
-## Auditoria
+Proyecto funcional en ambiente local/demo.
 
-El sistema registra logs automaticos para:
+Pendiente opcional:
 
-- Create / Update / Delete de Categories.
-- Create / Update / Delete de Suppliers.
-- Create / Update / Delete de Warehouses.
-- Create / Update / Delete de Products.
-- Create de Movements.
+- Deploy.
+- Documentación Swagger ampliada si aplica.
+- Exportación de reportes si se decide implementar en el futuro.
 
-Los Audit Logs son consultables solo por usuarios con rol `Admin`.
+## Autor
 
-## Estado del Proyecto
-
-Backend funcional completado para el alcance actual.
-
-Frontend pendiente: SPA con React + Vite.
+Desarrollado por Luis.
