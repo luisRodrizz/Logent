@@ -2,6 +2,7 @@ using FluentValidation;
 using InventorySaaS.Application.Categories.Validators;
 using InventorySaaS.Infrastructure;
 using InventorySaaS.Infrastructure.Identity;
+using InventorySaaS.Infrastructure.Persistence;
 using InventorySaaS.WebApi.Extensions;
 using InventorySaaS.WebApi.Middleware;
 using Serilog;
@@ -52,6 +53,11 @@ try
     using (var scope = app.Services.CreateScope())
     {
         await IdentitySeeder.SeedAsync(scope.ServiceProvider);
+
+        if (app.Environment.IsDevelopment())
+        {
+            await DemoDataSeeder.SeedAsync(scope.ServiceProvider);
+        }
     }
 
     app.Run();
