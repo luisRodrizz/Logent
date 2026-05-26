@@ -21,7 +21,7 @@ export function Topbar({ description, onMenuClick, title }: TopbarProps) {
   }
 
   return (
-    <header className="sticky top-0 z-30 border-b border-border bg-white/95 backdrop-blur">
+    <header className="sticky top-0 z-30 border-b border-border bg-white/95 shadow-[0_1px_2px_rgb(15_23_42/0.03)] backdrop-blur">
       <div className="flex min-h-[68px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex min-w-0 items-center gap-3">
           <Button

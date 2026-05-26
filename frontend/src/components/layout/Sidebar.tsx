@@ -11,44 +11,52 @@ type SidebarProps = {
 export function Sidebar({ onNavigate }: SidebarProps) {
   const { user } = useAuth()
   const visibleNavigationItems = getNavigationItemsForRoles(user?.roles ?? [])
+  const userRoles = user?.roles ?? []
 
   return (
-    <aside className="flex h-full w-72 flex-col border-r border-slate-800 bg-sidebar text-white">
+    <aside className="flex h-full w-72 flex-col border-r border-slate-800 bg-sidebar text-white shadow-[1px_0_0_rgb(255_255_255/0.03)]">
       <div className="border-b border-white/10 px-5 py-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sidebar ring-1 ring-white/10">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sidebar shadow-sm ring-1 ring-white/10">
             <Boxes className="h-5 w-5" />
           </div>
           <div className="min-w-0">
-            <p className="truncate text-base font-semibold">InventorySaaS</p>
-            <p className="truncate text-xs text-slate-400">Operations Console</p>
+            <p className="truncate text-base font-semibold tracking-tight">InventorySaaS</p>
+            <p className="truncate text-xs font-medium text-slate-400">Operations Console</p>
           </div>
         </div>
       </div>
 
       <nav className="flex-1 overflow-y-auto px-3 py-4" aria-label="Navegacion principal">
-        <p className="px-3 pb-2 text-[11px] font-semibold uppercase tracking-wider text-slate-500">Modulos</p>
-        <div className="space-y-0.5">
+        <div className="mb-3 flex items-center justify-between px-3">
+          <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Modulos</p>
+          <span className="rounded-full border border-white/10 px-2 py-0.5 text-[10px] font-semibold text-slate-500">
+            {visibleNavigationItems.length}
+          </span>
+        </div>
+        <div className="space-y-1">
           {visibleNavigationItems.map((item) => (
             <NavItem item={item} key={item.href} onNavigate={onNavigate} />
           ))}
         </div>
       </nav>
 
-      <div className="border-t border-white/10 p-3">
-        <div className="rounded-lg border border-white/10 bg-slate-900 px-3 py-3">
-          <div className="flex items-start gap-3">
-            <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-400/10 text-emerald-300">
+      <div className="border-t border-white/10 px-3 py-4">
+        <div className="rounded-lg border border-white/10 bg-white/[0.035] px-3 py-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/[0.06] text-teal-300 ring-1 ring-white/10">
               <ShieldCheck className="h-4 w-4" />
             </div>
-            <div className="min-w-0">
-              <div className="flex items-center gap-2">
+            <div className="min-w-0 flex-1">
+              <div className="flex min-w-0 items-center justify-between gap-2">
                 <p className="truncate text-sm font-semibold">Workspace</p>
-                <Badge className="bg-emerald-400/10 text-emerald-200 ring-emerald-300/20" variant="success">
+                <Badge className="bg-white/[0.06] text-slate-300 ring-white/10" variant="muted">
                   Dev
                 </Badge>
               </div>
-              <p className="mt-1 text-xs leading-5 text-slate-400">Sesion JWT activa y navegacion ajustada por rol.</p>
+              <p className="mt-1 truncate text-xs text-slate-500">
+                {userRoles.length > 0 ? userRoles.join(' / ') : 'Sesion activa'}
+              </p>
             </div>
           </div>
         </div>
