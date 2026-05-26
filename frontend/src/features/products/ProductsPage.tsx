@@ -236,7 +236,18 @@ export function ProductsPage() {
           </CardHeader>
           <CardContent className="p-0">
             <TableContainer>
-              <table className="min-w-[1080px] divide-y divide-border">
+              <table className="w-full min-w-[1080px] table-fixed divide-y divide-border">
+                <colgroup>
+                  <col className="w-[23%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[9%]" />
+                  <col className="w-[7%]" />
+                  <col className="w-[9%]" />
+                </colgroup>
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
@@ -259,8 +270,12 @@ export function ProductsPage() {
                           <p className="mt-1 font-mono text-xs text-muted">{product.code}</p>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-sm text-foreground">{product.categoryName || 'Sin categoria'}</td>
-                      <td className="px-5 py-4 text-sm text-muted">{product.supplierName || 'Sin proveedor'}</td>
+                      <td className="px-5 py-4 text-sm text-foreground">
+                        <p className="truncate">{product.categoryName || 'Sin categoria'}</p>
+                      </td>
+                      <td className="px-5 py-4 text-sm text-muted">
+                        <p className="truncate">{product.supplierName || 'Sin proveedor'}</p>
+                      </td>
                       <td className="px-5 py-4 text-right text-sm font-medium text-muted">
                         {formatCurrency(product.purchasePrice)}
                       </td>
@@ -275,8 +290,8 @@ export function ProductsPage() {
                           {product.isActive ? 'Activo' : 'Inactivo'}
                         </Badge>
                       </td>
-                      <td className="px-5 py-4 text-sm text-muted">{formatDate(product.createdAt)}</td>
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted">{formatDate(product.createdAt)}</td>
+                      <td className="w-24 px-5 py-4">
                         <div className="flex justify-end gap-2">
                           <Button
                             aria-label={`Editar ${product.name}`}

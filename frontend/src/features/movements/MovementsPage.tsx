@@ -4,10 +4,13 @@ import { toast } from 'sonner'
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
+import { SectionError } from '../../components/common/SectionError'
+import { TableContainer } from '../../components/common/TableContainer'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
+import { formatDateTime, formatNumber } from '../../lib/format'
 import type { CreateMovementRequest, Movement, MovementType } from '../../types/movement'
 import { MovementDetailsModal } from './MovementDetailsModal'
 import { MovementModal } from './MovementModal'
@@ -18,14 +21,6 @@ import {
   useMovementStockAvailability,
   useMovementWarehouseOptions,
 } from './movements.queries'
-
-const dateFormatter = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
 
 const movementLabels: Record<MovementType, string> = {
   Entry: 'Entrada',
@@ -57,9 +52,7 @@ function MovementsErrorState({ error }: { error: unknown }) {
   return (
     <Card>
       <CardContent className="px-6 py-10">
-        <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {getApiErrorMessage(error, 'No se pudo cargar el listado de movimientos.')}
-        </div>
+        <SectionError text={getApiErrorMessage(error, 'No se pudo cargar el listado de movimientos.')} />
       </CardContent>
     </Card>
   )
@@ -102,6 +95,11 @@ export function MovementsPage() {
   const stockItems = stockAvailabilityQuery.data ?? []
   const isLoadingOptions = productsQuery.isLoading || warehousesQuery.isLoading || stockAvailabilityQuery.isLoading
   const isSearching = Boolean(search)
+  const visibleDetailsCount = movements.reduce((total, movement) => total + movement.details.length, 0)
+  const visibleQuantity = movements.reduce(
+    (total, movement) => total + movement.details.reduce((innerTotal, detail) => innerTotal + detail.quantity, 0),
+    0,
+  )
 
   async function handleCreateMovement(payload: CreateMovementRequest) {
     try {
@@ -142,18 +140,30 @@ export function MovementsPage() {
             Nuevo movimiento
           </Button>
         }
-        description="Registra y consulta entradas, salidas y transferencias de inventario."
+        description="Registra y consulta entradas, salidas y transferencias que actualizan stock y Kardex."
+        eyebrow="Operations"
         title="Movimientos"
       />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Operaciones de inventario</CardTitle>
-          <CardDescription>Los movimientos actualizan stock y generan Kardex desde el backend.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="relative w-full lg:max-w-md">
+        <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+              <p className="text-xs font-medium text-muted">Movimientos visibles</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{formatNumber(movements.length)}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+              <p className="text-xs font-medium text-muted">Detalles visibles</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{formatNumber(visibleDetailsCount)}</p>
+            </div>
+            <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+              <p className="text-xs font-medium text-muted">Cantidad movida</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">{formatNumber(visibleQuantity)}</p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 sm:flex-row lg:justify-end">
+            <div className="relative w-full sm:min-w-80">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
               <input
                 className="h-10 w-full rounded-lg border border-border bg-white pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
@@ -164,8 +174,8 @@ export function MovementsPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-muted">Filas</span>
+            <label className="flex items-center gap-2 text-sm text-muted">
+              Filas
               <select
                 className="h-10 rounded-lg border border-border bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => handlePageSizeChange(event.target.value)}
@@ -177,7 +187,7 @@ export function MovementsPage() {
                   </option>
                 ))}
               </select>
-            </div>
+            </label>
           </div>
         </CardContent>
       </Card>
@@ -210,9 +220,22 @@ export function MovementsPage() {
         />
       ) : (
         <Card>
+          <CardHeader>
+            <CardTitle>Operaciones de inventario</CardTitle>
+            <CardDescription>Listado solo lectura de movimientos registrados.</CardDescription>
+          </CardHeader>
           <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-border">
+            <TableContainer>
+              <table className="w-full min-w-[1080px] table-fixed divide-y divide-border">
+                <colgroup>
+                  <col className="w-[13%]" />
+                  <col className="w-[17%]" />
+                  <col className="w-[17%]" />
+                  <col className="w-[13%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[20%]" />
+                  <col className="w-[8%]" />
+                </colgroup>
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Tipo</th>
@@ -230,29 +253,31 @@ export function MovementsPage() {
                     const totalQuantity = movement.details.reduce((total, detail) => total + detail.quantity, 0)
 
                     return (
-                      <tr className="transition-colors hover:bg-slate-50" key={movement.id}>
+                      <tr className="transition-colors hover:bg-slate-50/80" key={movement.id}>
                         <td className="px-5 py-4">
                           <div className="flex items-center gap-2">
                             <Icon className="h-4 w-4 text-muted" />
                             <Badge variant={movementBadgeVariants[movement.type]}>{movementLabels[movement.type]}</Badge>
                           </div>
                         </td>
-                        <td className="px-5 py-4 text-sm text-muted">{movement.warehouseOriginName || 'No aplica'}</td>
                         <td className="px-5 py-4 text-sm text-muted">
-                          {movement.warehouseDestinationName || 'No aplica'}
+                          <p className="truncate">{movement.warehouseOriginName || 'No aplica'}</p>
                         </td>
                         <td className="px-5 py-4 text-sm text-muted">
-                          {dateFormatter.format(new Date(movement.date))}
+                          <p className="truncate">{movement.warehouseDestinationName || 'No aplica'}</p>
+                        </td>
+                        <td className="whitespace-nowrap px-5 py-4 text-sm text-muted">
+                          {formatDateTime(movement.date)}
                         </td>
                         <td className="px-5 py-4 text-right text-sm font-semibold text-foreground">
-                          {movement.details.length} items · {totalQuantity}
+                          {formatNumber(movement.details.length)} items · {formatNumber(totalQuantity)}
                         </td>
                         <td className="max-w-sm px-5 py-4">
                           <p className="line-clamp-2 text-sm leading-6 text-muted">
                             {movement.observation || 'Sin observacion'}
                           </p>
                         </td>
-                        <td className="px-5 py-4">
+                        <td className="w-20 px-5 py-4">
                           <div className="flex justify-end">
                             <Button
                               aria-label="Ver detalle"
@@ -269,12 +294,12 @@ export function MovementsPage() {
                   })}
                 </tbody>
               </table>
-            </div>
+            </TableContainer>
 
             <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-sm text-muted">
                 Pagina {movementsQuery.data?.pageNumber ?? pageNumber} de {movementsQuery.data?.totalPages ?? 1} ·{' '}
-                {movementsQuery.data?.totalCount ?? 0} registros
+                {formatNumber(movementsQuery.data?.totalCount ?? 0)} registros
               </p>
               <div className="flex items-center gap-2">
                 <Button

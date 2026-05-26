@@ -215,7 +215,15 @@ export function WarehousesPage() {
           </CardHeader>
           <CardContent className="p-0">
             <TableContainer>
-              <table className="min-w-[960px] divide-y divide-border">
+              <table className="w-full min-w-[960px] table-fixed divide-y divide-border">
+                <colgroup>
+                  <col className="w-[24%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[28%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[10%]" />
+                  <col className="w-[10%]" />
+                </colgroup>
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
@@ -235,7 +243,9 @@ export function WarehousesPage() {
                           <p className="mt-1 font-mono text-xs text-muted">ID {warehouse.id.slice(0, 8)}</p>
                         </div>
                       </td>
-                      <td className="px-5 py-4 text-sm text-foreground">{warehouse.location || 'Sin ubicacion'}</td>
+                      <td className="px-5 py-4 text-sm text-foreground">
+                        <p className="truncate">{warehouse.location || 'Sin ubicacion'}</p>
+                      </td>
                       <td className="max-w-md px-5 py-4">
                         <p className="line-clamp-2 text-sm leading-6 text-muted">
                           {warehouse.description || 'Sin descripcion'}
@@ -246,8 +256,10 @@ export function WarehousesPage() {
                           {warehouse.isActive ? 'Activo' : 'Inactivo'}
                         </Badge>
                       </td>
-                      <td className="px-5 py-4 text-sm text-muted">{formatDate(warehouse.createdAt)}</td>
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted">
+                        {formatDate(warehouse.createdAt)}
+                      </td>
+                      <td className="w-24 px-5 py-4">
                         <div className="flex justify-end gap-2">
                           <Button
                             aria-label={`Editar ${warehouse.name}`}

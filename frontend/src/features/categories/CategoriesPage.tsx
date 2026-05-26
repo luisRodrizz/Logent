@@ -215,7 +215,14 @@ export function CategoriesPage() {
           </CardHeader>
           <CardContent className="p-0">
             <TableContainer>
-              <table className="min-w-[860px] divide-y divide-border">
+              <table className="w-full min-w-[860px] table-fixed divide-y divide-border">
+                <colgroup>
+                  <col className="w-[28%]" />
+                  <col className="w-[38%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[10%]" />
+                </colgroup>
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Nombre</th>
@@ -244,8 +251,10 @@ export function CategoriesPage() {
                           {category.isActive ? 'Activa' : 'Inactiva'}
                         </Badge>
                       </td>
-                      <td className="px-5 py-4 text-sm text-muted">{formatDate(category.createdAt)}</td>
-                      <td className="px-5 py-4">
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted">
+                        {formatDate(category.createdAt)}
+                      </td>
+                      <td className="w-24 px-5 py-4">
                         <div className="flex justify-end gap-2">
                           <Button
                             aria-label={`Editar ${category.name}`}

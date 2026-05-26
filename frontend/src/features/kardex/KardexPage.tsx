@@ -1,12 +1,15 @@
-import { ArrowDownCircle, ArrowLeftRight, ArrowUpCircle, ClipboardList, Eye, FilterX, Package, Search, Warehouse } from 'lucide-react'
+import { ArrowDownCircle, ArrowLeftRight, ArrowUpCircle, ClipboardList, Eye, FilterX, Search } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
+import { SectionError } from '../../components/common/SectionError'
+import { TableContainer } from '../../components/common/TableContainer'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
+import { formatCurrency, formatDateTime, formatNumber } from '../../lib/format'
 import type { KardexEntry, KardexMovementType } from '../../types/kardex'
 import { KardexDetailsModal } from './KardexDetailsModal'
 import {
@@ -17,20 +20,6 @@ import {
   useKardexProductOptions,
   useKardexWarehouseOptions,
 } from './kardex.queries'
-
-const dateFormatter = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
-
-const currencyFormatter = new Intl.NumberFormat('es-PE', {
-  currency: 'PEN',
-  maximumFractionDigits: 2,
-  style: 'currency',
-})
 
 const movementLabels: Record<KardexMovementType, string> = {
   Adjustment: 'Ajuste',
@@ -80,18 +69,18 @@ function SummaryCard({
   value: string
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-start justify-between gap-4 p-5">
-        <div>
+    <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-muted">{title}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-normal text-foreground">{value}</p>
+          <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{value}</p>
           <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
         </div>
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
+        <div className="text-slate-400">
           {icon}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
@@ -99,9 +88,7 @@ function KardexErrorState({ error }: { error: unknown }) {
   return (
     <Card>
       <CardContent className="px-6 py-10">
-        <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {getApiErrorMessage(error, 'No se pudo cargar la informacion del Kardex.')}
-        </div>
+        <SectionError text={getApiErrorMessage(error, 'No se pudo cargar la informacion del Kardex.')} />
       </CardContent>
     </Card>
   )
@@ -213,14 +200,14 @@ export function KardexPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Consulta el historial de movimientos y saldos del inventario." title="Kardex" />
+      <PageHeader
+        description="Historial operativo de movimientos, saldos y costos generado automaticamente."
+        eyebrow="Operations history"
+        title="Kardex"
+      />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Filtros de consulta</CardTitle>
-          <CardDescription>El Kardex se genera automaticamente a partir de los movimientos de inventario.</CardDescription>
-        </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4 p-4">
           <div className="grid gap-3 xl:grid-cols-[1fr_1fr_1fr_auto] xl:items-end">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="kardex-search">
@@ -298,6 +285,10 @@ export function KardexPage() {
               historicos especificos.
             </p>
           ) : null}
+
+          <p className="border-t border-border pt-3 text-xs leading-5 text-muted">
+            Kardex es una vista solo lectura. Los registros se generan desde los movimientos del backend.
+          </p>
         </CardContent>
       </Card>
 
@@ -324,27 +315,27 @@ export function KardexPage() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <SummaryCard
               description="Resultado mostrado"
-              icon={<ArrowUpCircle className="h-5 w-5" />}
+              icon={<ArrowUpCircle className="h-4 w-4" />}
               title="Entradas"
-              value={summary.totalIn.toString()}
+              value={formatNumber(summary.totalIn)}
             />
             <SummaryCard
               description="Resultado mostrado"
-              icon={<ArrowDownCircle className="h-5 w-5" />}
+              icon={<ArrowDownCircle className="h-4 w-4" />}
               title="Salidas"
-              value={summary.totalOut.toString()}
+              value={formatNumber(summary.totalOut)}
             />
             <SummaryCard
               description="Ultimo saldo del resultado"
-              icon={<ClipboardList className="h-5 w-5" />}
+              icon={<ClipboardList className="h-4 w-4" />}
               title="Saldo"
-              value={summary.currentBalance.toString()}
+              value={formatNumber(summary.currentBalance)}
             />
             <SummaryCard
               description="Cantidad x costo unitario"
-              icon={<ArrowLeftRight className="h-5 w-5" />}
+              icon={<ArrowLeftRight className="h-4 w-4" />}
               title="Costo movido"
-              value={currencyFormatter.format(summary.totalCost)}
+              value={formatCurrency(summary.totalCost)}
             />
           </div>
 
@@ -354,8 +345,19 @@ export function KardexPage() {
               <CardDescription>Vista historica solo lectura de movimientos y saldos.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-border">
+              <TableContainer>
+                <table className="w-full min-w-[1180px] table-fixed divide-y divide-border">
+                  <colgroup>
+                    <col className="w-[13%]" />
+                    <col className="w-[22%]" />
+                    <col className="w-[15%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[8%]" />
+                    <col className="w-[7%]" />
+                    <col className="w-[7%]" />
+                  </colgroup>
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Fecha</th>
@@ -376,26 +378,20 @@ export function KardexPage() {
                       const quantityOut = getQuantityOut(entry)
 
                       return (
-                        <tr className="transition-colors hover:bg-slate-50" key={entry.id}>
-                          <td className="px-5 py-4 text-sm text-muted">{dateFormatter.format(new Date(entry.date))}</td>
+                        <tr className="transition-colors hover:bg-slate-50/80" key={entry.id}>
+                          <td className="whitespace-nowrap px-5 py-4 text-sm text-muted">
+                            {formatDateTime(entry.date)}
+                          </td>
                           <td className="px-5 py-4">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
-                                <Package className="h-4 w-4" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-foreground">{entry.productName}</p>
-                                <p className="mt-1 text-xs text-muted">{entry.productCode}</p>
-                              </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-foreground">{entry.productName}</p>
+                              <p className="mt-1 font-mono text-xs text-muted">{entry.productCode}</p>
                             </div>
                           </td>
-                          <td className="px-5 py-4">
-                            <p className="flex items-center gap-2 text-sm text-foreground">
-                              <Warehouse className="h-3.5 w-3.5 text-muted" />
-                              {entry.warehouseName}
-                            </p>
+                          <td className="px-5 py-4 text-sm text-foreground">
+                            <p className="truncate">{entry.warehouseName}</p>
                           </td>
-                          <td className="px-5 py-4">
+                          <td className="w-20 px-5 py-4">
                             <div className="flex items-center gap-2">
                               <Icon className="h-4 w-4 text-muted" />
                               <Badge variant={movementBadgeVariants[entry.movementType]}>
@@ -403,13 +399,17 @@ export function KardexPage() {
                               </Badge>
                             </div>
                           </td>
-                          <td className="px-5 py-4 text-right text-sm font-semibold text-emerald-700">{quantityIn}</td>
-                          <td className="px-5 py-4 text-right text-sm font-semibold text-amber-700">{quantityOut}</td>
+                          <td className="px-5 py-4 text-right text-sm font-semibold text-emerald-700">
+                            {formatNumber(quantityIn)}
+                          </td>
+                          <td className="px-5 py-4 text-right text-sm font-semibold text-amber-700">
+                            {formatNumber(quantityOut)}
+                          </td>
                           <td className="px-5 py-4 text-right text-sm font-semibold text-foreground">
-                            {entry.stockAfter}
+                            {formatNumber(entry.stockAfter)}
                           </td>
                           <td className="px-5 py-4 text-right text-sm text-muted">
-                            {currencyFormatter.format(entry.unitCost)}
+                            {formatCurrency(entry.unitCost)}
                           </td>
                           <td className="px-5 py-4">
                             <div className="flex justify-end">
@@ -428,13 +428,13 @@ export function KardexPage() {
                     })}
                   </tbody>
                 </table>
-              </div>
+              </TableContainer>
 
               {!hasFilters ? (
                 <div className="flex flex-col gap-3 border-t border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
                   <p className="text-sm text-muted">
                     Pagina {generalQuery.data?.pageNumber ?? pageNumber} de {generalQuery.data?.totalPages ?? 1} ·{' '}
-                    {generalQuery.data?.totalCount ?? 0} registros
+                    {formatNumber(generalQuery.data?.totalCount ?? 0)} registros
                   </p>
                   <div className="flex items-center gap-2">
                     <select
@@ -466,7 +466,7 @@ export function KardexPage() {
                 </div>
               ) : (
                 <div className="border-t border-border px-5 py-4">
-                  <p className="text-sm text-muted">{entries.length} registros en la consulta filtrada.</p>
+                  <p className="text-sm text-muted">{formatNumber(entries.length)} registros en la consulta filtrada.</p>
                 </div>
               )}
             </CardContent>

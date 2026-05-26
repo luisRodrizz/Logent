@@ -1,8 +1,9 @@
 import { X } from 'lucide-react'
+import { TableContainer } from '../../components/common/TableContainer'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
-import { formatCurrency, formatDateTime } from '../../lib/format'
+import { formatCurrency, formatDateTime, formatNumber } from '../../lib/format'
 import type { Movement, MovementType } from '../../types/movement'
 
 type MovementDetailsModalProps = {
@@ -72,25 +73,27 @@ export function MovementDetailsModal({ movement, onClose }: MovementDetailsModal
             </div>
           ) : null}
 
-          <div className="overflow-hidden rounded-lg border border-border">
-            <div className="grid grid-cols-[1.2fr_0.5fr_0.6fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-muted">
-              <span>Producto</span>
-              <span className="text-right">Cantidad</span>
-              <span className="text-right">Costo unit.</span>
-            </div>
-            <div className="divide-y divide-border">
-              {movement.details.map((detail) => (
-                <div className="grid grid-cols-[1.2fr_0.5fr_0.6fr] items-center gap-3 px-4 py-3" key={detail.id}>
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-foreground">{detail.productName}</p>
-                    <p className="mt-1 text-xs text-muted">{detail.productCode}</p>
+          <TableContainer>
+            <div className="w-full min-w-[640px]">
+              <div className="grid grid-cols-[1.2fr_0.5fr_0.6fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-muted">
+                <span>Producto</span>
+                <span className="text-right">Cantidad</span>
+                <span className="text-right">Costo unit.</span>
+              </div>
+              <div className="divide-y divide-border bg-white">
+                {movement.details.map((detail) => (
+                  <div className="grid grid-cols-[1.2fr_0.5fr_0.6fr] items-center gap-3 px-4 py-3" key={detail.id}>
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-foreground">{detail.productName}</p>
+                      <p className="mt-1 font-mono text-xs text-muted">{detail.productCode}</p>
+                    </div>
+                    <p className="text-right text-sm font-semibold text-foreground">{formatNumber(detail.quantity)}</p>
+                    <p className="text-right text-sm font-medium text-muted">{formatCurrency(detail.unitCost)}</p>
                   </div>
-                  <p className="text-right text-sm font-semibold text-foreground">{detail.quantity}</p>
-                  <p className="text-right text-sm font-medium text-muted">{formatCurrency(detail.unitCost)}</p>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
-          </div>
+          </TableContainer>
         </CardContent>
       </Card>
     </div>

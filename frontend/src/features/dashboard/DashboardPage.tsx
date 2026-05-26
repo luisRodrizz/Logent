@@ -287,7 +287,7 @@ export function DashboardPage() {
             />
           ) : (
             <TableContainer>
-              <div className="min-w-[760px]">
+              <div className="w-full min-w-[760px]">
                 <div className="grid grid-cols-[0.8fr_1fr_1.4fr_0.6fr] gap-3 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase text-muted">
                   <span>Tipo</span>
                   <span>Fecha</span>

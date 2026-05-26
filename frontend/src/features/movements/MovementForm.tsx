@@ -105,7 +105,12 @@ export function MovementForm({
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit(handleValidSubmit)}>
-      <div className="grid gap-4 md:grid-cols-3">
+      <section className="rounded-lg border border-border bg-white p-4">
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold text-foreground">Tipo y almacenes</h3>
+          <p className="mt-1 text-xs leading-5 text-muted">Define la operacion y las ubicaciones involucradas.</p>
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
         <div className="space-y-2">
           <label className="text-sm font-semibold text-foreground" htmlFor="movement-type">
             Tipo
@@ -166,6 +171,7 @@ export function MovementForm({
           ) : null}
         </div>
       </div>
+      </section>
 
       <div className="rounded-lg border border-border">
         <div className="flex flex-col gap-3 border-b border-border px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
@@ -191,7 +197,7 @@ export function MovementForm({
             const showAvailability = selectedType === 'Exit' || selectedType === 'Transfer'
 
             return (
-              <div className="rounded-lg border border-border bg-slate-50 p-4" key={field.id}>
+              <div className="rounded-lg border border-border bg-white p-4" key={field.id}>
                 <div className="grid gap-4 lg:grid-cols-[1fr_0.5fr_0.5fr_auto] lg:items-start">
                   <div className="space-y-2">
                     <label className="text-sm font-semibold text-foreground" htmlFor={`movement-product-${field.id}`}>
@@ -213,7 +219,7 @@ export function MovementForm({
                       <p className="text-sm font-medium text-red-600">{errors.details[index]?.productId?.message}</p>
                     ) : null}
                     {showAvailability ? (
-                      <p className="text-xs text-muted">
+                      <p className="rounded-md bg-slate-50 px-2 py-1 text-xs text-muted">
                         Disponible origen:{' '}
                         <span className="font-semibold text-foreground">
                           {availableStock === null ? 'Selecciona producto y origen' : availableStock}
@@ -275,20 +281,22 @@ export function MovementForm({
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label className="text-sm font-semibold text-foreground" htmlFor="movement-observation">
-          Observacion
-        </label>
-        <textarea
-          className="min-h-24 w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm leading-6 text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
-          id="movement-observation"
-          placeholder="Referencia operativa, guia, documento o nota interna."
-          {...register('observation')}
-        />
-        {errors.observation ? <p className="text-sm font-medium text-red-600">{errors.observation.message}</p> : null}
-      </div>
+      <section className="rounded-lg border border-border bg-white p-4">
+        <div className="space-y-2">
+          <label className="text-sm font-semibold text-foreground" htmlFor="movement-observation">
+            Observacion
+          </label>
+          <textarea
+            className="min-h-24 w-full resize-none rounded-lg border border-border bg-white px-3 py-2 text-sm leading-6 text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
+            id="movement-observation"
+            placeholder="Referencia operativa, guia, documento o nota interna."
+            {...register('observation')}
+          />
+          {errors.observation ? <p className="text-sm font-medium text-red-600">{errors.observation.message}</p> : null}
+        </div>
+      </section>
 
-      <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
+      <div className="rounded-lg border border-blue-100 bg-blue-50/70 px-4 py-3 text-sm leading-6 text-blue-800">
         Este movimiento {typeLabels[selectedType].toLowerCase()} actualizara stock y Kardex desde el backend. No hay
         edicion manual de StockItems en esta pantalla.
       </div>

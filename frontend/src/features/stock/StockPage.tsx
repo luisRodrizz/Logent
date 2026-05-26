@@ -3,10 +3,13 @@ import { useMemo, useState } from 'react'
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
+import { SectionError } from '../../components/common/SectionError'
+import { TableContainer } from '../../components/common/TableContainer'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
+import { formatDateTime, formatNumber } from '../../lib/format'
 import type { Product } from '../../types/product'
 import type { StockItem } from '../../types/stock'
 import {
@@ -18,25 +21,9 @@ import {
   useStockWarehouseOptions,
 } from './stock.queries'
 
-const dateFormatter = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
-
 const emptyProducts: Product[] = []
 
 type StockStatus = 'normal' | 'low' | 'empty' | 'unknown'
-
-function formatDate(value?: string | null): string {
-  if (!value) {
-    return 'Sin fecha'
-  }
-
-  return dateFormatter.format(new Date(value))
-}
 
 function getMinimumStock(product?: Product): number | null {
   return typeof product?.minimumStock === 'number' ? product.minimumStock : null
@@ -88,18 +75,18 @@ function SummaryCard({
   value: string
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-start justify-between gap-4 p-5">
-        <div>
+    <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
           <p className="text-sm font-medium text-muted">{title}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-normal text-foreground">{value}</p>
+          <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{value}</p>
           <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
         </div>
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
+        <div className="text-slate-400">
           {icon}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }
 
@@ -107,9 +94,7 @@ function StockErrorState({ error }: { error: unknown }) {
   return (
     <Card>
       <CardContent className="px-6 py-10">
-        <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-          {getApiErrorMessage(error, 'No se pudo cargar la informacion de stock.')}
-        </div>
+        <SectionError text={getApiErrorMessage(error, 'No se pudo cargar la informacion de stock.')} />
       </CardContent>
     </Card>
   )
@@ -196,15 +181,15 @@ export function StockPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Consulta las existencias actuales por producto y almacen." title="Stock" />
+      <PageHeader
+        description="Consulta operativa de existencias por producto y almacen. Vista solo lectura."
+        eyebrow="Operations"
+        title="Stock"
+      />
 
       <Card>
-        <CardHeader>
-          <CardTitle>Filtros de consulta</CardTitle>
-          <CardDescription>El stock se actualiza unicamente mediante movimientos de inventario.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-3 lg:grid-cols-[1fr_1fr_auto] lg:items-end">
+        <CardContent className="space-y-4 p-4">
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-[1fr_1fr_auto] xl:items-end">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="stock-product-filter">
                 Producto
@@ -256,6 +241,10 @@ export function StockPage() {
               No se pudieron cargar todas las opciones de filtro. La consulta de stock sigue disponible.
             </p>
           ) : null}
+
+          <p className="border-t border-border pt-3 text-xs leading-5 text-muted">
+            El stock no se edita manualmente. Las existencias cambian unicamente mediante movimientos.
+          </p>
         </CardContent>
       </Card>
 
@@ -282,27 +271,27 @@ export function StockPage() {
           <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             <SummaryCard
               description="Suma de existencias visibles"
-              icon={<Boxes className="h-5 w-5" />}
+              icon={<Boxes className="h-4 w-4" />}
               title="Cantidad total"
-              value={summary.totalQuantity.toString()}
+              value={formatNumber(summary.totalQuantity)}
             />
             <SummaryCard
               description="Productos en la consulta"
-              icon={<Package className="h-5 w-5" />}
+              icon={<Package className="h-4 w-4" />}
               title="Productos"
-              value={summary.productCount.toString()}
+              value={formatNumber(summary.productCount)}
             />
             <SummaryCard
               description="Almacenes en la consulta"
-              icon={<Warehouse className="h-5 w-5" />}
+              icon={<Warehouse className="h-4 w-4" />}
               title="Almacenes"
-              value={summary.warehouseCount.toString()}
+              value={formatNumber(summary.warehouseCount)}
             />
             <SummaryCard
               description={`${summary.emptyStockItems} sin stock`}
-              icon={<AlertTriangle className="h-5 w-5" />}
+              icon={<AlertTriangle className="h-4 w-4" />}
               title="Stock bajo"
-              value={summary.lowStockItems.toString()}
+              value={formatNumber(summary.lowStockItems)}
             />
           </div>
 
@@ -312,8 +301,16 @@ export function StockPage() {
               <CardDescription>Vista solo lectura por producto y almacen.</CardDescription>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-border">
+              <TableContainer>
+                <table className="w-full min-w-[980px] table-fixed divide-y divide-border">
+                  <colgroup>
+                    <col className="w-[32%]" />
+                    <col className="w-[24%]" />
+                    <col className="w-[11%]" />
+                    <col className="w-[13%]" />
+                    <col className="w-[10%]" />
+                    <col className="w-[10%]" />
+                  </colgroup>
                   <thead className="bg-slate-50">
                     <tr>
                       <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
@@ -331,40 +328,34 @@ export function StockPage() {
                       const status = getStockStatus(item.quantity, minimumStock)
 
                       return (
-                        <tr className="transition-colors hover:bg-slate-50" key={item.id}>
+                        <tr className="transition-colors hover:bg-slate-50/80" key={item.id}>
                           <td className="px-5 py-4">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
-                                <Package className="h-4 w-4" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate text-sm font-semibold text-foreground">{item.productName}</p>
-                                <p className="mt-1 text-xs text-muted">{item.productCode}</p>
-                              </div>
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-foreground">{item.productName}</p>
+                              <p className="mt-1 font-mono text-xs text-muted">{item.productCode}</p>
                             </div>
                           </td>
-                          <td className="px-5 py-4">
-                            <p className="flex items-center gap-2 text-sm text-foreground">
-                              <Warehouse className="h-3.5 w-3.5 text-muted" />
-                              {item.warehouseName}
-                            </p>
+                          <td className="px-5 py-4 text-sm text-foreground">
+                            <p className="truncate">{item.warehouseName}</p>
                           </td>
                           <td className="px-5 py-4 text-right text-sm font-semibold text-foreground">
-                            {item.quantity}
+                            {formatNumber(item.quantity)}
                           </td>
                           <td className="px-5 py-4 text-right text-sm text-muted">
-                            {minimumStock === null ? 'Sin dato' : minimumStock}
+                            {minimumStock === null ? 'Sin dato' : formatNumber(minimumStock)}
                           </td>
                           <td className="px-5 py-4">
                             <Badge variant={getStatusVariant(status)}>{getStatusLabel(status)}</Badge>
                           </td>
-                          <td className="px-5 py-4 text-sm text-muted">{formatDate(item.updatedAt)}</td>
+                          <td className="whitespace-nowrap px-5 py-4 text-sm text-muted">
+                            {formatDateTime(item.updatedAt)}
+                          </td>
                         </tr>
                       )
                     })}
                   </tbody>
                 </table>
-              </div>
+              </TableContainer>
             </CardContent>
           </Card>
         </>
