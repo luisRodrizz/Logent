@@ -1,5 +1,7 @@
 import { X } from 'lucide-react'
 import { LoadingState } from '../../components/common/LoadingState'
+import { ModalOverlay } from '../../components/common/ModalOverlay'
+import { SectionError } from '../../components/common/SectionError'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
@@ -63,18 +65,22 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
   const auditLog = logQuery.data
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 sm:items-center">
-      <Card aria-modal="true" className="max-h-[92vh] w-full max-w-4xl overflow-y-auto" role="dialog">
+    <ModalOverlay>
+      <Card aria-modal="true" className="max-h-[calc(100vh-48px)] w-full max-w-4xl overflow-y-auto" role="dialog">
         <CardHeader className="relative pr-14">
-          {auditLog ? (
-            <div className="mb-3">
-              <Badge variant={actionBadgeVariants[auditLog.action]}>{actionLabels[auditLog.action]}</Badge>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div className="min-w-0">
+              {auditLog ? (
+                <div className="mb-3">
+                  <Badge variant={actionBadgeVariants[auditLog.action]}>{actionLabels[auditLog.action]}</Badge>
+                </div>
+              ) : null}
+              <CardTitle>Detalle de auditoria</CardTitle>
+              <CardDescription>
+                {auditLog ? formatDateTime(auditLog.createdAt) : 'Cargando evento auditado'}
+              </CardDescription>
             </div>
-          ) : null}
-          <CardTitle>Detalle de auditoria</CardTitle>
-          <CardDescription>
-            {auditLog ? formatDateTime(auditLog.createdAt) : 'Cargando evento auditado'}
-          </CardDescription>
+          </div>
           <Button
             aria-label="Cerrar detalle"
             className="absolute right-4 top-4 h-9 w-9 p-0"
@@ -88,9 +94,7 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
           {logQuery.isLoading ? (
             <LoadingState text="Cargando detalle de auditoria..." />
           ) : logQuery.isError ? (
-            <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-              {getApiErrorMessage(logQuery.error, 'No se pudo cargar la informacion de auditoria.')}
-            </div>
+            <SectionError text={getApiErrorMessage(logQuery.error, 'No se pudo cargar la informacion de auditoria.')} />
           ) : auditLog ? (
             <>
               <div className="grid gap-4 md:grid-cols-3">
@@ -103,29 +107,29 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
                   <p className="mt-2 text-sm font-semibold text-foreground">{auditLog.entityName}</p>
                 </div>
                 <div className="rounded-lg border border-border bg-slate-50 p-4">
-                  <p className="text-xs font-semibold uppercase text-muted">Entity ID</p>
-                  <p className="mt-2 break-all text-sm font-semibold text-foreground">
-                    {formatValue(auditLog.entityId)}
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-lg border border-border bg-white p-4 md:col-span-2">
-                  <p className="text-xs font-semibold uppercase text-muted">Usuario</p>
-                  <p className="mt-2 break-all text-sm font-semibold text-foreground">
-                    {formatValue(auditLog.userId)}
-                  </p>
-                </div>
-                <div className="rounded-lg border border-border bg-white p-4">
                   <p className="text-xs font-semibold uppercase text-muted">Fecha</p>
                   <p className="mt-2 text-sm font-semibold text-foreground">{formatDateTime(auditLog.createdAt)}</p>
                 </div>
               </div>
 
-              <div className="rounded-lg border border-border bg-slate-950 p-4">
-                <p className="text-xs font-semibold uppercase text-slate-300">Descripcion</p>
-                <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words text-xs leading-6 text-slate-100">
+              <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
+                <div className="rounded-lg border border-border bg-white p-4">
+                  <p className="text-xs font-semibold uppercase text-muted">Entity ID</p>
+                  <p className="mt-2 break-all font-mono text-xs font-semibold leading-5 text-foreground">
+                    {formatValue(auditLog.entityId)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-white p-4">
+                  <p className="text-xs font-semibold uppercase text-muted">Usuario</p>
+                  <p className="mt-2 break-all font-mono text-xs font-semibold leading-5 text-foreground">
+                    {formatValue(auditLog.userId)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="rounded-lg border border-border bg-slate-50 p-4">
+                <p className="text-xs font-semibold uppercase text-muted">Descripcion</p>
+                <pre className="mt-3 max-h-72 overflow-auto whitespace-pre-wrap break-words rounded-md bg-white p-3 text-xs leading-6 text-foreground">
                   {formatDescription(auditLog.description)}
                 </pre>
               </div>
@@ -133,6 +137,6 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
           ) : null}
         </CardContent>
       </Card>
-    </div>
+    </ModalOverlay>
   )
 }

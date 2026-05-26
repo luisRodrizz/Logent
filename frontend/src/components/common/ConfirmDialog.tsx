@@ -1,4 +1,5 @@
 import { AlertTriangle } from 'lucide-react'
+import { ModalOverlay } from './ModalOverlay'
 import { Button } from '../ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Card'
 
@@ -28,7 +29,7 @@ export function ConfirmDialog({
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 sm:items-center">
+    <ModalOverlay>
       <Card aria-modal="true" className="w-full max-w-md" role="dialog">
         <CardHeader>
           <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-lg bg-red-50 text-red-600">
@@ -48,6 +49,6 @@ export function ConfirmDialog({
           </div>
         </CardContent>
       </Card>
-    </div>
+    </ModalOverlay>
   )
 }

@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import { ModalOverlay } from '../../components/common/ModalOverlay'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
@@ -42,8 +43,8 @@ export function KardexDetailsModal({ entry, onClose }: KardexDetailsModalProps) 
   const totalCost = entry.quantity * entry.unitCost
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 sm:items-center">
-      <Card aria-modal="true" className="max-h-[92vh] w-full max-w-4xl overflow-y-auto" role="dialog">
+    <ModalOverlay>
+      <Card aria-modal="true" className="max-h-[calc(100vh-48px)] w-full max-w-4xl overflow-y-auto" role="dialog">
         <CardHeader className="relative pr-14">
           <div className="mb-3">
             <Badge variant={movementBadgeVariants[entry.movementType]}>{movementLabels[entry.movementType]}</Badge>
@@ -118,6 +119,6 @@ export function KardexDetailsModal({ entry, onClose }: KardexDetailsModalProps) 
           ) : null}
         </CardContent>
       </Card>
-    </div>
+    </ModalOverlay>
   )
 }

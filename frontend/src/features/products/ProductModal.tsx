@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import { ModalOverlay } from '../../components/common/ModalOverlay'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import type { Category } from '../../types/category'
@@ -40,8 +41,8 @@ export function ProductModal({
       : 'Actualiza los datos del catalogo maestro del producto.'
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 sm:items-center">
-      <Card aria-modal="true" className="max-h-[92vh] w-full max-w-3xl overflow-y-auto" role="dialog">
+    <ModalOverlay>
+      <Card aria-modal="true" className="max-h-[calc(100vh-48px)] w-full max-w-3xl overflow-y-auto" role="dialog">
         <CardHeader className="relative pr-14">
           <CardTitle>{title}</CardTitle>
           <CardDescription>{description}</CardDescription>
@@ -76,6 +77,6 @@ export function ProductModal({
           />
         </CardContent>
       </Card>
-    </div>
+    </ModalOverlay>
   )
 }

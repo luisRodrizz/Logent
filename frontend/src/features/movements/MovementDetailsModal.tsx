@@ -1,4 +1,5 @@
 import { X } from 'lucide-react'
+import { ModalOverlay } from '../../components/common/ModalOverlay'
 import { TableContainer } from '../../components/common/TableContainer'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
@@ -29,8 +30,8 @@ export function MovementDetailsModal({ movement, onClose }: MovementDetailsModal
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-slate-950/50 px-4 py-6 sm:items-center">
-      <Card aria-modal="true" className="max-h-[92vh] w-full max-w-4xl overflow-y-auto" role="dialog">
+    <ModalOverlay>
+      <Card aria-modal="true" className="max-h-[calc(100vh-48px)] w-full max-w-4xl overflow-y-auto" role="dialog">
         <CardHeader className="relative pr-14">
           <div className="mb-3">
             <Badge variant={movementBadgeVariants[movement.type]}>{movementLabels[movement.type]}</Badge>
@@ -96,6 +97,6 @@ export function MovementDetailsModal({ movement, onClose }: MovementDetailsModal
           </TableContainer>
         </CardContent>
       </Card>
-    </div>
+    </ModalOverlay>
   )
 }

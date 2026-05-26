@@ -14,9 +14,11 @@ import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recha
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
+import { SectionError } from '../../components/common/SectionError'
+import { TableContainer } from '../../components/common/TableContainer'
 import { Badge } from '../../components/ui/Badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
-import { getApiErrorMessage } from '../../lib/api-error'
+import { formatCurrency, formatDateTime, formatNumber } from '../../lib/format'
 import type { LowStockReportItem, StockSummaryReport } from '../../types/report'
 import {
   useKardexSummaryReport,
@@ -28,37 +30,7 @@ import {
 const emptyStockSummary: StockSummaryReport[] = []
 const emptyLowStock: LowStockReportItem[] = []
 
-const numberFormatter = new Intl.NumberFormat('es-PE')
-const currencyFormatter = new Intl.NumberFormat('es-PE', {
-  currency: 'PEN',
-  maximumFractionDigits: 2,
-  style: 'currency',
-})
-const dateFormatter = new Intl.DateTimeFormat('es-PE', {
-  day: '2-digit',
-  hour: '2-digit',
-  minute: '2-digit',
-  month: 'short',
-  year: 'numeric',
-})
-
-function formatNumber(value: number): string {
-  return numberFormatter.format(value)
-}
-
-function formatCurrency(value: number): string {
-  return currencyFormatter.format(value)
-}
-
-function SectionError({ error }: { error: unknown }) {
-  return (
-    <div className="rounded-lg border border-red-100 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">
-      {getApiErrorMessage(error, 'No se pudo cargar la informacion de reportes.')}
-    </div>
-  )
-}
-
-function MetricCard({
+function ReportMetric({
   description,
   icon,
   title,
@@ -70,18 +42,16 @@ function MetricCard({
   value: string
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-start justify-between gap-4 p-5">
+    <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+      <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-medium text-muted">{title}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-normal text-foreground">{value}</p>
+          <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{value}</p>
           <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
         </div>
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
-          {icon}
-        </div>
-      </CardContent>
-    </Card>
+        <div className="text-slate-400">{icon}</div>
+      </div>
+    </div>
   )
 }
 
@@ -184,16 +154,17 @@ export function ReportsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Analiza el estado operativo del inventario mediante reportes consolidados."
+        description="Lectura analitica del inventario, alertas operativas, movimientos y Kardex consolidado."
+        eyebrow="Analytics"
         title="Reportes"
       />
 
       <Card>
-        <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
+        <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
           <div>
             <p className="text-sm font-semibold text-foreground">Modulo de consulta</p>
-            <p className="mt-1 text-sm leading-6 text-muted">
-              Los reportes son de solo lectura y se calculan desde los datos operativos del sistema.
+            <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">
+              Los reportes son de solo lectura y se calculan desde los datos operativos registrados por el backend.
             </p>
           </div>
           <Badge variant="muted">Solo lectura</Badge>
@@ -209,7 +180,7 @@ export function ReportsPage() {
           {stockSummaryQuery.isLoading ? (
             <LoadingState text="Cargando reporte de stock..." />
           ) : stockSummaryQuery.isError ? (
-            <SectionError error={stockSummaryQuery.error} />
+            <SectionError text="No se pudo cargar el reporte de stock." />
           ) : stockSummary.length === 0 ? (
             <EmptyState
               description="Aun no hay existencias consolidadas para analizar."
@@ -219,38 +190,43 @@ export function ReportsPage() {
           ) : (
             <div className="space-y-5">
               <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                <MetricCard
+                <ReportMetric
                   description="Registros producto-almacen"
-                  icon={<ClipboardList className="h-5 w-5" />}
+                  icon={<ClipboardList className="h-4 w-4" />}
                   title="Items"
                   value={formatNumber(stockSummary.length)}
                 />
-                <MetricCard
+                <ReportMetric
                   description="Unidades disponibles"
-                  icon={<Package className="h-5 w-5" />}
+                  icon={<Package className="h-4 w-4" />}
                   title="Cantidad total"
                   value={formatNumber(stockTotals.totalQuantity)}
                 />
-                <MetricCard
+                <ReportMetric
                   description="Valor de inventario calculado"
-                  icon={<DollarSign className="h-5 w-5" />}
+                  icon={<DollarSign className="h-4 w-4" />}
                   title="Valor estimado"
                   value={formatCurrency(stockTotals.totalValue)}
                 />
-                <MetricCard
+                <ReportMetric
                   description={`${formatNumber(stockTotals.warehouses)} almacenes con stock`}
-                  icon={<AlertTriangle className="h-5 w-5" />}
+                  icon={<AlertTriangle className="h-4 w-4" />}
                   title="Stock bajo"
                   value={formatNumber(stockTotals.lowStockCount)}
                 />
               </div>
 
               {stockChartData.length > 0 ? (
-                <div className="h-64 rounded-lg border border-border bg-slate-50 px-3 py-4">
+                <div className="h-64 rounded-lg border border-border bg-white px-3 py-4">
                   <ResponsiveContainer height="100%" width="100%">
                     <BarChart data={stockChartData}>
-                      <XAxis dataKey="name" fontSize={11} tickLine={false} />
-                      <YAxis fontSize={11} tickFormatter={(value) => formatNumber(Number(value))} tickLine={false} />
+                      <XAxis axisLine={false} dataKey="name" fontSize={11} tickLine={false} />
+                      <YAxis
+                        axisLine={false}
+                        fontSize={11}
+                        tickFormatter={(value) => formatNumber(Number(value))}
+                        tickLine={false}
+                      />
                       <Tooltip
                         cursor={{ fill: 'rgb(226 232 240 / 0.45)' }}
                         formatter={(value) => [formatCurrency(Number(value)), 'Valor estimado']}
@@ -261,41 +237,51 @@ export function ReportsPage() {
                 </div>
               ) : null}
 
-              <div className="overflow-hidden rounded-lg border border-border">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full divide-y divide-border">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Cantidad</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Minimo</th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Valor</th>
+              <TableContainer>
+                <table className="w-full min-w-[980px] table-fixed divide-y divide-border">
+                  <colgroup>
+                    <col className="w-[28%]" />
+                    <col className="w-[20%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[12%]" />
+                    <col className="w-[16%]" />
+                  </colgroup>
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Cantidad</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Minimo</th>
+                      <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
+                      <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Valor</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border bg-white">
+                    {stockSummary.slice(0, 10).map((item) => (
+                      <tr className="transition-colors hover:bg-slate-50/80" key={`${item.productId}-${item.warehouseId}`}>
+                        <td className="px-4 py-3">
+                          <div className="min-w-0">
+                            <p className="truncate text-sm font-semibold text-foreground">{item.productName}</p>
+                            <p className="mt-1 font-mono text-xs text-muted">{item.productCode}</p>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 text-sm text-muted">
+                          <p className="truncate">{item.warehouseName}</p>
+                        </td>
+                        <td className="px-4 py-3 text-right text-sm font-semibold text-foreground">
+                          {formatNumber(item.quantity)}
+                        </td>
+                        <td className="px-4 py-3 text-right text-sm text-muted">{formatNumber(item.minimumStock)}</td>
+                        <td className="px-4 py-3">{getStockBadge(item)}</td>
+                        <td className="px-4 py-3 text-right text-sm font-medium text-muted">
+                          {formatCurrency(item.estimatedStockValue)}
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border bg-white">
-                      {stockSummary.slice(0, 10).map((item) => (
-                        <tr key={`${item.productId}-${item.warehouseId}`}>
-                          <td className="px-4 py-3">
-                            <p className="text-sm font-semibold text-foreground">{item.productName}</p>
-                            <p className="mt-1 text-xs text-muted">{item.productCode}</p>
-                          </td>
-                          <td className="px-4 py-3 text-sm text-muted">{item.warehouseName}</td>
-                          <td className="px-4 py-3 text-right text-sm font-semibold text-foreground">
-                            {formatNumber(item.quantity)}
-                          </td>
-                          <td className="px-4 py-3 text-right text-sm text-muted">{formatNumber(item.minimumStock)}</td>
-                          <td className="px-4 py-3">{getStockBadge(item)}</td>
-                          <td className="px-4 py-3 text-right text-sm font-medium text-muted">
-                            {formatCurrency(item.estimatedStockValue)}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
             </div>
           )}
         </CardContent>
@@ -311,7 +297,7 @@ export function ReportsPage() {
             {lowStockQuery.isLoading ? (
               <LoadingState text="Cargando reporte de stock bajo..." />
             ) : lowStockQuery.isError ? (
-              <SectionError error={lowStockQuery.error} />
+              <SectionError text="No se pudo cargar el reporte de stock bajo." />
             ) : lowStock.length === 0 ? (
               <EmptyState
                 description="No hay productos por debajo del stock minimo."
@@ -321,11 +307,11 @@ export function ReportsPage() {
             ) : (
               <div className="space-y-5">
                 {lowStockByWarehouse.length > 0 ? (
-                  <div className="h-56 rounded-lg border border-border bg-slate-50 px-3 py-4">
+                  <div className="h-56 rounded-lg border border-border bg-white px-3 py-4">
                     <ResponsiveContainer height="100%" width="100%">
                       <BarChart data={lowStockByWarehouse}>
-                        <XAxis dataKey="warehouse" fontSize={11} tickLine={false} />
-                        <YAxis allowDecimals={false} fontSize={11} tickLine={false} />
+                        <XAxis axisLine={false} dataKey="warehouse" fontSize={11} tickLine={false} />
+                        <YAxis allowDecimals={false} axisLine={false} fontSize={11} tickLine={false} />
                         <Tooltip
                           cursor={{ fill: 'rgb(226 232 240 / 0.45)' }}
                           formatter={(value) => [formatNumber(Number(value)), 'Faltante']}
@@ -336,41 +322,51 @@ export function ReportsPage() {
                   </div>
                 ) : null}
 
-                <div className="overflow-hidden rounded-lg border border-border">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-border">
-                      <thead className="bg-slate-50">
-                        <tr>
-                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
-                          <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Actual</th>
-                          <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Minimo</th>
-                          <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Faltante</th>
-                          <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
+                <TableContainer>
+                  <table className="w-full min-w-[920px] table-fixed divide-y divide-border">
+                    <colgroup>
+                      <col className="w-[28%]" />
+                      <col className="w-[22%]" />
+                      <col className="w-[12%]" />
+                      <col className="w-[12%]" />
+                      <col className="w-[12%]" />
+                      <col className="w-[14%]" />
+                    </colgroup>
+                    <thead className="bg-slate-50">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Producto</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Almacen</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Actual</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Minimo</th>
+                        <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Faltante</th>
+                        <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border bg-white">
+                      {lowStock.slice(0, 10).map((item) => (
+                        <tr className="transition-colors hover:bg-slate-50/80" key={`${item.productId}-${item.warehouseId}`}>
+                          <td className="px-4 py-3">
+                            <div className="min-w-0">
+                              <p className="truncate text-sm font-semibold text-foreground">{item.productName}</p>
+                              <p className="mt-1 font-mono text-xs text-muted">{item.productCode}</p>
+                            </div>
+                          </td>
+                          <td className="px-4 py-3 text-sm text-muted">
+                            <p className="truncate">{item.warehouseName}</p>
+                          </td>
+                          <td className="px-4 py-3 text-right text-sm font-semibold text-foreground">
+                            {formatNumber(item.quantity)}
+                          </td>
+                          <td className="px-4 py-3 text-right text-sm text-muted">{formatNumber(item.minimumStock)}</td>
+                          <td className="px-4 py-3 text-right text-sm font-medium text-muted">
+                            {formatNumber(item.missingQuantity)}
+                          </td>
+                          <td className="px-4 py-3">{getLowStockBadge(item)}</td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-border bg-white">
-                        {lowStock.slice(0, 10).map((item) => (
-                          <tr key={`${item.productId}-${item.warehouseId}`}>
-                            <td className="px-4 py-3">
-                              <p className="text-sm font-semibold text-foreground">{item.productName}</p>
-                              <p className="mt-1 text-xs text-muted">{item.productCode}</p>
-                            </td>
-                            <td className="px-4 py-3 text-sm text-muted">{item.warehouseName}</td>
-                            <td className="px-4 py-3 text-right text-sm font-semibold text-foreground">
-                              {formatNumber(item.quantity)}
-                            </td>
-                            <td className="px-4 py-3 text-right text-sm text-muted">{formatNumber(item.minimumStock)}</td>
-                            <td className="px-4 py-3 text-right text-sm font-medium text-muted">
-                              {formatNumber(item.missingQuantity)}
-                            </td>
-                            <td className="px-4 py-3">{getLowStockBadge(item)}</td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </TableContainer>
               </div>
             )}
           </CardContent>
@@ -385,7 +381,7 @@ export function ReportsPage() {
             {movementsSummaryQuery.isLoading ? (
               <LoadingState text="Cargando resumen de movimientos..." />
             ) : movementsSummaryQuery.isError ? (
-              <SectionError error={movementsSummaryQuery.error} />
+              <SectionError text="No se pudo cargar el resumen de movimientos." />
             ) : !hasMovementData || !movementsSummary ? (
               <EmptyState
                 description="Aun no hay movimientos registrados para analizar."
@@ -395,37 +391,37 @@ export function ReportsPage() {
             ) : (
               <div className="space-y-5">
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <MetricCard
+                  <ReportMetric
                     description="Movimientos creados"
-                    icon={<ArrowLeftRight className="h-5 w-5" />}
+                    icon={<ArrowLeftRight className="h-4 w-4" />}
                     title="Total"
                     value={formatNumber(movementsSummary.totalMovements)}
                   />
-                  <MetricCard
+                  <ReportMetric
                     description="Lineas operativas"
-                    icon={<ClipboardList className="h-5 w-5" />}
+                    icon={<ClipboardList className="h-4 w-4" />}
                     title="Detalles"
                     value={formatNumber(movementsSummary.totalMovementDetails)}
                   />
-                  <MetricCard
+                  <ReportMetric
                     description="Unidades procesadas"
-                    icon={<Package className="h-5 w-5" />}
+                    icon={<Package className="h-4 w-4" />}
                     title="Unidades"
                     value={formatNumber(movementsSummary.totalUnitsMoved)}
                   />
-                  <MetricCard
+                  <ReportMetric
                     description="Transferencias internas"
-                    icon={<Warehouse className="h-5 w-5" />}
+                    icon={<Warehouse className="h-4 w-4" />}
                     title="Transferencias"
                     value={formatNumber(movementsSummary.totalTransfers)}
                   />
                 </div>
 
-                <div className="h-56 rounded-lg border border-border bg-slate-50 px-3 py-4">
+                <div className="h-56 rounded-lg border border-border bg-white px-3 py-4">
                   <ResponsiveContainer height="100%" width="100%">
                     <BarChart data={movementChartData}>
-                      <XAxis dataKey="name" fontSize={11} tickLine={false} />
-                      <YAxis allowDecimals={false} fontSize={11} tickLine={false} />
+                      <XAxis axisLine={false} dataKey="name" fontSize={11} tickLine={false} />
+                      <YAxis allowDecimals={false} axisLine={false} fontSize={11} tickLine={false} />
                       <Tooltip
                         cursor={{ fill: 'rgb(226 232 240 / 0.45)' }}
                         formatter={(value) => [formatNumber(Number(value)), 'Movimientos']}
@@ -436,30 +432,21 @@ export function ReportsPage() {
                 </div>
 
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <div className="rounded-lg border border-border bg-white p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <ArrowUpCircle className="h-4 w-4 text-emerald-600" />
-                      Entradas
-                    </div>
-                    <p className="mt-2 text-2xl font-semibold text-foreground">
+                  <div className="rounded-lg border border-border bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-foreground">Entradas</p>
+                    <p className="mt-2 text-lg font-semibold text-foreground">
                       {formatNumber(movementsSummary.totalEntries)}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-border bg-white p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <ArrowDownCircle className="h-4 w-4 text-red-600" />
-                      Salidas
-                    </div>
-                    <p className="mt-2 text-2xl font-semibold text-foreground">
+                  <div className="rounded-lg border border-border bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-foreground">Salidas</p>
+                    <p className="mt-2 text-lg font-semibold text-foreground">
                       {formatNumber(movementsSummary.totalExits)}
                     </p>
                   </div>
-                  <div className="rounded-lg border border-border bg-white p-4">
-                    <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                      <ArrowLeftRight className="h-4 w-4 text-primary" />
-                      Transferencias
-                    </div>
-                    <p className="mt-2 text-2xl font-semibold text-foreground">
+                  <div className="rounded-lg border border-border bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-foreground">Transferencias</p>
+                    <p className="mt-2 text-lg font-semibold text-foreground">
                       {formatNumber(movementsSummary.totalTransfers)}
                     </p>
                   </div>
@@ -479,7 +466,7 @@ export function ReportsPage() {
           {kardexSummaryQuery.isLoading ? (
             <LoadingState text="Cargando resumen de Kardex..." />
           ) : kardexSummaryQuery.isError ? (
-            <SectionError error={kardexSummaryQuery.error} />
+            <SectionError text="No se pudo cargar el resumen de Kardex." />
           ) : !hasKardexData || !kardexSummary ? (
             <EmptyState
               description="El Kardex se alimentara automaticamente cuando existan movimientos."
@@ -488,39 +475,35 @@ export function ReportsPage() {
             />
           ) : (
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-              <MetricCard
+              <ReportMetric
                 description="Registros historicos"
-                icon={<ClipboardList className="h-5 w-5" />}
+                icon={<ClipboardList className="h-4 w-4" />}
                 title="Entradas Kardex"
                 value={formatNumber(kardexSummary.totalEntries)}
               />
-              <MetricCard
+              <ReportMetric
                 description="Unidades ingresadas"
-                icon={<ArrowUpCircle className="h-5 w-5" />}
+                icon={<ArrowUpCircle className="h-4 w-4" />}
                 title="Entrada"
                 value={formatNumber(kardexSummary.totalEntryUnits)}
               />
-              <MetricCard
+              <ReportMetric
                 description="Unidades retiradas"
-                icon={<ArrowDownCircle className="h-5 w-5" />}
+                icon={<ArrowDownCircle className="h-4 w-4" />}
                 title="Salida"
                 value={formatNumber(kardexSummary.totalExitUnits)}
               />
-              <MetricCard
+              <ReportMetric
                 description="Valor actual calculado"
-                icon={<DollarSign className="h-5 w-5" />}
+                icon={<DollarSign className="h-4 w-4" />}
                 title="Valor inventario"
                 value={formatCurrency(kardexSummary.totalInventoryValue)}
               />
-              <MetricCard
+              <ReportMetric
                 description="Ultima fecha registrada"
-                icon={<BarChart3 className="h-5 w-5" />}
+                icon={<BarChart3 className="h-4 w-4" />}
                 title="Ultimo movimiento"
-                value={
-                  kardexSummary.lastMovementDate
-                    ? dateFormatter.format(new Date(kardexSummary.lastMovementDate))
-                    : 'Sin fecha'
-                }
+                value={formatDateTime(kardexSummary.lastMovementDate)}
               />
             </div>
           )}

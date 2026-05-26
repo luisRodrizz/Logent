@@ -79,18 +79,16 @@ function SummaryCard({
   value: string
 }) {
   return (
-    <Card>
-      <CardContent className="flex items-start justify-between gap-4 p-5">
+    <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
+      <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <p className="text-sm font-medium text-muted">{title}</p>
-          <p className="mt-2 text-2xl font-semibold tracking-normal text-foreground">{value}</p>
+          <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{value}</p>
           <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
         </div>
-        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-primary">
-          {icon}
-        </div>
-      </CardContent>
-    </Card>
+        <div className="text-slate-400">{icon}</div>
+      </div>
+    </div>
   )
 }
 
@@ -198,26 +196,24 @@ export function AuditLogsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader description="Consulta el historial de operaciones registradas en el sistema." title="Auditoria" />
+      <PageHeader
+        description="Trazabilidad administrativa de operaciones, accesos y cambios registrados por el sistema."
+        eyebrow="Administration"
+        title="Auditoria"
+      />
 
       <Card>
-        <CardContent className="flex flex-col gap-3 p-5 md:flex-row md:items-center md:justify-between">
-          <div>
-            <p className="text-sm font-semibold text-foreground">Trazabilidad del sistema</p>
-            <p className="mt-1 text-sm leading-6 text-muted">
-              Los logs se generan automaticamente desde backend y son de solo lectura.
-            </p>
+        <CardContent className="space-y-4 p-4">
+          <div className="flex flex-col gap-3 border-b border-border pb-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-foreground">Consulta de auditoria</p>
+              <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">
+                Los logs se generan automaticamente desde backend y se mantienen como evidencia de solo lectura.
+              </p>
+            </div>
+            <Badge variant="muted">Solo Admin</Badge>
           </div>
-          <Badge variant="muted">Solo Admin</Badge>
-        </CardContent>
-      </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Filtros de auditoria</CardTitle>
-          <CardDescription>Usa busqueda general o un filtro especifico segun el endpoint disponible.</CardDescription>
-        </CardHeader>
-        <CardContent>
           <div className="grid gap-3 xl:grid-cols-[1.2fr_0.75fr_1fr_auto] xl:items-end">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="audit-search">
@@ -305,26 +301,26 @@ export function AuditLogsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
-          description="Resumen del resultado mostrado"
-          icon={<ShieldCheck className="h-5 w-5" />}
+          description="Resultado mostrado"
+          icon={<ShieldCheck className="h-4 w-4" />}
           title="Logs visibles"
           value={formatNumber(auditLogs.length)}
         />
         <SummaryCard
           description="Operaciones de creacion"
-          icon={<PlusCircle className="h-5 w-5" />}
+          icon={<PlusCircle className="h-4 w-4" />}
           title="Creates"
           value={formatNumber(summary.creates)}
         />
         <SummaryCard
           description="Operaciones de actualizacion"
-          icon={<PencilLine className="h-5 w-5" />}
+          icon={<PencilLine className="h-4 w-4" />}
           title="Updates"
           value={formatNumber(summary.updates)}
         />
         <SummaryCard
           description={`${formatNumber(summary.entities)} entidades afectadas`}
-          icon={<Trash2 className="h-5 w-5" />}
+          icon={<Trash2 className="h-4 w-4" />}
           title="Deletes"
           value={formatNumber(summary.deletes)}
         />
@@ -339,11 +335,7 @@ export function AuditLogsPage() {
       ) : activeQuery.isError ? (
         <AuditLogsErrorState error={activeQuery.error} />
       ) : auditLogs.length === 0 ? (
-        <EmptyState
-          description={emptyDescription}
-          icon={<ShieldCheck className="h-6 w-6" />}
-          title={emptyTitle}
-        />
+        <EmptyState description={emptyDescription} icon={<ShieldCheck className="h-6 w-6" />} title={emptyTitle} />
       ) : (
         <Card>
           <CardHeader>
@@ -354,50 +346,66 @@ export function AuditLogsPage() {
                 : `${formatNumber(generalQuery.data?.totalCount ?? auditLogs.length)} registros encontrados.`}
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="p-0">
             <TableContainer>
-              <table className="min-w-full divide-y divide-border">
+              <table className="w-full min-w-[1120px] table-fixed divide-y divide-border">
+                <colgroup>
+                  <col className="w-[13%]" />
+                  <col className="w-[12%]" />
+                  <col className="w-[24%]" />
+                  <col className="w-[19%]" />
+                  <col className="w-[22%]" />
+                  <col className="w-[10%]" />
+                </colgroup>
                 <thead className="bg-slate-50">
                   <tr>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Fecha</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Accion</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Entidad</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Entity ID</th>
-                    <th className="px-4 py-3 text-left text-xs font-semibold uppercase text-muted">Usuario</th>
-                    <th className="px-4 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Fecha</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Accion</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Entidad</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Entity ID</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Usuario</th>
+                    <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-white">
                   {auditLogs.map((log) => (
-                    <tr key={log.id}>
-                      <td className="whitespace-nowrap px-4 py-3 text-sm text-muted">
+                    <tr className="transition-colors hover:bg-slate-50/80" key={log.id}>
+                      <td className="whitespace-nowrap px-5 py-4 text-sm text-muted">
                         {formatDateTime(log.createdAt)}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4">
                         <Badge variant={actionBadgeVariants[log.action]}>{actionLabels[log.action]}</Badge>
                       </td>
-                      <td className="px-4 py-3">
-                        <p className="text-sm font-semibold text-foreground">{log.entityName}</p>
-                        <p className="mt-1 max-w-sm truncate text-xs text-muted">
-                          {log.description ?? 'Sin descripcion'}
-                        </p>
+                      <td className="px-5 py-4">
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-foreground">{log.entityName}</p>
+                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
+                            {log.description ?? 'Sin descripcion'}
+                          </p>
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-muted">
-                        <span className="block max-w-48 truncate">{log.entityId ?? 'No registrado'}</span>
+                      <td className="px-5 py-4 text-sm text-muted">
+                        <span className="block truncate font-mono text-xs">{log.entityId ?? 'No registrado'}</span>
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-5 py-4">
                         <div className="flex min-w-0 items-center gap-2">
                           <UserRound className="h-4 w-4 shrink-0 text-muted" />
-                          <span className="block max-w-48 truncate text-sm text-muted">
+                          <span className="block truncate font-mono text-xs text-muted">
                             {log.userId ?? 'No registrado'}
                           </span>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-right">
-                        <Button onClick={() => setSelectedLogId(log.id)} size="sm" variant="ghost">
-                          <Eye className="h-4 w-4" />
-                          Ver
-                        </Button>
+                      <td className="px-5 py-4">
+                        <div className="flex justify-end">
+                          <Button
+                            aria-label="Ver detalle de auditoria"
+                            className="h-9 w-9 p-0"
+                            onClick={() => setSelectedLogId(log.id)}
+                            variant="secondary"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -406,11 +414,11 @@ export function AuditLogsPage() {
             </TableContainer>
 
             {!hasSpecificFilter ? (
-              <div className="flex flex-col gap-3 border-t border-border pt-4 md:flex-row md:items-center md:justify-between">
-                <div className="flex items-center gap-2 text-sm text-muted">
-                  <span>Mostrar</span>
+              <div className="flex flex-col gap-3 border-t border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
+                <label className="flex items-center gap-2 text-sm text-muted">
+                  Filas
                   <select
-                    className="h-9 rounded-lg border border-border bg-white px-2 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-blue-100"
+                    className="h-10 rounded-lg border border-border bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
                     onChange={(event) => handlePageSizeChange(event.target.value)}
                     value={pageSize}
                   >
@@ -420,8 +428,7 @@ export function AuditLogsPage() {
                       </option>
                     ))}
                   </select>
-                  <span>por pagina</span>
-                </div>
+                </label>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
                   <p className="text-sm text-muted">
@@ -432,7 +439,6 @@ export function AuditLogsPage() {
                     <Button
                       disabled={!generalQuery.data?.hasPreviousPage}
                       onClick={() => setPageNumber((current) => Math.max(current - 1, 1))}
-                      size="sm"
                       variant="secondary"
                     >
                       Anterior
@@ -440,7 +446,6 @@ export function AuditLogsPage() {
                     <Button
                       disabled={!generalQuery.data?.hasNextPage}
                       onClick={() => setPageNumber((current) => current + 1)}
-                      size="sm"
                       variant="secondary"
                     >
                       Siguiente
@@ -449,7 +454,7 @@ export function AuditLogsPage() {
                 </div>
               </div>
             ) : (
-              <div className="border-t border-border pt-4 text-sm text-muted">
+              <div className="border-t border-border px-5 py-4 text-sm text-muted">
                 Los filtros especificos usan endpoints de consulta sin paginacion.
               </div>
             )}
