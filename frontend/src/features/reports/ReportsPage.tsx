@@ -287,8 +287,8 @@ export function ReportsPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <Card>
+      <div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,0.9fr)]">
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Low stock</CardTitle>
             <CardDescription>Productos por debajo del minimo operativo configurado.</CardDescription>
@@ -372,7 +372,7 @@ export function ReportsPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="min-w-0">
           <CardHeader>
             <CardTitle>Movements summary</CardTitle>
             <CardDescription>Consolidado de entradas, salidas y transferencias registradas.</CardDescription>
