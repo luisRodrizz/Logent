@@ -1,0 +1,351 @@
+.logent-login {
+  position: relative;
+  min-height: 100dvh;
+  overflow-x: clip;
+  background:
+    radial-gradient(circle at 50% 18%, rgb(16 23 216 / 0.055), transparent 34%),
+    radial-gradient(circle at 78% 72%, rgb(40 224 0 / 0.06), transparent 30%),
+    #f8fafc;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+}
+
+.logent-login-loading {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  padding: 24px;
+}
+
+.logent-login-back {
+  position: fixed;
+  left: 32px;
+  top: 28px;
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+  transition:
+    color 180ms ease,
+    transform 180ms ease;
+}
+
+.logent-login-back:hover {
+  color: #0f172a;
+  transform: translateX(-2px);
+}
+
+.logent-login-shell {
+  width: min(100%, 460px);
+}
+
+.logent-login-brand {
+  text-align: center;
+  margin-bottom: 28px;
+}
+
+.logent-login-logo {
+  display: block;
+  height: 58px;
+  width: auto;
+  object-fit: contain;
+  margin: 0 auto 28px;
+}
+
+.logent-login-eyebrow {
+  margin: 0 0 10px;
+  color: #0f6e00;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.logent-login-brand h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 34px;
+  font-weight: 780;
+  line-height: 1.12;
+  letter-spacing: -0.035em;
+}
+
+.logent-login-brand p {
+  margin: 14px auto 0;
+  max-width: 420px;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.logent-login-card {
+  position: relative;
+  padding: 28px;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  background: #ffffff;
+  box-shadow: 0 24px 70px rgb(15 23 42 / 0.08);
+}
+
+.logent-login-card::before {
+  content: "";
+  position: absolute;
+  inset: -1px;
+  z-index: -1;
+  border-radius: 17px;
+  background:
+    linear-gradient(
+      135deg,
+      rgb(16 23 216 / 0.12),
+      rgb(40 224 0 / 0.08),
+      rgb(226 232 240 / 0)
+    );
+  opacity: 0.7;
+}
+
+.logent-login-card-head {
+  margin-bottom: 22px;
+}
+
+.logent-login-card-head h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 24px;
+  font-weight: 780;
+  letter-spacing: -0.025em;
+}
+
+.logent-login-card-head span {
+  display: block;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.logent-login-field + .logent-login-field {
+  margin-top: 17px;
+}
+
+.logent-login-field label {
+  display: block;
+  margin-bottom: 8px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.logent-login-input-wrap {
+  position: relative;
+}
+
+.logent-login-input-wrap svg {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  color: #64748b;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.logent-login-input-wrap input {
+  width: 100%;
+  height: 48px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: 0 14px 0 44px;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.logent-login-input-wrap input::placeholder {
+  color: #94a3b8;
+}
+
+.logent-login-input-wrap input:focus {
+  border-color: #1017d8;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgb(16 23 216 / 0.08);
+}
+
+.logent-login-error {
+  margin: 8px 0 0;
+  color: #dc2626;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.logent-login-submit {
+  width: 100%;
+  height: 46px;
+  margin-top: 22px;
+  border: 0;
+  border-radius: 10px;
+  background: #1017d8;
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 780;
+  transition:
+    background-color 180ms ease,
+    transform 180ms ease,
+    opacity 180ms ease;
+}
+
+.logent-login-submit:hover {
+  background: #0b119e;
+  transform: translateY(-1px);
+}
+
+.logent-login-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+  transform: none;
+}
+
+.logent-login-forgot {
+  width: 100%;
+  margin-top: 14px;
+  border: 0;
+  background: transparent;
+  color: #1017d8;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.logent-login-forgot:hover {
+  text-decoration: underline;
+}
+
+.logent-login-demo {
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.logent-login-demo-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.logent-login-demo-head div {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logent-login-demo-head svg {
+  color: #1017d8;
+}
+
+.logent-login-demo-head strong {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.logent-login-demo-head > span {
+  border: 1px solid rgb(40 224 0 / 0.28);
+  border-radius: 999px;
+  background: rgb(40 224 0 / 0.08);
+  color: #0f6e00;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.logent-login-demo-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.logent-login-demo-row + .logent-login-demo-row {
+  margin-top: 10px;
+}
+
+.logent-login-demo-row span {
+  color: #64748b;
+  font-size: 13px;
+}
+
+.logent-login-demo-row code {
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.logent-login-note {
+  margin: 18px 0 0;
+  color: #64748b;
+  text-align: center;
+  font-size: 12px;
+}
+
+@media (max-width: 640px) {
+  .logent-login {
+    align-items: flex-start;
+    padding: 88px 18px 32px;
+  }
+
+  .logent-login-back {
+    left: 20px;
+    top: 22px;
+  }
+
+  .logent-login-logo {
+    height: 48px;
+  }
+
+  .logent-login-brand h1 {
+    font-size: 29px;
+  }
+
+  .logent-login-card {
+    padding: 22px;
+  }
+
+  .logent-login-demo-row {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .logent-login *,
+  .logent-login *::before,
+  .logent-login *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Link, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
 import { LoadingState } from '../components/common/LoadingState'
 import { ProtectedLayout } from '../components/layout/ProtectedLayout'
 import { routeRoles } from '../components/layout/navigation'
@@ -19,6 +19,9 @@ const DashboardPage = lazy(() =>
 )
 const KardexPage = lazy(() =>
   import('../features/kardex/KardexPage').then((module) => ({ default: module.KardexPage })),
+)
+const LandingPage = lazy(() =>
+  import('../features/landing/LandingPage').then((module) => ({ default: module.LandingPage })),
 )
 const LoginPage = lazy(() => import('../features/auth/LoginPage').then((module) => ({ default: module.LoginPage })))
 const MovementsPage = lazy(() =>
@@ -90,6 +93,14 @@ export function AppRouter() {
     <BrowserRouter>
       <Routes>
         <Route
+          path="/"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <LandingPage />
+            </Suspense>
+          }
+        />
+        <Route
           path="/login"
           element={
             <Suspense fallback={<FullPageFallback />}>
@@ -99,7 +110,6 @@ export function AppRouter() {
         />
         <Route element={<RequireAuth />}>
           <Route element={<ProtectedLayout />}>
-            <Route index element={<Navigate replace to="/dashboard" />} />
             <Route path="/dashboard" element={protectedRoute(<DashboardPage />, routeRoles.dashboard)} />
             <Route path="/categories" element={protectedRoute(<CategoriesPage />, routeRoles.categories)} />
             <Route path="/suppliers" element={protectedRoute(<SuppliersPage />, routeRoles.suppliers)} />
