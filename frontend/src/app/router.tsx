@@ -37,6 +37,9 @@ const StockPage = lazy(() => import('../features/stock/StockPage').then((module)
 const SuppliersPage = lazy(() =>
   import('../features/suppliers/SuppliersPage').then((module) => ({ default: module.SuppliersPage })),
 )
+const UsersPage = lazy(() =>
+  import('../features/users/UsersPage').then((module) => ({ default: module.UsersPage })),
+)
 const WarehousesPage = lazy(() =>
   import('../features/warehouses/WarehousesPage').then((module) => ({ default: module.WarehousesPage })),
 )
@@ -119,6 +122,7 @@ export function AppRouter() {
             <Route path="/movements" element={protectedRoute(<MovementsPage />, routeRoles.movements)} />
             <Route path="/kardex" element={protectedRoute(<KardexPage />, routeRoles.kardex)} />
             <Route path="/reports" element={protectedRoute(<ReportsPage />, routeRoles.reports)} />
+            <Route path="/admin/users" element={protectedRoute(<UsersPage />, routeRoles.users)} />
             <Route path="/audit-logs" element={protectedRoute(<AuditLogsPage />, routeRoles.auditLogs)} />
           </Route>
         </Route>

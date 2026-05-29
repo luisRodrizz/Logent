@@ -2,11 +2,12 @@ import { AxiosError } from 'axios'
 
 type ApiErrorResponse = {
   detail?: string
+  errors?: string[]
   message?: string
 }
 
 function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
-  return typeof value === 'object' && value !== null && ('message' in value || 'detail' in value)
+  return typeof value === 'object' && value !== null && ('message' in value || 'detail' in value || 'errors' in value)
 }
 
 export function getApiErrorMessage(error: unknown, fallback = 'No se pudo completar la operacion.'): string {
@@ -22,7 +23,13 @@ export function getApiErrorMessage(error: unknown, fallback = 'No se pudo comple
     }
 
     if (isApiErrorResponse(data)) {
-      return data.message ?? data.detail ?? fallback
+      const firstError = data.errors?.find((item) => item.trim().length > 0)
+
+      if (data.message && data.message !== 'Validation failed.') {
+        return data.message
+      }
+
+      return data.detail ?? firstError ?? data.message ?? fallback
     }
   }
 

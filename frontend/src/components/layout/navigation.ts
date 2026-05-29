@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Tags,
   Truck,
+  UsersRound,
   Warehouse,
   type LucideIcon,
 } from 'lucide-react'
@@ -37,6 +38,7 @@ export const routeRoles = {
   reports: ['Admin', 'Almacenero', 'Consulta'],
   stock: ['Admin', 'Almacenero', 'Consulta'],
   suppliers: ['Admin'],
+  users: ['Admin'],
   warehouses: ['Admin'],
 } satisfies Record<string, AuthRole[]>
 
@@ -127,6 +129,13 @@ export const navigationGroups: NavigationGroup[] = [
   {
     label: 'Administración',
     items: [
+      {
+        allowedRoles: routeRoles.users,
+        description: 'Cuentas y roles internos',
+        href: '/admin/users',
+        icon: UsersRound,
+        label: 'Usuarios',
+      },
       {
         allowedRoles: routeRoles.auditLogs,
         description: 'Registro de acciones',
