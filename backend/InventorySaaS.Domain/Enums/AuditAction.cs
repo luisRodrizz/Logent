@@ -15,5 +15,6 @@ public enum AuditAction
     UserUpdated,
     UserRoleChanged,
     UserStatusChanged,
-    UserPasswordReset
+    UserPasswordReset,
+    ProfilePasswordChanged
 }

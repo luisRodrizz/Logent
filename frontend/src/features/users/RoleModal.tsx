@@ -7,7 +7,7 @@ import { ModalOverlay } from '../../components/common/ModalOverlay'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
-import type { UpdateUserRolePayload, User } from './users.types'
+import type { UpdateUserRolePayload, User, UserRole } from './users.types'
 import { userRoles } from './users.types'
 
 const roleSchema = z.object({
@@ -22,6 +22,12 @@ type RoleModalProps = {
   onClose: () => void
   onSubmit: (payload: UpdateUserRolePayload) => Promise<void> | void
   user?: User | null
+}
+
+const roleBadgeVariants: Record<UserRole, 'default' | 'success' | 'muted'> = {
+  Admin: 'default',
+  Almacenero: 'success',
+  Consulta: 'muted',
 }
 
 export function RoleModal({ isOpen, isSubmitting = false, onClose, onSubmit, user }: RoleModalProps) {
@@ -73,7 +79,7 @@ export function RoleModal({ isOpen, isSubmitting = false, onClose, onSubmit, use
               <p className="text-sm font-semibold text-foreground">{user.fullName || user.email}</p>
               <p className="mt-1 text-sm text-muted">{user.email}</p>
               <div className="mt-3">
-                <Badge>{user.role}</Badge>
+                <Badge variant={roleBadgeVariants[user.role]}>{user.role}</Badge>
               </div>
             </div>
 

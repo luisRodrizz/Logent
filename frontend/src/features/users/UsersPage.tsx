@@ -42,6 +42,8 @@ const roleBadgeVariants: Record<UserRole, 'default' | 'success' | 'muted'> = {
   Consulta: 'muted',
 }
 
+const actionButtonBaseClass = 'h-9 w-9 border p-0 shadow-none'
+
 type UserModalState =
   | {
       mode: 'create' | 'edit'
@@ -153,7 +155,7 @@ export function UsersPage() {
 
     try {
       await resetUserPasswordMutation.mutateAsync({ id: userForReset.id, payload })
-      toast.success('Contraseña temporal actualizada correctamente.')
+      toast.success('Contraseña restablecida correctamente.')
       setUserForReset(null)
     } catch (error) {
       toast.error(getApiErrorMessage(error))
@@ -292,14 +294,14 @@ export function UsersPage() {
           </CardHeader>
           <CardContent className="p-0">
             <TableContainer>
-              <table className="w-full min-w-[980px] table-fixed divide-y divide-border">
+              <table className="w-full min-w-[1060px] table-fixed divide-y divide-border">
                 <colgroup>
-                  <col className="w-[24%]" />
-                  <col className="w-[24%]" />
+                  <col className="w-[22%]" />
+                  <col className="w-[22%]" />
                   <col className="w-[13%]" />
                   <col className="w-[11%]" />
-                  <col className="w-[13%]" />
-                  <col className="w-[15%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[18%]" />
                 </colgroup>
                 <thead className="bg-slate-50">
                   <tr>
@@ -317,7 +319,9 @@ export function UsersPage() {
                       <td className="px-5 py-4">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">{getDisplayName(user)}</p>
-                          <p className="mt-1 font-mono text-xs text-muted">ID {user.id.slice(0, 8)}</p>
+                          <p className="mt-1 font-mono text-[11px] uppercase tracking-wide text-slate-400">
+                            ID: {user.id.slice(0, 8)}
+                          </p>
                         </div>
                       </td>
                       <td className="px-5 py-4">
@@ -327,7 +331,7 @@ export function UsersPage() {
                         <Badge variant={roleBadgeVariants[user.role]}>{user.role}</Badge>
                       </td>
                       <td className="px-5 py-4">
-                        <Badge variant={user.isActive ? 'success' : 'muted'}>
+                        <Badge variant={user.isActive ? 'success' : 'danger'}>
                           {user.isActive ? 'Activo' : 'Inactivo'}
                         </Badge>
                       </td>
@@ -335,39 +339,47 @@ export function UsersPage() {
                       <td className="px-5 py-4">
                         <div className="flex justify-end gap-2">
                           <Button
-                            aria-label={`Editar ${getDisplayName(user)}`}
-                            className="h-9 w-9 p-0"
+                            aria-label={`Editar usuario ${getDisplayName(user)}`}
+                            className={actionButtonBaseClass}
                             onClick={() => setModalState({ mode: 'edit', user })}
+                            title="Editar usuario"
                             variant="secondary"
                           >
                             <Edit3 className="h-4 w-4" />
                           </Button>
                           <Button
                             aria-label={`Cambiar rol de ${getDisplayName(user)}`}
-                            className="h-9 w-9 p-0"
+                            className={`${actionButtonBaseClass} border-[#1017D8]/15 bg-[#1017D8]/5 text-primary hover:bg-[#1017D8]/10`}
                             onClick={() => setUserForRole(user)}
+                            title="Cambiar rol"
                             variant="secondary"
                           >
                             <ShieldCheck className="h-4 w-4" />
                           </Button>
                           <Button
                             aria-label={`Resetear contraseña de ${getDisplayName(user)}`}
-                            className="h-9 w-9 p-0"
+                            className={actionButtonBaseClass}
                             onClick={() => setUserForReset(user)}
+                            title="Resetear contraseña"
                             variant="secondary"
                           >
                             <KeyRound className="h-4 w-4" />
                           </Button>
                           <Button
                             aria-label={`${user.isActive ? 'Desactivar' : 'Activar'} ${getDisplayName(user)}`}
-                            className="h-9 w-9 p-0"
+                            className={
+                              user.isActive
+                                ? `${actionButtonBaseClass} border-red-200 bg-red-50 text-red-700 hover:bg-red-100`
+                                : `${actionButtonBaseClass} border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100`
+                            }
                             onClick={() => setUserForStatus(user)}
-                            variant="ghost"
+                            title={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
+                            variant="secondary"
                           >
                             {user.isActive ? (
-                              <PowerOff className="h-4 w-4 text-red-600" />
+                              <PowerOff className="h-4 w-4" />
                             ) : (
-                              <Power className="h-4 w-4 text-emerald-700" />
+                              <Power className="h-4 w-4" />
                             )}
                           </Button>
                         </div>
@@ -432,11 +444,9 @@ export function UsersPage() {
       <ConfirmDialog
         confirmLabel={userForStatus?.isActive ? 'Desactivar' : 'Activar'}
         description={
-          userForStatus
-            ? `${userForStatus.isActive ? 'Se desactivara' : 'Se activara'} el acceso de "${getDisplayName(
-                userForStatus,
-              )}".`
-            : 'Se actualizara el estado del usuario.'
+          userForStatus?.isActive
+            ? 'El usuario no podra iniciar sesion mientras este inactivo.'
+            : 'El usuario recuperara el acceso al sistema.'
         }
         isConfirming={updateUserStatusMutation.isPending}
         isOpen={Boolean(userForStatus)}

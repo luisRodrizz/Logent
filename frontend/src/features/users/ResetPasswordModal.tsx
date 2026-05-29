@@ -89,6 +89,10 @@ export function ResetPasswordModal({
               <p className="mt-1 text-sm text-muted">{user.email}</p>
             </div>
 
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm leading-6 text-amber-800">
+              Entrega esta contraseña temporal al usuario. Podra iniciar sesion con ella.
+            </p>
+
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="new-password">
                 Nueva contraseña temporal

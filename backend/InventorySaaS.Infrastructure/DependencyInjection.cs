@@ -5,6 +5,7 @@ using InventorySaaS.Application.Dashboard.Interfaces;
 using InventorySaaS.Application.Kardex.Interfaces;
 using InventorySaaS.Application.Movements.Interfaces;
 using InventorySaaS.Application.Products.Interfaces;
+using InventorySaaS.Application.Profile.Interfaces;
 using InventorySaaS.Application.Reports.Interfaces;
 using InventorySaaS.Application.StockItems.Interfaces;
 using InventorySaaS.Application.Suppliers.Interfaces;
@@ -19,6 +20,7 @@ using InventorySaaS.Infrastructure.Kardex;
 using InventorySaaS.Infrastructure.Movements;
 using InventorySaaS.Infrastructure.Persistence;
 using InventorySaaS.Infrastructure.Products;
+using InventorySaaS.Infrastructure.Profile;
 using InventorySaaS.Infrastructure.Reports;
 using InventorySaaS.Infrastructure.StockItems;
 using InventorySaaS.Infrastructure.Suppliers;
@@ -70,6 +72,7 @@ public static class DependencyInjection
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
+        services.AddScoped<IProfileService, ProfileService>();
 
         // Authentication / audit helpers
         services.AddScoped<IJwtTokenService, JwtTokenService>();
