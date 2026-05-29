@@ -202,7 +202,7 @@ export function ProductForm({
         )}
       </div>
 
-      <div className="rounded-lg border border-blue-100 bg-blue-50 px-4 py-3 text-sm leading-6 text-blue-800">
+      <div className="rounded-lg border border-[#14B8A6]/25 bg-[#14B8A6]/10 px-4 py-3 text-sm leading-6 text-slate-700">
         El stock actual no se edita desde productos. Las existencias se gestionan unicamente mediante movimientos.
       </div>
 

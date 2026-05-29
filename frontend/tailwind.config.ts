@@ -5,10 +5,12 @@ export default {
   theme: {
     extend: {
       colors: {
+        'logent-blue': '#1017D8',
+        'logent-green': '#28E000',
         border: '#E2E8F0',
         card: '#FFFFFF',
         muted: '#64748B',
-        primary: '#2563EB',
+        primary: '#1017D8',
         accent: '#14B8A6',
         background: '#F8FAFC',
         foreground: '#0F172A',

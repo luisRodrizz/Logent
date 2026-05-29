@@ -49,7 +49,7 @@ function ReportMetric({
           <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{value}</p>
           <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
         </div>
-        <div className="text-slate-400">{icon}</div>
+        <div className="text-[#14B8A6]">{icon}</div>
       </div>
     </div>
   )
@@ -231,7 +231,7 @@ export function ReportsPage() {
                         cursor={{ fill: 'rgb(226 232 240 / 0.45)' }}
                         formatter={(value) => [formatCurrency(Number(value)), 'Valor estimado']}
                       />
-                      <Bar dataKey="value" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                      <Bar dataKey="value" fill="#1017D8" radius={[4, 4, 0, 0]} />
                     </BarChart>
                   </ResponsiveContainer>
                 </div>

@@ -296,7 +296,7 @@ export function MovementForm({
         </div>
       </section>
 
-      <div className="rounded-lg border border-blue-100 bg-blue-50/70 px-4 py-3 text-sm leading-6 text-blue-800">
+      <div className="rounded-lg border border-[#14B8A6]/25 bg-[#14B8A6]/10 px-4 py-3 text-sm leading-6 text-slate-700">
         Este movimiento {typeLabels[selectedType].toLowerCase()} actualizara stock y Kardex desde el backend. No hay
         edicion manual de StockItems en esta pantalla.
       </div>

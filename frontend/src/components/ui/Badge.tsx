@@ -8,8 +8,8 @@ type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 }
 
 const variants: Record<BadgeVariant, string> = {
-  default: 'bg-blue-50 text-primary ring-blue-200',
-  success: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
+  default: 'bg-[#1017D8]/5 text-primary ring-[#1017D8]/20',
+  success: 'bg-[#28E000]/10 text-emerald-700 ring-[#28E000]/25',
   warning: 'bg-amber-50 text-amber-700 ring-amber-200',
   danger: 'bg-red-50 text-red-700 ring-red-200',
   muted: 'bg-slate-100 text-slate-600 ring-slate-200',

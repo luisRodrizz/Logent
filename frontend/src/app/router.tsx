@@ -41,7 +41,7 @@ const WarehousesPage = lazy(() =>
 function FullPageFallback() {
   return (
     <main className="flex min-h-screen items-center justify-center bg-background px-6">
-      <LoadingState text="Cargando InventorySaaS..." />
+      <LoadingState text="Cargando LOGENT..." />
     </main>
   )
 }
@@ -50,7 +50,7 @@ function RouteFallback() {
   return (
     <Card>
       <CardContent>
-        <LoadingState text="Cargando modulo..." />
+        <LoadingState text="Cargando módulo..." />
       </CardContent>
     </Card>
   )
@@ -69,7 +69,7 @@ function NotFoundPage() {
     <main className="flex min-h-screen items-center justify-center bg-background px-6">
       <Card className="w-full max-w-lg text-center">
         <CardHeader>
-          <CardTitle>Pagina no encontrada</CardTitle>
+          <CardTitle>Página no encontrada</CardTitle>
           <CardDescription>La ruta solicitada no existe en el frontend.</CardDescription>
         </CardHeader>
         <CardContent>

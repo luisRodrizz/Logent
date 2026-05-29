@@ -51,10 +51,10 @@ function CompactMetric({
   value: string
 }) {
   return (
-    <div className="rounded-lg border border-border bg-white px-4 py-3">
+    <div className="rounded-lg border border-border bg-white px-4 py-3 shadow-[0_1px_2px_rgb(15_23_42/0.03)]">
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm font-medium text-muted">{title}</p>
-        <div className="text-slate-400">{icon}</div>
+        <div className="text-[#14B8A6]">{icon}</div>
       </div>
       <p className="mt-3 text-xl font-semibold tracking-tight text-foreground">{value}</p>
       <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
@@ -93,7 +93,7 @@ export function DashboardPage() {
       ) : summaryQuery.isError ? (
         <SectionError text="No se pudieron cargar las métricas principales del dashboard." />
       ) : summaryQuery.data ? (
-        <Card className="overflow-hidden">
+        <Card className="overflow-hidden border-t-2 border-t-[#28E000]">
           <CardContent className="grid gap-0 p-0 lg:grid-cols-[1fr_1.8fr]">
             <div className="border-b border-border bg-white p-6 lg:border-b-0 lg:border-r">
               <p className="text-sm font-medium text-muted">Valor estimado actual</p>
@@ -104,13 +104,13 @@ export function DashboardPage() {
                 Resumen financiero calculado desde el stock y costos registrados.
               </p>
               <div className="mt-6 grid grid-cols-2 gap-3">
-                <div className="rounded-lg border border-border bg-slate-50 p-3">
+                <div className="rounded-lg border border-[#14B8A6]/20 bg-[#14B8A6]/5 p-3">
                   <p className="text-xs text-muted">Productos</p>
                   <p className="mt-2 text-lg font-semibold text-foreground">
                     {formatNumber(summaryQuery.data.totalProducts)}
                   </p>
                 </div>
-                <div className="rounded-lg border border-border bg-slate-50 p-3">
+                <div className="rounded-lg border border-[#1017D8]/15 bg-[#1017D8]/5 p-3">
                   <p className="text-xs text-muted">Almacenes</p>
                   <p className="mt-2 text-lg font-semibold text-foreground">
                     {formatNumber(summaryQuery.data.totalWarehouses)}
@@ -190,7 +190,7 @@ export function DashboardPage() {
                           cursor={{ fill: 'rgb(226 232 240 / 0.45)' }}
                           formatter={(value) => [formatNumber(Number(value)), 'Cantidad']}
                         />
-                        <Bar dataKey="quantity" fill="#2563EB" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="quantity" fill="#1017D8" radius={[4, 4, 0, 0]} />
                       </BarChart>
                     </ResponsiveContainer>
                   </div>

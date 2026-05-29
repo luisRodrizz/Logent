@@ -25,7 +25,7 @@ export function Topbar({ description, onMenuClick, title }: TopbarProps) {
       <div className="flex min-h-[68px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-8 xl:px-10">
         <div className="flex min-w-0 items-center gap-3">
           <Button
-            aria-label="Abrir menu"
+            aria-label="Abrir menú"
             className="h-10 w-10 shrink-0 p-0 lg:hidden"
             onClick={onMenuClick}
             variant="secondary"
@@ -33,7 +33,7 @@ export function Topbar({ description, onMenuClick, title }: TopbarProps) {
             <Menu className="h-5 w-5" />
           </Button>
           <div className="min-w-0">
-            <p className="truncate text-xs font-semibold uppercase tracking-wide text-muted">InventorySaaS</p>
+            <p className="truncate text-xs font-semibold uppercase tracking-wide text-muted">LOGENT</p>
             <div className="flex min-w-0 items-baseline gap-2">
               <h1 className="truncate text-lg font-semibold text-foreground">{title}</h1>
               <span className="hidden text-sm text-muted md:inline">{description}</span>
@@ -55,7 +55,7 @@ export function Topbar({ description, onMenuClick, title }: TopbarProps) {
             </div>
             <div className="min-w-0">
               <p className="max-w-44 truncate text-sm font-semibold text-foreground">{displayName}</p>
-              <p className="text-xs text-muted">Sesion activa</p>
+              <p className="text-xs text-muted">Sesión activa</p>
             </div>
           </div>
           <Button aria-label="Salir" className="shrink-0" onClick={handleLogout} size="sm" variant="ghost">

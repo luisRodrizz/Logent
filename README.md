@@ -1,10 +1,16 @@
-# InventorySaaS
+# LOGENT / InventorySaaS
 
-InventorySaaS es un sistema SaaS de gestión de inventario orientado al control operativo de stock, movimientos, Kardex, reportes y auditoría. El proyecto integra un backend con arquitectura limpia y una interfaz web moderna para administrar catálogos, existencias, trazabilidad y consultas analíticas en un entorno local/demo.
+LOGENT es un sistema SaaS de gestión de inventario orientado al control operativo de stock, movimientos, Kardex, reportes y auditoría. El proyecto integra un backend con arquitectura limpia y una interfaz web moderna para administrar catálogos, existencias, trazabilidad y consultas analíticas en un entorno local/demo.
+
+## Identidad del producto
+
+LOGENT es la identidad visual y nombre comercial del sistema InventorySaaS, orientada a presentar el proyecto como una plataforma SaaS profesional para gestión de inventarios.
+
+InventorySaaS se mantiene como nombre técnico del repositorio/proyecto y como referencia interna de arquitectura.
 
 ## Objetivo del proyecto
 
-InventorySaaS fue desarrollado como un proyecto full-stack avanzado para portafolio, aplicando arquitectura limpia, autenticación con JWT, control de roles, reglas de inventario, trazabilidad mediante auditoría y una UI premium responsive con enfoque enterprise.
+InventorySaaS fue desarrollado como un proyecto full-stack avanzado para portafolio. LOGENT representa la experiencia visible del producto, aplicando arquitectura limpia, autenticación con JWT, control de roles, reglas de inventario, trazabilidad mediante auditoría y una UI premium responsive con enfoque enterprise.
 
 ## Características principales
 
