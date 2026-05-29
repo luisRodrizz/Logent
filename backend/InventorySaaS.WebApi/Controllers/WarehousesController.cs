@@ -3,6 +3,7 @@ using FluentValidation;
 using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Warehouses.DTOs;
 using InventorySaaS.Application.Warehouses.Interfaces;
+using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,7 +34,9 @@ public class WarehousesController(
     {
         var warehouse = await warehouseService.GetByIdAsync(id, cancellationToken);
 
-        return warehouse is null ? NotFound() : Ok(warehouse);
+        return warehouse is null
+            ? this.ApiNotFound("Warehouse not found.", "No warehouse was found with the provided id.")
+            : Ok(warehouse);
     }
 
     [HttpPost]
@@ -46,14 +49,14 @@ public class WarehousesController(
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            return this.ApiValidation(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
         var userId = GetCurrentUserId();
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var warehouse = await warehouseService.CreateAsync(request, userId, cancellationToken);
@@ -72,19 +75,21 @@ public class WarehousesController(
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            return this.ApiValidation(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
         var userId = GetCurrentUserId();
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var updated = await warehouseService.UpdateAsync(id, request, userId, cancellationToken);
 
-        return updated ? NoContent() : NotFound();
+        return updated
+            ? NoContent()
+            : this.ApiNotFound("Warehouse not found.", "No warehouse was found with the provided id.");
     }
 
     [HttpDelete("{id:guid}")]
@@ -95,12 +100,14 @@ public class WarehousesController(
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var deleted = await warehouseService.DeleteAsync(id, userId, cancellationToken);
 
-        return deleted ? NoContent() : NotFound();
+        return deleted
+            ? NoContent()
+            : this.ApiNotFound("Warehouse not found.", "No warehouse was found with the provided id.");
     }
 
     private string? GetCurrentUserId()

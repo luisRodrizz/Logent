@@ -8,6 +8,8 @@ public class ApiErrorResponse
 
     public string? Detail { get; set; }
 
+    public IEnumerable<string>? Errors { get; set; }
+
     public string TraceId { get; set; } = string.Empty;
 
     public DateTime Timestamp { get; set; }

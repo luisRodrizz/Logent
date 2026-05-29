@@ -8,6 +8,7 @@ using InventorySaaS.Application.Products.Interfaces;
 using InventorySaaS.Application.Reports.Interfaces;
 using InventorySaaS.Application.StockItems.Interfaces;
 using InventorySaaS.Application.Suppliers.Interfaces;
+using InventorySaaS.Application.Users.Interfaces;
 using InventorySaaS.Application.Warehouses.Interfaces;
 using InventorySaaS.Infrastructure.Authentication;
 using InventorySaaS.Infrastructure.AuditLogs;
@@ -21,6 +22,7 @@ using InventorySaaS.Infrastructure.Products;
 using InventorySaaS.Infrastructure.Reports;
 using InventorySaaS.Infrastructure.StockItems;
 using InventorySaaS.Infrastructure.Suppliers;
+using InventorySaaS.Infrastructure.Users;
 using InventorySaaS.Infrastructure.Warehouses;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -67,6 +69,7 @@ public static class DependencyInjection
         services.AddScoped<IReportService, ReportService>();
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
+        services.AddScoped<IUserManagementService, UserManagementService>();
 
         // Authentication / audit helpers
         services.AddScoped<IJwtTokenService, JwtTokenService>();

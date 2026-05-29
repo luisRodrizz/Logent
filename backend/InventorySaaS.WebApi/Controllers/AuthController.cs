@@ -2,6 +2,7 @@ using System.Security.Claims;
 using InventorySaaS.Application.Auth.DTOs;
 using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Infrastructure.Identity;
+using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -22,6 +23,7 @@ public class AuthController(
         IdentitySeeder.ReadOnlyRole
     };
 
+    [Authorize(Roles = IdentitySeeder.AdminRole)]
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)
     {
@@ -29,14 +31,22 @@ public class AuthController(
 
         if (!AllowedRoles.Contains(role))
         {
-            return BadRequest($"Role must be one of: {string.Join(", ", AllowedRoles)}.");
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status400BadRequest,
+                "Invalid role.",
+                $"Role must be one of: {string.Join(", ", AllowedRoles)}.");
         }
 
         var existingUser = await userManager.FindByEmailAsync(request.Email);
 
         if (existingUser is not null)
         {
-            return BadRequest("A user with this email already exists.");
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status400BadRequest,
+                "A user with this email already exists.",
+                "A user with this email already exists.");
         }
 
         var user = new ApplicationUser
@@ -54,14 +64,18 @@ public class AuthController(
 
         if (!createResult.Succeeded)
         {
-            return BadRequest(createResult.Errors.Select(error => error.Description));
+            return ApiErrorResponseFactory.Validation(
+                HttpContext,
+                createResult.Errors.Select(error => error.Description));
         }
 
         var roleResult = await userManager.AddToRoleAsync(user, role);
 
         if (!roleResult.Succeeded)
         {
-            return BadRequest(roleResult.Errors.Select(error => error.Description));
+            return ApiErrorResponseFactory.Validation(
+                HttpContext,
+                roleResult.Errors.Select(error => error.Description));
         }
 
         return Ok(await CreateAuthResponseAsync(user));
@@ -72,16 +86,33 @@ public class AuthController(
     {
         var user = await userManager.FindByEmailAsync(request.Email);
 
-        if (user is null || !user.IsActive)
+        if (user is null)
         {
-            return Unauthorized("Invalid credentials.");
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "Invalid email or password.",
+                "The provided credentials are not valid.");
+        }
+
+        if (!user.IsActive)
+        {
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "User account is inactive.",
+                "Contact an administrator to reactivate this account.");
         }
 
         var signInResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
 
         if (!signInResult.Succeeded)
         {
-            return Unauthorized("Invalid credentials.");
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "Invalid email or password.",
+                "The provided credentials are not valid.");
         }
 
         return Ok(await CreateAuthResponseAsync(user));
@@ -95,14 +126,31 @@ public class AuthController(
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            return Unauthorized();
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "Authentication is required.",
+                "You must provide a valid access token.");
         }
 
         var user = await userManager.FindByIdAsync(userId);
 
-        if (user is null || !user.IsActive)
+        if (user is null)
         {
-            return Unauthorized();
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "Authentication is required.",
+                "You must provide a valid access token.");
+        }
+
+        if (!user.IsActive)
+        {
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "User account is inactive.",
+                "Contact an administrator to reactivate this account.");
         }
 
         var roles = await userManager.GetRolesAsync(user);

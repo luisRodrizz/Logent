@@ -3,6 +3,7 @@ using FluentValidation;
 using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Products.DTOs;
 using InventorySaaS.Application.Products.Interfaces;
+using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,7 +34,9 @@ public class ProductsController(
     {
         var product = await productService.GetByIdAsync(id, cancellationToken);
 
-        return product is null ? NotFound() : Ok(product);
+        return product is null
+            ? this.ApiNotFound("Product not found.", "No product was found with the provided id.")
+            : Ok(product);
     }
 
     [HttpPost]
@@ -46,14 +49,14 @@ public class ProductsController(
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            return this.ApiValidation(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
         var userId = GetCurrentUserId();
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var product = await productService.CreateAsync(request, userId, cancellationToken);
@@ -72,19 +75,21 @@ public class ProductsController(
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            return this.ApiValidation(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
         var userId = GetCurrentUserId();
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var updated = await productService.UpdateAsync(id, request, userId, cancellationToken);
 
-        return updated ? NoContent() : NotFound();
+        return updated
+            ? NoContent()
+            : this.ApiNotFound("Product not found.", "No product was found with the provided id.");
     }
 
     [HttpDelete("{id:guid}")]
@@ -95,12 +100,14 @@ public class ProductsController(
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var deleted = await productService.DeleteAsync(id, userId, cancellationToken);
 
-        return deleted ? NoContent() : NotFound();
+        return deleted
+            ? NoContent()
+            : this.ApiNotFound("Product not found.", "No product was found with the provided id.");
     }
 
     private string? GetCurrentUserId()

@@ -1,6 +1,7 @@
 using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Kardex.DTOs;
 using InventorySaaS.Application.Kardex.Interfaces;
+using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -26,7 +27,9 @@ public class KardexController(IKardexService kardexService) : ControllerBase
     {
         var entry = await kardexService.GetByIdAsync(id, cancellationToken);
 
-        return entry is null ? NotFound() : Ok(entry);
+        return entry is null
+            ? this.ApiNotFound("Kardex entry not found.", "No Kardex entry was found with the provided id.")
+            : Ok(entry);
     }
 
     [HttpGet("by-product/{productId:guid}")]

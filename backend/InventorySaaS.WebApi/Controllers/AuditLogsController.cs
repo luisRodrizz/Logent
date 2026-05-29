@@ -2,6 +2,7 @@ using InventorySaaS.Application.AuditLogs.DTOs;
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Domain.Enums;
+using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -27,7 +28,9 @@ public class AuditLogsController(IAuditLogService auditLogService) : ControllerB
     {
         var auditLog = await auditLogService.GetByIdAsync(id, cancellationToken);
 
-        return auditLog is null ? NotFound() : Ok(auditLog);
+        return auditLog is null
+            ? this.ApiNotFound("Audit log not found.", "No audit log was found with the provided id.")
+            : Ok(auditLog);
     }
 
     [HttpGet("by-user/{userId}")]
@@ -58,7 +61,11 @@ public class AuditLogsController(IAuditLogService auditLogService) : ControllerB
         if (!Enum.TryParse<AuditAction>(auditAction, ignoreCase: true, out var parsedAction)
             || !Enum.IsDefined(parsedAction))
         {
-            return BadRequest("Invalid audit action.");
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status400BadRequest,
+                "Invalid audit action.",
+                "The provided audit action is not valid.");
         }
 
         var auditLogs = await auditLogService.GetByActionAsync(parsedAction, cancellationToken);

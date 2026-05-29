@@ -1,5 +1,6 @@
 using InventorySaaS.Application.StockItems.DTOs;
 using InventorySaaS.Application.StockItems.Interfaces;
+using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -23,7 +24,9 @@ public class StockItemsController(IStockItemService stockItemService) : Controll
     {
         var stockItem = await stockItemService.GetByIdAsync(id, cancellationToken);
 
-        return stockItem is null ? NotFound() : Ok(stockItem);
+        return stockItem is null
+            ? this.ApiNotFound("Stock item not found.", "No stock item was found with the provided id.")
+            : Ok(stockItem);
     }
 
     [HttpGet("by-product/{productId:guid}")]
@@ -57,6 +60,8 @@ public class StockItemsController(IStockItemService stockItemService) : Controll
             warehouseId,
             cancellationToken);
 
-        return stockItem is null ? NotFound() : Ok(stockItem);
+        return stockItem is null
+            ? this.ApiNotFound("Stock item not found.", "No stock item was found for the provided product and warehouse.")
+            : Ok(stockItem);
     }
 }

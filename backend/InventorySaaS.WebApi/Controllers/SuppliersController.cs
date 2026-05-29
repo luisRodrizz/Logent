@@ -3,6 +3,7 @@ using FluentValidation;
 using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Suppliers.DTOs;
 using InventorySaaS.Application.Suppliers.Interfaces;
+using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,7 +34,9 @@ public class SuppliersController(
     {
         var supplier = await supplierService.GetByIdAsync(id, cancellationToken);
 
-        return supplier is null ? NotFound() : Ok(supplier);
+        return supplier is null
+            ? this.ApiNotFound("Supplier not found.", "No supplier was found with the provided id.")
+            : Ok(supplier);
     }
 
     [HttpPost]
@@ -46,14 +49,14 @@ public class SuppliersController(
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            return this.ApiValidation(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
         var userId = GetCurrentUserId();
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var supplier = await supplierService.CreateAsync(request, userId, cancellationToken);
@@ -72,19 +75,21 @@ public class SuppliersController(
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            return this.ApiValidation(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
         var userId = GetCurrentUserId();
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var updated = await supplierService.UpdateAsync(id, request, userId, cancellationToken);
 
-        return updated ? NoContent() : NotFound();
+        return updated
+            ? NoContent()
+            : this.ApiNotFound("Supplier not found.", "No supplier was found with the provided id.");
     }
 
     [HttpDelete("{id:guid}")]
@@ -95,12 +100,14 @@ public class SuppliersController(
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var deleted = await supplierService.DeleteAsync(id, userId, cancellationToken);
 
-        return deleted ? NoContent() : NotFound();
+        return deleted
+            ? NoContent()
+            : this.ApiNotFound("Supplier not found.", "No supplier was found with the provided id.");
     }
 
     private string? GetCurrentUserId()

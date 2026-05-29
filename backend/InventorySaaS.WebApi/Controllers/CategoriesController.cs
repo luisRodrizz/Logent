@@ -3,6 +3,7 @@ using FluentValidation;
 using InventorySaaS.Application.Categories.DTOs;
 using InventorySaaS.Application.Categories.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
+using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -33,7 +34,9 @@ public class CategoriesController(
     {
         var category = await categoryService.GetByIdAsync(id, cancellationToken);
 
-        return category is null ? NotFound() : Ok(category);
+        return category is null
+            ? this.ApiNotFound("Category not found.", "No category was found with the provided id.")
+            : Ok(category);
     }
 
     [HttpPost]
@@ -46,14 +49,14 @@ public class CategoriesController(
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            return this.ApiValidation(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
         var userId = GetCurrentUserId();
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var category = await categoryService.CreateAsync(request, userId, cancellationToken);
@@ -72,19 +75,21 @@ public class CategoriesController(
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            return this.ApiValidation(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
         var userId = GetCurrentUserId();
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var updated = await categoryService.UpdateAsync(id, request, userId, cancellationToken);
 
-        return updated ? NoContent() : NotFound();
+        return updated
+            ? NoContent()
+            : this.ApiNotFound("Category not found.", "No category was found with the provided id.");
     }
 
     [HttpDelete("{id:guid}")]
@@ -95,12 +100,14 @@ public class CategoriesController(
 
         if (userId is null)
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var deleted = await categoryService.DeleteAsync(id, userId, cancellationToken);
 
-        return deleted ? NoContent() : NotFound();
+        return deleted
+            ? NoContent()
+            : this.ApiNotFound("Category not found.", "No category was found with the provided id.");
     }
 
     private string? GetCurrentUserId()

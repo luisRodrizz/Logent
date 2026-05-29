@@ -3,6 +3,7 @@ using FluentValidation;
 using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Movements.DTOs;
 using InventorySaaS.Application.Movements.Interfaces;
+using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
@@ -32,7 +33,9 @@ public class MovementsController(
     {
         var movement = await movementService.GetByIdAsync(id, cancellationToken);
 
-        return movement is null ? NotFound() : Ok(movement);
+        return movement is null
+            ? this.ApiNotFound("Movement not found.", "No movement was found with the provided id.")
+            : Ok(movement);
     }
 
     [HttpPost]
@@ -45,14 +48,14 @@ public class MovementsController(
 
         if (string.IsNullOrWhiteSpace(userId))
         {
-            return Unauthorized();
+            return this.ApiUnauthorized();
         }
 
         var validationResult = await createValidator.ValidateAsync(request, cancellationToken);
 
         if (!validationResult.IsValid)
         {
-            return BadRequest(validationResult.Errors.Select(error => error.ErrorMessage));
+            return this.ApiValidation(validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
         var movement = await movementService.CreateAsync(request, userId, cancellationToken);

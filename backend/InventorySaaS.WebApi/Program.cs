@@ -3,8 +3,10 @@ using InventorySaaS.Application.Categories.Validators;
 using InventorySaaS.Infrastructure;
 using InventorySaaS.Infrastructure.Identity;
 using InventorySaaS.Infrastructure.Persistence;
+using InventorySaaS.WebApi.Common;
 using InventorySaaS.WebApi.Extensions;
 using InventorySaaS.WebApi.Middleware;
+using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Text.Json.Serialization;
 
@@ -27,6 +29,20 @@ try
         {
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
+    builder.Services.Configure<ApiBehaviorOptions>(options =>
+    {
+        options.InvalidModelStateResponseFactory = context =>
+        {
+            var errors = context.ModelState
+                .Values
+                .SelectMany(entry => entry.Errors)
+                .Select(error => string.IsNullOrWhiteSpace(error.ErrorMessage)
+                    ? "The request payload is invalid."
+                    : error.ErrorMessage);
+
+            return ApiErrorResponseFactory.Validation(context.HttpContext, errors);
+        };
+    });
     builder.Services.AddValidatorsFromAssemblyContaining<CreateCategoryRequestValidator>();
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddJwtAuthentication(builder.Configuration);

@@ -1,5 +1,6 @@
 using System.Net;
-using InventorySaaS.Application.Common.DTOs;
+using InventorySaaS.Application.Common.Exceptions;
+using InventorySaaS.WebApi.Common;
 
 namespace InventorySaaS.WebApi.Middleware;
 
@@ -44,14 +45,12 @@ public class ExceptionHandlingMiddleware(
                 context.TraceIdentifier);
         }
 
-        var response = new ApiErrorResponse
-        {
-            StatusCode = statusCode,
-            Message = message,
-            Detail = environment.IsDevelopment() ? exception.Message : null,
-            TraceId = context.TraceIdentifier,
-            Timestamp = DateTime.UtcNow
-        };
+        var response = ApiErrorResponseFactory.Create(
+            context,
+            statusCode,
+            message,
+            GetDetail(exception),
+            GetErrors(exception));
 
         context.Response.Clear();
         context.Response.StatusCode = statusCode;
@@ -64,6 +63,7 @@ public class ExceptionHandlingMiddleware(
     {
         return exception switch
         {
+            ApiException apiException => apiException.StatusCode,
             InvalidOperationException => (int)HttpStatusCode.BadRequest,
             KeyNotFoundException => (int)HttpStatusCode.NotFound,
             UnauthorizedAccessException => (int)HttpStatusCode.Forbidden,
@@ -75,11 +75,26 @@ public class ExceptionHandlingMiddleware(
     {
         return exception switch
         {
+            ApiException apiException => apiException.Message,
             InvalidOperationException => exception.Message,
             KeyNotFoundException => exception.Message,
             UnauthorizedAccessException => exception.Message,
             _ when statusCode == (int)HttpStatusCode.InternalServerError => "An unexpected error occurred.",
             _ => exception.Message
         };
+    }
+
+    private string? GetDetail(Exception exception)
+    {
+        return exception switch
+        {
+            ApiException apiException => apiException.Detail,
+            _ => environment.IsDevelopment() ? exception.Message : null
+        };
+    }
+
+    private static IEnumerable<string>? GetErrors(Exception exception)
+    {
+        return exception is ApiException apiException ? apiException.Errors : null;
     }
 }

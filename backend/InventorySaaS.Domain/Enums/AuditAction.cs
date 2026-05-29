@@ -10,5 +10,10 @@ public enum AuditAction
     StockEntry,
     StockExit,
     StockAdjustment,
-    StockTransfer
+    StockTransfer,
+    UserCreated,
+    UserUpdated,
+    UserRoleChanged,
+    UserStatusChanged,
+    UserPasswordReset
 }
