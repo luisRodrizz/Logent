@@ -1,9 +1,9 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Link, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { LoadingState } from '../components/common/LoadingState'
 import { ProtectedLayout } from '../components/layout/ProtectedLayout'
 import { routeRoles } from '../components/layout/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card'
+import { Card, CardContent } from '../components/ui/Card'
 import { RequireAuth } from '../features/auth/RequireAuth'
 import { RequireRole } from '../features/auth/RequireRole'
 import type { AuthRole } from '../types/auth'
@@ -27,8 +27,14 @@ const LoginPage = lazy(() => import('../features/auth/LoginPage').then((module) 
 const MovementsPage = lazy(() =>
   import('../features/movements/MovementsPage').then((module) => ({ default: module.MovementsPage })),
 )
+const NotFoundPage = lazy(() =>
+  import('../features/errors/NotFoundPage').then((module) => ({ default: module.NotFoundPage })),
+)
 const ProductsPage = lazy(() =>
   import('../features/products/ProductsPage').then((module) => ({ default: module.ProductsPage })),
+)
+const ProfilePage = lazy(() =>
+  import('../features/profile/ProfilePage').then((module) => ({ default: module.ProfilePage })),
 )
 const ReportsPage = lazy(() =>
   import('../features/reports/ReportsPage').then((module) => ({ default: module.ReportsPage })),
@@ -39,6 +45,9 @@ const SuppliersPage = lazy(() =>
 )
 const UsersPage = lazy(() =>
   import('../features/users/UsersPage').then((module) => ({ default: module.UsersPage })),
+)
+const UnauthorizedPage = lazy(() =>
+  import('../features/errors/UnauthorizedPage').then((module) => ({ default: module.UnauthorizedPage })),
 )
 const WarehousesPage = lazy(() =>
   import('../features/warehouses/WarehousesPage').then((module) => ({ default: module.WarehousesPage })),
@@ -70,27 +79,6 @@ function protectedRoute(element: ReactNode, allowedRoles: AuthRole[]) {
   return <RequireRole allowedRoles={allowedRoles}>{lazyRoute(element)}</RequireRole>
 }
 
-function NotFoundPage() {
-  return (
-    <main className="flex min-h-screen items-center justify-center bg-background px-6">
-      <Card className="w-full max-w-lg text-center">
-        <CardHeader>
-          <CardTitle>Página no encontrada</CardTitle>
-          <CardDescription>La ruta solicitada no existe en el frontend.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Link
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-primary px-4 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
-            to="/dashboard"
-          >
-            Ir al dashboard
-          </Link>
-        </CardContent>
-      </Card>
-    </main>
-  )
-}
-
 export function AppRouter() {
   return (
     <BrowserRouter>
@@ -112,6 +100,14 @@ export function AppRouter() {
           }
         />
         <Route element={<RequireAuth />}>
+          <Route
+            path="/unauthorized"
+            element={
+              <Suspense fallback={<FullPageFallback />}>
+                <UnauthorizedPage />
+              </Suspense>
+            }
+          />
           <Route element={<ProtectedLayout />}>
             <Route path="/dashboard" element={protectedRoute(<DashboardPage />, routeRoles.dashboard)} />
             <Route path="/categories" element={protectedRoute(<CategoriesPage />, routeRoles.categories)} />
@@ -122,11 +118,19 @@ export function AppRouter() {
             <Route path="/movements" element={protectedRoute(<MovementsPage />, routeRoles.movements)} />
             <Route path="/kardex" element={protectedRoute(<KardexPage />, routeRoles.kardex)} />
             <Route path="/reports" element={protectedRoute(<ReportsPage />, routeRoles.reports)} />
+            <Route path="/profile" element={lazyRoute(<ProfilePage />)} />
             <Route path="/admin/users" element={protectedRoute(<UsersPage />, routeRoles.users)} />
             <Route path="/audit-logs" element={protectedRoute(<AuditLogsPage />, routeRoles.auditLogs)} />
           </Route>
         </Route>
-        <Route path="*" element={<NotFoundPage />} />
+        <Route
+          path="*"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <NotFoundPage />
+            </Suspense>
+          }
+        />
       </Routes>
     </BrowserRouter>
   )

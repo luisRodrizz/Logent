@@ -1,5 +1,5 @@
 import { LogOut, Menu, UserRound } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/useAuth'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
@@ -10,10 +10,31 @@ type TopbarProps = {
   title: string
 }
 
+const pageTitles = [
+  { match: '/admin/users', subtitle: 'Cuentas y roles internos', title: 'Usuarios' },
+  { match: '/profile', subtitle: 'Cuenta y seguridad', title: 'Mi perfil' },
+  { match: '/audit-logs', subtitle: 'Administración', title: 'Auditoría' },
+  { match: '/categories', subtitle: 'Datos maestros', title: 'Categorías' },
+  { match: '/suppliers', subtitle: 'Datos maestros', title: 'Proveedores' },
+  { match: '/warehouses', subtitle: 'Datos maestros', title: 'Almacenes' },
+  { match: '/products', subtitle: 'Datos maestros', title: 'Productos' },
+  { match: '/stock', subtitle: 'Operación', title: 'Stock' },
+  { match: '/movements', subtitle: 'Operación', title: 'Movimientos' },
+  { match: '/kardex', subtitle: 'Operación', title: 'Kardex' },
+  { match: '/reports', subtitle: 'Análisis', title: 'Reportes' },
+  { match: '/dashboard', subtitle: 'Resumen operativo', title: 'Dashboard' },
+]
+
+function getPageTitle(pathname: string, fallback: { subtitle: string; title: string }) {
+  return pageTitles.find((page) => pathname === page.match || pathname.startsWith(`${page.match}/`)) ?? fallback
+}
+
 export function Topbar({ description, onMenuClick, title }: TopbarProps) {
+  const location = useLocation()
   const navigate = useNavigate()
   const { logout, user } = useAuth()
   const displayName = user?.fullName || user?.userName || user?.email || 'Usuario'
+  const currentPage = getPageTitle(location.pathname, { subtitle: description, title })
 
   function handleLogout() {
     logout()
@@ -35,8 +56,8 @@ export function Topbar({ description, onMenuClick, title }: TopbarProps) {
           <div className="min-w-0">
             <p className="truncate text-xs font-semibold uppercase tracking-wide text-muted">LOGENT</p>
             <div className="flex min-w-0 items-baseline gap-2">
-              <h1 className="truncate text-lg font-semibold text-foreground">{title}</h1>
-              <span className="hidden text-sm text-muted md:inline">{description}</span>
+              <h1 className="truncate text-lg font-semibold text-foreground">{currentPage.title}</h1>
+              <span className="hidden text-sm text-muted md:inline">{currentPage.subtitle}</span>
             </div>
           </div>
         </div>
@@ -58,6 +79,14 @@ export function Topbar({ description, onMenuClick, title }: TopbarProps) {
               <p className="text-xs text-muted">Sesión activa</p>
             </div>
           </div>
+          <Link
+            aria-label="Mi perfil"
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border bg-white px-0 text-sm font-semibold text-foreground transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14B8A6] focus-visible:ring-offset-2 sm:w-auto sm:px-3"
+            to="/profile"
+          >
+            <UserRound className="h-4 w-4 sm:hidden" />
+            <span className="hidden sm:inline">Mi perfil</span>
+          </Link>
           <Button aria-label="Salir" className="shrink-0" onClick={handleLogout} size="sm" variant="ghost">
             <LogOut className="h-4 w-4" />
             <span className="hidden sm:inline">Salir</span>
