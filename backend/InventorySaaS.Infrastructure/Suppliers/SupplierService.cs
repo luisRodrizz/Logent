@@ -1,5 +1,6 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Suppliers.DTOs;
 using InventorySaaS.Application.Suppliers.Interfaces;
 using InventorySaaS.Domain.Entities;
@@ -10,15 +11,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Suppliers;
 
-public class SupplierService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : ISupplierService
+public class SupplierService(
+    ApplicationDbContext context,
+    IAuditLogWriter auditLogWriter,
+    ICurrentUserContext currentUserContext) : ISupplierService
 {
     public async Task<PagedResponse<SupplierResponse>> GetAllAsync(
         PagedRequest request,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var query = context.Suppliers
             .AsNoTracking()
-            .Where(supplier => supplier.IsActive);
+            .Where(supplier => supplier.CompanyId == companyId && supplier.IsActive);
 
         var search = request.NormalizeSearch();
 
@@ -40,9 +46,11 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
 
     public async Task<SupplierResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         return await context.Suppliers
             .AsNoTracking()
-            .Where(supplier => supplier.Id == id && supplier.IsActive)
+            .Where(supplier => supplier.Id == id && supplier.CompanyId == companyId && supplier.IsActive)
             .Select(supplier => MapToResponse(supplier))
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -52,15 +60,21 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
         string userId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
         var businessName = request.BusinessName.Trim();
         var ruc = NormalizeOptionalText(request.Ruc);
 
-        await EnsureActiveBusinessNameIsUniqueAsync(businessName, excludedSupplierId: null, cancellationToken);
-        await EnsureActiveRucIsUniqueAsync(ruc, excludedSupplierId: null, cancellationToken);
+        await EnsureActiveBusinessNameIsUniqueAsync(
+            companyId,
+            businessName,
+            excludedSupplierId: null,
+            cancellationToken);
+        await EnsureActiveRucIsUniqueAsync(companyId, ruc, excludedSupplierId: null, cancellationToken);
 
         var supplier = new Supplier
         {
             Id = Guid.NewGuid(),
+            CompanyId = companyId,
             BusinessName = businessName,
             Ruc = ruc,
             Phone = NormalizeOptionalText(request.Phone),
@@ -78,7 +92,8 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
             "Supplier",
             supplier.Id.ToString(),
             $"Supplier created: {supplier.BusinessName}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return MapToResponse(supplier);
     }
@@ -89,8 +104,12 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
         string userId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var supplier = await context.Suppliers
-            .FirstOrDefaultAsync(supplier => supplier.Id == id && supplier.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(
+                supplier => supplier.Id == id && supplier.CompanyId == companyId && supplier.IsActive,
+                cancellationToken);
 
         if (supplier is null)
         {
@@ -100,8 +119,8 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
         var businessName = request.BusinessName.Trim();
         var ruc = NormalizeOptionalText(request.Ruc);
 
-        await EnsureActiveBusinessNameIsUniqueAsync(businessName, id, cancellationToken);
-        await EnsureActiveRucIsUniqueAsync(ruc, id, cancellationToken);
+        await EnsureActiveBusinessNameIsUniqueAsync(companyId, businessName, id, cancellationToken);
+        await EnsureActiveRucIsUniqueAsync(companyId, ruc, id, cancellationToken);
 
         supplier.BusinessName = businessName;
         supplier.Ruc = ruc;
@@ -117,15 +136,20 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
             "Supplier",
             supplier.Id.ToString(),
             $"Supplier updated: {supplier.BusinessName}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
 
     public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var supplier = await context.Suppliers
-            .FirstOrDefaultAsync(supplier => supplier.Id == id && supplier.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(
+                supplier => supplier.Id == id && supplier.CompanyId == companyId && supplier.IsActive,
+                cancellationToken);
 
         if (supplier is null)
         {
@@ -142,12 +166,14 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
             "Supplier",
             supplier.Id.ToString(),
             $"Supplier deactivated: {supplier.BusinessName}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
 
     private async Task EnsureActiveBusinessNameIsUniqueAsync(
+        Guid companyId,
         string businessName,
         Guid? excludedSupplierId,
         CancellationToken cancellationToken)
@@ -156,7 +182,8 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
             .AsNoTracking()
             .AnyAsync(
                 supplier =>
-                    supplier.IsActive
+                    supplier.CompanyId == companyId
+                    && supplier.IsActive
                     && supplier.BusinessName == businessName
                     && (!excludedSupplierId.HasValue || supplier.Id != excludedSupplierId.Value),
                 cancellationToken);
@@ -168,6 +195,7 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
     }
 
     private async Task EnsureActiveRucIsUniqueAsync(
+        Guid companyId,
         string? ruc,
         Guid? excludedSupplierId,
         CancellationToken cancellationToken)
@@ -181,7 +209,8 @@ public class SupplierService(ApplicationDbContext context, IAuditLogWriter audit
             .AsNoTracking()
             .AnyAsync(
                 supplier =>
-                    supplier.IsActive
+                    supplier.CompanyId == companyId
+                    && supplier.IsActive
                     && supplier.Ruc == ruc
                     && (!excludedSupplierId.HasValue || supplier.Id != excludedSupplierId.Value),
                 cancellationToken);

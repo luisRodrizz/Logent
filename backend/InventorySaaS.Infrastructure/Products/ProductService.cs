@@ -1,5 +1,6 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Products.DTOs;
 using InventorySaaS.Application.Products.Interfaces;
 using InventorySaaS.Domain.Entities;
@@ -10,17 +11,22 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Products;
 
-public class ProductService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : IProductService
+public class ProductService(
+    ApplicationDbContext context,
+    IAuditLogWriter auditLogWriter,
+    ICurrentUserContext currentUserContext) : IProductService
 {
     public async Task<PagedResponse<ProductResponse>> GetAllAsync(
         PagedRequest request,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var query = context.Products
             .AsNoTracking()
             .Include(product => product.Category)
             .Include(product => product.Supplier)
-            .Where(product => product.IsActive);
+            .Where(product => product.CompanyId == companyId && product.IsActive);
 
         var search = request.NormalizeSearch();
 
@@ -43,11 +49,13 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
 
     public async Task<ProductResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         return await context.Products
             .AsNoTracking()
             .Include(product => product.Category)
             .Include(product => product.Supplier)
-            .Where(product => product.Id == id && product.IsActive)
+            .Where(product => product.Id == id && product.CompanyId == companyId && product.IsActive)
             .Select(product => MapToResponse(product))
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -57,16 +65,18 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
         string userId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
         var code = request.Code.Trim();
         var name = request.Name.Trim();
 
-        await EnsureActiveCodeIsUniqueAsync(code, excludedProductId: null, cancellationToken);
-        await EnsureActiveCategoryExistsAsync(request.CategoryId, cancellationToken);
-        await EnsureActiveSupplierExistsAsync(request.SupplierId, cancellationToken);
+        await EnsureActiveCodeIsUniqueAsync(companyId, code, excludedProductId: null, cancellationToken);
+        await EnsureActiveCategoryExistsAsync(companyId, request.CategoryId, cancellationToken);
+        await EnsureActiveSupplierExistsAsync(companyId, request.SupplierId, cancellationToken);
 
         var product = new Product
         {
             Id = Guid.NewGuid(),
+            CompanyId = companyId,
             Code = code,
             Name = name,
             Description = NormalizeOptionalText(request.Description),
@@ -87,7 +97,8 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
             "Product",
             product.Id.ToString(),
             $"Product created: {product.Code} - {product.Name}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         var createdProduct = await GetByIdAsync(product.Id, cancellationToken);
 
@@ -101,8 +112,12 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
         string userId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var product = await context.Products
-            .FirstOrDefaultAsync(product => product.Id == id && product.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(
+                product => product.Id == id && product.CompanyId == companyId && product.IsActive,
+                cancellationToken);
 
         if (product is null)
         {
@@ -112,9 +127,9 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
         var code = request.Code.Trim();
         var name = request.Name.Trim();
 
-        await EnsureActiveCodeIsUniqueAsync(code, id, cancellationToken);
-        await EnsureActiveCategoryExistsAsync(request.CategoryId, cancellationToken);
-        await EnsureActiveSupplierExistsAsync(request.SupplierId, cancellationToken);
+        await EnsureActiveCodeIsUniqueAsync(companyId, code, id, cancellationToken);
+        await EnsureActiveCategoryExistsAsync(companyId, request.CategoryId, cancellationToken);
+        await EnsureActiveSupplierExistsAsync(companyId, request.SupplierId, cancellationToken);
 
         product.Code = code;
         product.Name = name;
@@ -133,15 +148,20 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
             "Product",
             product.Id.ToString(),
             $"Product updated: {product.Code} - {product.Name}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
 
     public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var product = await context.Products
-            .FirstOrDefaultAsync(product => product.Id == id && product.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(
+                product => product.Id == id && product.CompanyId == companyId && product.IsActive,
+                cancellationToken);
 
         if (product is null)
         {
@@ -158,12 +178,14 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
             "Product",
             product.Id.ToString(),
             $"Product deactivated: {product.Code} - {product.Name}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
 
     private async Task EnsureActiveCodeIsUniqueAsync(
+        Guid companyId,
         string code,
         Guid? excludedProductId,
         CancellationToken cancellationToken)
@@ -172,7 +194,8 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
             .AsNoTracking()
             .AnyAsync(
                 product =>
-                    product.IsActive
+                    product.CompanyId == companyId
+                    && product.IsActive
                     && product.Code == code
                     && (!excludedProductId.HasValue || product.Id != excludedProductId.Value),
                 cancellationToken);
@@ -183,11 +206,16 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
         }
     }
 
-    private async Task EnsureActiveCategoryExistsAsync(Guid categoryId, CancellationToken cancellationToken)
+    private async Task EnsureActiveCategoryExistsAsync(
+        Guid companyId,
+        Guid categoryId,
+        CancellationToken cancellationToken)
     {
         var exists = await context.Categories
             .AsNoTracking()
-            .AnyAsync(category => category.Id == categoryId && category.IsActive, cancellationToken);
+            .AnyAsync(
+                category => category.Id == categoryId && category.CompanyId == companyId && category.IsActive,
+                cancellationToken);
 
         if (!exists)
         {
@@ -195,7 +223,10 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
         }
     }
 
-    private async Task EnsureActiveSupplierExistsAsync(Guid? supplierId, CancellationToken cancellationToken)
+    private async Task EnsureActiveSupplierExistsAsync(
+        Guid companyId,
+        Guid? supplierId,
+        CancellationToken cancellationToken)
     {
         if (!supplierId.HasValue)
         {
@@ -204,7 +235,9 @@ public class ProductService(ApplicationDbContext context, IAuditLogWriter auditL
 
         var exists = await context.Suppliers
             .AsNoTracking()
-            .AnyAsync(supplier => supplier.Id == supplierId.Value && supplier.IsActive, cancellationToken);
+            .AnyAsync(
+                supplier => supplier.Id == supplierId.Value && supplier.CompanyId == companyId && supplier.IsActive,
+                cancellationToken);
 
         if (!exists)
         {

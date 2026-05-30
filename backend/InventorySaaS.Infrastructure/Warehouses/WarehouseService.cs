@@ -1,5 +1,6 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Warehouses.DTOs;
 using InventorySaaS.Application.Warehouses.Interfaces;
 using InventorySaaS.Domain.Entities;
@@ -10,15 +11,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Warehouses;
 
-public class WarehouseService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : IWarehouseService
+public class WarehouseService(
+    ApplicationDbContext context,
+    IAuditLogWriter auditLogWriter,
+    ICurrentUserContext currentUserContext) : IWarehouseService
 {
     public async Task<PagedResponse<WarehouseResponse>> GetAllAsync(
         PagedRequest request,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var query = context.Warehouses
             .AsNoTracking()
-            .Where(warehouse => warehouse.IsActive);
+            .Where(warehouse => warehouse.CompanyId == companyId && warehouse.IsActive);
 
         var search = request.NormalizeSearch();
 
@@ -39,9 +45,11 @@ public class WarehouseService(ApplicationDbContext context, IAuditLogWriter audi
 
     public async Task<WarehouseResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         return await context.Warehouses
             .AsNoTracking()
-            .Where(warehouse => warehouse.Id == id && warehouse.IsActive)
+            .Where(warehouse => warehouse.Id == id && warehouse.CompanyId == companyId && warehouse.IsActive)
             .Select(warehouse => MapToResponse(warehouse))
             .FirstOrDefaultAsync(cancellationToken);
     }
@@ -51,13 +59,15 @@ public class WarehouseService(ApplicationDbContext context, IAuditLogWriter audi
         string userId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
         var name = request.Name.Trim();
 
-        await EnsureActiveNameIsUniqueAsync(name, excludedWarehouseId: null, cancellationToken);
+        await EnsureActiveNameIsUniqueAsync(companyId, name, excludedWarehouseId: null, cancellationToken);
 
         var warehouse = new Warehouse
         {
             Id = Guid.NewGuid(),
+            CompanyId = companyId,
             Name = name,
             Location = NormalizeOptionalText(request.Location),
             Description = NormalizeOptionalText(request.Description),
@@ -73,7 +83,8 @@ public class WarehouseService(ApplicationDbContext context, IAuditLogWriter audi
             "Warehouse",
             warehouse.Id.ToString(),
             $"Warehouse created: {warehouse.Name}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return MapToResponse(warehouse);
     }
@@ -84,8 +95,12 @@ public class WarehouseService(ApplicationDbContext context, IAuditLogWriter audi
         string userId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var warehouse = await context.Warehouses
-            .FirstOrDefaultAsync(warehouse => warehouse.Id == id && warehouse.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(
+                warehouse => warehouse.Id == id && warehouse.CompanyId == companyId && warehouse.IsActive,
+                cancellationToken);
 
         if (warehouse is null)
         {
@@ -94,7 +109,7 @@ public class WarehouseService(ApplicationDbContext context, IAuditLogWriter audi
 
         var name = request.Name.Trim();
 
-        await EnsureActiveNameIsUniqueAsync(name, id, cancellationToken);
+        await EnsureActiveNameIsUniqueAsync(companyId, name, id, cancellationToken);
 
         warehouse.Name = name;
         warehouse.Location = NormalizeOptionalText(request.Location);
@@ -108,15 +123,20 @@ public class WarehouseService(ApplicationDbContext context, IAuditLogWriter audi
             "Warehouse",
             warehouse.Id.ToString(),
             $"Warehouse updated: {warehouse.Name}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
 
     public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var warehouse = await context.Warehouses
-            .FirstOrDefaultAsync(warehouse => warehouse.Id == id && warehouse.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(
+                warehouse => warehouse.Id == id && warehouse.CompanyId == companyId && warehouse.IsActive,
+                cancellationToken);
 
         if (warehouse is null)
         {
@@ -133,12 +153,14 @@ public class WarehouseService(ApplicationDbContext context, IAuditLogWriter audi
             "Warehouse",
             warehouse.Id.ToString(),
             $"Warehouse deactivated: {warehouse.Name}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
 
     private async Task EnsureActiveNameIsUniqueAsync(
+        Guid companyId,
         string name,
         Guid? excludedWarehouseId,
         CancellationToken cancellationToken)
@@ -147,7 +169,8 @@ public class WarehouseService(ApplicationDbContext context, IAuditLogWriter audi
             .AsNoTracking()
             .AnyAsync(
                 warehouse =>
-                    warehouse.IsActive
+                    warehouse.CompanyId == companyId
+                    && warehouse.IsActive
                     && warehouse.Name == name
                     && (!excludedWarehouseId.HasValue || warehouse.Id != excludedWarehouseId.Value),
                 cancellationToken);

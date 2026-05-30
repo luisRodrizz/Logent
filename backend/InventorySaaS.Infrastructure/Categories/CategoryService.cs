@@ -2,6 +2,7 @@ using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Categories.DTOs;
 using InventorySaaS.Application.Categories.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Common.Extensions;
@@ -10,15 +11,20 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Categories;
 
-public class CategoryService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : ICategoryService
+public class CategoryService(
+    ApplicationDbContext context,
+    IAuditLogWriter auditLogWriter,
+    ICurrentUserContext currentUserContext) : ICategoryService
 {
     public async Task<PagedResponse<CategoryResponse>> GetAllAsync(
         PagedRequest request,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var query = context.Categories
             .AsNoTracking()
-            .Where(category => category.IsActive);
+            .Where(category => category.CompanyId == companyId && category.IsActive);
 
         var search = request.NormalizeSearch();
 
@@ -38,9 +44,11 @@ public class CategoryService(ApplicationDbContext context, IAuditLogWriter audit
 
     public async Task<CategoryResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var category = await context.Categories
             .AsNoTracking()
-            .Where(category => category.Id == id && category.IsActive)
+            .Where(category => category.Id == id && category.CompanyId == companyId && category.IsActive)
             .Select(category => MapToResponse(category))
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -52,13 +60,15 @@ public class CategoryService(ApplicationDbContext context, IAuditLogWriter audit
         string userId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
         var name = request.Name.Trim();
 
-        await EnsureActiveNameIsUniqueAsync(name, excludedCategoryId: null, cancellationToken);
+        await EnsureActiveNameIsUniqueAsync(companyId, name, excludedCategoryId: null, cancellationToken);
 
         var category = new Category
         {
             Id = Guid.NewGuid(),
+            CompanyId = companyId,
             Name = name,
             Description = NormalizeDescription(request.Description),
             CreatedAt = DateTime.UtcNow,
@@ -73,7 +83,8 @@ public class CategoryService(ApplicationDbContext context, IAuditLogWriter audit
             "Category",
             category.Id.ToString(),
             $"Category created: {category.Name}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return MapToResponse(category);
     }
@@ -84,8 +95,12 @@ public class CategoryService(ApplicationDbContext context, IAuditLogWriter audit
         string userId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var category = await context.Categories
-            .FirstOrDefaultAsync(category => category.Id == id && category.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(
+                category => category.Id == id && category.CompanyId == companyId && category.IsActive,
+                cancellationToken);
 
         if (category is null)
         {
@@ -94,7 +109,7 @@ public class CategoryService(ApplicationDbContext context, IAuditLogWriter audit
 
         var name = request.Name.Trim();
 
-        await EnsureActiveNameIsUniqueAsync(name, id, cancellationToken);
+        await EnsureActiveNameIsUniqueAsync(companyId, name, id, cancellationToken);
 
         category.Name = name;
         category.Description = NormalizeDescription(request.Description);
@@ -107,15 +122,20 @@ public class CategoryService(ApplicationDbContext context, IAuditLogWriter audit
             "Category",
             category.Id.ToString(),
             $"Category updated: {category.Name}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
 
     public async Task<bool> DeleteAsync(Guid id, string userId, CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         var category = await context.Categories
-            .FirstOrDefaultAsync(category => category.Id == id && category.IsActive, cancellationToken);
+            .FirstOrDefaultAsync(
+                category => category.Id == id && category.CompanyId == companyId && category.IsActive,
+                cancellationToken);
 
         if (category is null)
         {
@@ -132,12 +152,14 @@ public class CategoryService(ApplicationDbContext context, IAuditLogWriter audit
             "Category",
             category.Id.ToString(),
             $"Category deactivated: {category.Name}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
 
     private async Task EnsureActiveNameIsUniqueAsync(
+        Guid companyId,
         string name,
         Guid? excludedCategoryId,
         CancellationToken cancellationToken)
@@ -146,7 +168,8 @@ public class CategoryService(ApplicationDbContext context, IAuditLogWriter audit
             .AsNoTracking()
             .AnyAsync(
                 category =>
-                    category.IsActive
+                    category.CompanyId == companyId
+                    && category.IsActive
                     && category.Name == name
                     && (!excludedCategoryId.HasValue || category.Id != excludedCategoryId.Value),
                 cancellationToken);
