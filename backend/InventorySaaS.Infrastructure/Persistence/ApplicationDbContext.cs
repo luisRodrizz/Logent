@@ -8,6 +8,8 @@ namespace InventorySaaS.Infrastructure.Persistence;
 public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
     : IdentityDbContext<ApplicationUser>(options)
 {
+    public DbSet<Company> Companies => Set<Company>();
+
     public DbSet<Product> Products => Set<Product>();
 
     public DbSet<Category> Categories => Set<Category>();
@@ -31,5 +33,15 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
         base.OnModelCreating(modelBuilder);
 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
+
+        modelBuilder.Entity<ApplicationUser>(builder =>
+        {
+            builder.HasOne(user => user.Company)
+                .WithMany()
+                .HasForeignKey(user => user.CompanyId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasIndex(user => user.CompanyId);
+        });
     }
 }

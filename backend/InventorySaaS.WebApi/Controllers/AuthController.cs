@@ -2,6 +2,7 @@ using System.Security.Claims;
 using InventorySaaS.Application.Auth.DTOs;
 using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Infrastructure.Identity;
+using InventorySaaS.Infrastructure.Persistence;
 using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -54,6 +55,7 @@ public class AuthController(
             UserName = request.Email,
             Email = request.Email,
             EmailConfirmed = true,
+            CompanyId = await GetCurrentUserCompanyIdAsync(),
             FirstName = request.FirstName,
             LastName = request.LastName,
             IsActive = true,
@@ -171,11 +173,25 @@ public class AuthController(
 
         return new AuthResponse
         {
-            Token = jwtTokenService.GenerateToken(user.Id, email, roles),
+            Token = jwtTokenService.GenerateToken(user.Id, email, roles, user.CompanyId),
             Email = email,
             FullName = $"{user.FirstName} {user.LastName}".Trim(),
             Roles = roles,
             ExpiresAt = jwtTokenService.GetExpirationTime()
         };
+    }
+
+    private async Task<Guid?> GetCurrentUserCompanyIdAsync()
+    {
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (string.IsNullOrWhiteSpace(currentUserId))
+        {
+            return DemoTenantDefaults.CompanyId;
+        }
+
+        var currentUser = await userManager.FindByIdAsync(currentUserId);
+
+        return currentUser?.CompanyId ?? DemoTenantDefaults.CompanyId;
     }
 }

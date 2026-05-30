@@ -27,6 +27,14 @@ public class CategoryConfiguration : IEntityTypeConfiguration<Category>
         builder.Property(category => category.IsActive)
             .IsRequired();
 
+        builder.HasIndex(category => new { category.CompanyId, category.Name })
+            .IsUnique();
+
+        builder.HasOne(category => category.Company)
+            .WithMany(company => company.Categories)
+            .HasForeignKey(category => category.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(category => category.Products)
             .WithOne(product => product.Category)
             .HasForeignKey(product => product.CategoryId)

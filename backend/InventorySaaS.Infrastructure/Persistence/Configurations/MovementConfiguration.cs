@@ -32,6 +32,13 @@ public class MovementConfiguration : IEntityTypeConfiguration<Movement>
         builder.Property(movement => movement.IsActive)
             .IsRequired();
 
+        builder.HasIndex(movement => movement.CompanyId);
+
+        builder.HasOne(movement => movement.Company)
+            .WithMany(company => company.Movements)
+            .HasForeignKey(movement => movement.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(movement => movement.WarehouseOrigin)
             .WithMany()
             .HasForeignKey(movement => movement.WarehouseOriginId)

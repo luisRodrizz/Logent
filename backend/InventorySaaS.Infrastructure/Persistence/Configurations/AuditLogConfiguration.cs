@@ -31,5 +31,12 @@ public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
 
         builder.Property(auditLog => auditLog.CreatedAt)
             .IsRequired();
+
+        builder.HasIndex(auditLog => auditLog.CompanyId);
+
+        builder.HasOne(auditLog => auditLog.Company)
+            .WithMany(company => company.AuditLogs)
+            .HasForeignKey(auditLog => auditLog.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
     }
 }

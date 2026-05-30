@@ -70,6 +70,7 @@ public class UserManagementService(
     {
         var role = await NormalizeAndValidateRoleAsync(request.Role);
         var email = NormalizeEmail(request.Email);
+        var currentUser = await FindUserAsync(currentUserId, cancellationToken);
 
         await EnsureEmailIsUniqueAsync(email, excludedUserId: null);
 
@@ -79,6 +80,7 @@ public class UserManagementService(
             UserName = email,
             Email = email,
             EmailConfirmed = true,
+            CompanyId = currentUser?.CompanyId,
             FirstName = name.FirstName,
             LastName = name.LastName,
             IsActive = request.IsActive,

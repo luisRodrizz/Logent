@@ -5,6 +5,10 @@ namespace InventorySaaS.Domain.Entities;
 
 public class Movement : AuditableEntity
 {
+    public Guid? CompanyId { get; set; }
+
+    public Company? Company { get; set; }
+
     public MovementType Type { get; set; }
 
     public Guid? WarehouseOriginId { get; set; }

@@ -1,0 +1,37 @@
+using InventorySaaS.Domain.Common;
+using InventorySaaS.Domain.Enums;
+
+namespace InventorySaaS.Domain.Entities;
+
+public class Company : AuditableEntity
+{
+    public string Name { get; set; } = string.Empty;
+
+    public string? Ruc { get; set; }
+
+    public string Slug { get; set; } = string.Empty;
+
+    public string? Email { get; set; }
+
+    public string? Phone { get; set; }
+
+    public string? Address { get; set; }
+
+    public PlanType Plan { get; set; } = PlanType.Free;
+
+    public ICollection<Category> Categories { get; set; } = new List<Category>();
+
+    public ICollection<Supplier> Suppliers { get; set; } = new List<Supplier>();
+
+    public ICollection<Warehouse> Warehouses { get; set; } = new List<Warehouse>();
+
+    public ICollection<Product> Products { get; set; } = new List<Product>();
+
+    public ICollection<StockItem> StockItems { get; set; } = new List<StockItem>();
+
+    public ICollection<Movement> Movements { get; set; } = new List<Movement>();
+
+    public ICollection<KardexEntry> KardexEntries { get; set; } = new List<KardexEntry>();
+
+    public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+}

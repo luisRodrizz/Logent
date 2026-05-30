@@ -14,5 +14,6 @@ public interface IMovementService
     Task<MovementResponse> CreateAsync(
         CreateMovementRequest request,
         string userId,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? companyId = null);
 }

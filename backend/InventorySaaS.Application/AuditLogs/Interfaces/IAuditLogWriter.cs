@@ -10,5 +10,6 @@ public interface IAuditLogWriter
         string entityName,
         string? entityId,
         string? description,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default,
+        Guid? companyId = null);
 }

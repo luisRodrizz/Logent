@@ -4,6 +4,10 @@ namespace InventorySaaS.Domain.Entities;
 
 public class Supplier : AuditableEntity
 {
+    public Guid? CompanyId { get; set; }
+
+    public Company? Company { get; set; }
+
     public string BusinessName { get; set; } = string.Empty;
 
     public string? Ruc { get; set; }

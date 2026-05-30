@@ -40,8 +40,13 @@ public class ProductConfiguration : IEntityTypeConfiguration<Product>
         builder.Property(product => product.IsActive)
             .IsRequired();
 
-        builder.HasIndex(product => product.Code)
+        builder.HasIndex(product => new { product.CompanyId, product.Code })
             .IsUnique();
+
+        builder.HasOne(product => product.Company)
+            .WithMany(company => company.Products)
+            .HasForeignKey(product => product.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(product => product.Category)
             .WithMany(category => category.Products)

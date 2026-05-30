@@ -18,8 +18,13 @@ public class StockItemConfiguration : IEntityTypeConfiguration<StockItem>
         builder.Property(stockItem => stockItem.UpdatedAt)
             .IsRequired();
 
-        builder.HasIndex(stockItem => new { stockItem.ProductId, stockItem.WarehouseId })
+        builder.HasIndex(stockItem => new { stockItem.CompanyId, stockItem.ProductId, stockItem.WarehouseId })
             .IsUnique();
+
+        builder.HasOne(stockItem => stockItem.Company)
+            .WithMany(company => company.StockItems)
+            .HasForeignKey(stockItem => stockItem.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
 
         builder.HasOne(stockItem => stockItem.Product)
             .WithMany(product => product.StockItems)

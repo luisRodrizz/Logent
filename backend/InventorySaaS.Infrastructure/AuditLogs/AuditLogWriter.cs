@@ -13,11 +13,13 @@ public class AuditLogWriter(ApplicationDbContext context) : IAuditLogWriter
         string entityName,
         string? entityId,
         string? description,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? companyId = null)
     {
         context.AuditLogs.Add(new AuditLog
         {
             Id = Guid.NewGuid(),
+            CompanyId = companyId,
             UserId = userId,
             Action = action,
             EntityName = entityName,

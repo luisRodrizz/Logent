@@ -4,6 +4,10 @@ namespace InventorySaaS.Domain.Entities;
 
 public class StockItem : BaseEntity
 {
+    public Guid? CompanyId { get; set; }
+
+    public Company? Company { get; set; }
+
     public Guid ProductId { get; set; }
 
     public Product? Product { get; set; }

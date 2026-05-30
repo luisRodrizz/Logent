@@ -4,6 +4,10 @@ namespace InventorySaaS.Domain.Entities;
 
 public class Product : AuditableEntity
 {
+    public Guid? CompanyId { get; set; }
+
+    public Company? Company { get; set; }
+
     public string Code { get; set; } = string.Empty;
 
     public string Name { get; set; } = string.Empty;

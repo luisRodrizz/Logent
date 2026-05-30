@@ -39,6 +39,13 @@ public class KardexEntryConfiguration : IEntityTypeConfiguration<KardexEntry>
         builder.Property(kardexEntry => kardexEntry.Observation)
             .HasMaxLength(500);
 
+        builder.HasIndex(kardexEntry => kardexEntry.CompanyId);
+
+        builder.HasOne(kardexEntry => kardexEntry.Company)
+            .WithMany(company => company.KardexEntries)
+            .HasForeignKey(kardexEntry => kardexEntry.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasOne(kardexEntry => kardexEntry.Product)
             .WithMany(product => product.KardexEntries)
             .HasForeignKey(kardexEntry => kardexEntry.ProductId)

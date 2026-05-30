@@ -21,26 +21,40 @@ public static class DemoDataSeeder
 
         var adminUser = await userManager.FindByEmailAsync(AdminEmail)
             ?? throw new InvalidOperationException("Admin user must be seeded before demo data.");
+        var companyId = adminUser.CompanyId ?? DemoTenantDefaults.CompanyId;
 
-        await EnsureCatalogAsync(context, cancellationToken);
+        await EnsureCatalogAsync(context, companyId, cancellationToken);
+        await EnsureExistingOperationalDataAsync(context, companyId, adminUser.Id, cancellationToken);
 
         var products = await context.Products
-            .Where(product => DemoProductCodes.Contains(product.Code))
+            .Where(product => product.CompanyId == companyId && DemoProductCodes.Contains(product.Code))
             .ToDictionaryAsync(product => product.Code, cancellationToken);
 
         var warehouses = await context.Warehouses
-            .Where(warehouse => DemoWarehouseNames.Contains(warehouse.Name))
+            .Where(warehouse => warehouse.CompanyId == companyId && DemoWarehouseNames.Contains(warehouse.Name))
             .ToDictionaryAsync(warehouse => warehouse.Name, cancellationToken);
 
-        await EnsureMovementsAsync(context, movementService, products, warehouses, adminUser.Id, cancellationToken);
+        await EnsureMovementsAsync(
+            context,
+            movementService,
+            products,
+            warehouses,
+            adminUser.Id,
+            companyId,
+            cancellationToken);
     }
 
-    private static async Task EnsureCatalogAsync(ApplicationDbContext context, CancellationToken cancellationToken)
+    private static async Task EnsureCatalogAsync(
+        ApplicationDbContext context,
+        Guid companyId,
+        CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
 
         var categories = await context.Categories
-            .Where(category => DemoCategoryNames.Contains(category.Name))
+            .Where(category =>
+                DemoCategoryNames.Contains(category.Name)
+                && (category.CompanyId == companyId || category.CompanyId == null))
             .ToDictionaryAsync(category => category.Name, cancellationToken);
 
         foreach (var item in Categories)
@@ -57,6 +71,7 @@ public static class DemoDataSeeder
                 categories[item.Name] = category;
             }
 
+            category.CompanyId = companyId;
             category.Name = item.Name;
             category.Description = item.Description;
             category.IsActive = true;
@@ -64,7 +79,10 @@ public static class DemoDataSeeder
         }
 
         var suppliers = await context.Suppliers
-            .Where(supplier => DemoSupplierRucs.Contains(supplier.Ruc!))
+            .Where(supplier =>
+                supplier.Ruc != null
+                && DemoSupplierRucs.Contains(supplier.Ruc)
+                && (supplier.CompanyId == companyId || supplier.CompanyId == null))
             .ToDictionaryAsync(supplier => supplier.Ruc!, cancellationToken);
 
         foreach (var item in Suppliers)
@@ -81,6 +99,7 @@ public static class DemoDataSeeder
                 suppliers[item.Ruc] = supplier;
             }
 
+            supplier.CompanyId = companyId;
             supplier.BusinessName = item.BusinessName;
             supplier.Ruc = item.Ruc;
             supplier.Phone = item.Phone;
@@ -91,7 +110,9 @@ public static class DemoDataSeeder
         }
 
         var warehouses = await context.Warehouses
-            .Where(warehouse => DemoWarehouseNames.Contains(warehouse.Name))
+            .Where(warehouse =>
+                DemoWarehouseNames.Contains(warehouse.Name)
+                && (warehouse.CompanyId == companyId || warehouse.CompanyId == null))
             .ToDictionaryAsync(warehouse => warehouse.Name, cancellationToken);
 
         foreach (var item in Warehouses)
@@ -108,6 +129,7 @@ public static class DemoDataSeeder
                 warehouses[item.Name] = warehouse;
             }
 
+            warehouse.CompanyId = companyId;
             warehouse.Name = item.Name;
             warehouse.Location = item.Location;
             warehouse.Description = item.Description;
@@ -118,15 +140,17 @@ public static class DemoDataSeeder
         await context.SaveChangesAsync(cancellationToken);
 
         var categoriesByName = await context.Categories
-            .Where(category => DemoCategoryNames.Contains(category.Name))
+            .Where(category => category.CompanyId == companyId && DemoCategoryNames.Contains(category.Name))
             .ToDictionaryAsync(category => category.Name, cancellationToken);
 
         var suppliersByName = await context.Suppliers
-            .Where(supplier => DemoSupplierNames.Contains(supplier.BusinessName))
+            .Where(supplier => supplier.CompanyId == companyId && DemoSupplierNames.Contains(supplier.BusinessName))
             .ToDictionaryAsync(supplier => supplier.BusinessName, cancellationToken);
 
         var products = await context.Products
-            .Where(product => DemoProductCodes.Contains(product.Code))
+            .Where(product =>
+                DemoProductCodes.Contains(product.Code)
+                && (product.CompanyId == companyId || product.CompanyId == null))
             .ToDictionaryAsync(product => product.Code, cancellationToken);
 
         foreach (var item in Products)
@@ -143,6 +167,7 @@ public static class DemoDataSeeder
                 products[item.Code] = product;
             }
 
+            product.CompanyId = companyId;
             product.Code = item.Code;
             product.Name = item.Name;
             product.Description = item.Description;
@@ -158,12 +183,50 @@ public static class DemoDataSeeder
         await context.SaveChangesAsync(cancellationToken);
     }
 
+    private static async Task EnsureExistingOperationalDataAsync(
+        ApplicationDbContext context,
+        Guid companyId,
+        string adminUserId,
+        CancellationToken cancellationToken)
+    {
+        await context.StockItems
+            .Where(stockItem =>
+                stockItem.CompanyId == null
+                && DemoProductCodes.Contains(stockItem.Product!.Code)
+                && DemoWarehouseNames.Contains(stockItem.Warehouse!.Name))
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(stockItem => stockItem.CompanyId, companyId),
+                cancellationToken);
+
+        await context.Movements
+            .Where(movement => movement.CompanyId == null && DemoMovementObservations.Contains(movement.Observation!))
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(movement => movement.CompanyId, companyId),
+                cancellationToken);
+
+        await context.KardexEntries
+            .Where(kardexEntry =>
+                kardexEntry.CompanyId == null
+                && DemoProductCodes.Contains(kardexEntry.Product!.Code)
+                && DemoWarehouseNames.Contains(kardexEntry.Warehouse!.Name))
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(kardexEntry => kardexEntry.CompanyId, companyId),
+                cancellationToken);
+
+        await context.AuditLogs
+            .Where(auditLog => auditLog.CompanyId == null && auditLog.UserId == adminUserId)
+            .ExecuteUpdateAsync(
+                setters => setters.SetProperty(auditLog => auditLog.CompanyId, companyId),
+                cancellationToken);
+    }
+
     private static async Task EnsureMovementsAsync(
         ApplicationDbContext context,
         IMovementService movementService,
         IReadOnlyDictionary<string, Product> products,
         IReadOnlyDictionary<string, Warehouse> warehouses,
         string userId,
+        Guid companyId,
         CancellationToken cancellationToken)
     {
         await EnsureMovementAsync(
@@ -175,6 +238,7 @@ public static class DemoDataSeeder
             destinationWarehouseId: warehouses["Almacén Central"].Id,
             observation: "Ingreso inicial de inventario para operación principal.",
             userId,
+            companyId,
             cancellationToken,
             new("LAP-LEN-E14", 10, 2800m),
             new("LAP-HP-450G9", 8, 2600m),
@@ -194,6 +258,7 @@ public static class DemoDataSeeder
             destinationWarehouseId: warehouses["Almacén Norte"].Id,
             observation: "Ingreso de inventario para atención regional norte.",
             userId,
+            companyId,
             cancellationToken,
             new("MON-LG-27", 8, 540m),
             new("CAM-LOG-C920", 10, 210m),
@@ -209,6 +274,7 @@ public static class DemoDataSeeder
             destinationWarehouseId: null,
             observation: "Salida de equipos para implementación interna.",
             userId,
+            companyId,
             cancellationToken,
             new("LAP-LEN-E14", 2, 2800m),
             new("MON-DELL-24", 3, 620m),
@@ -223,6 +289,7 @@ public static class DemoDataSeeder
             destinationWarehouseId: warehouses["Almacén Norte"].Id,
             observation: "Transferencia de periféricos para abastecimiento regional.",
             userId,
+            companyId,
             cancellationToken,
             new("TEC-LOG-MX", 5, 280m),
             new("MOU-LOG-M720", 5, 95m),
@@ -237,6 +304,7 @@ public static class DemoDataSeeder
             destinationWarehouseId: warehouses["Almacén de Oficina"].Id,
             observation: "Distribución de equipos para áreas administrativas.",
             userId,
+            companyId,
             cancellationToken,
             new("LAP-HP-450G9", 2, 2600m),
             new("MON-DELL-24", 2, 620m),
@@ -251,6 +319,7 @@ public static class DemoDataSeeder
             destinationWarehouseId: null,
             observation: "Salida por instalación en oficina regional.",
             userId,
+            companyId,
             cancellationToken,
             new("MON-LG-27", 2, 540m),
             new("CAM-LOG-C920", 3, 210m));
@@ -265,12 +334,15 @@ public static class DemoDataSeeder
         Guid? destinationWarehouseId,
         string observation,
         string userId,
+        Guid companyId,
         CancellationToken cancellationToken,
         params DemoMovementDetail[] details)
     {
         var alreadySeeded = await context.Movements
             .AsNoTracking()
-            .AnyAsync(movement => movement.Observation == observation, cancellationToken);
+            .AnyAsync(
+                movement => movement.CompanyId == companyId && movement.Observation == observation,
+                cancellationToken);
 
         if (alreadySeeded)
         {
@@ -293,7 +365,7 @@ public static class DemoDataSeeder
                 .ToList()
         };
 
-        await movementService.CreateAsync(request, userId, cancellationToken);
+        await movementService.CreateAsync(request, userId, cancellationToken, companyId);
     }
 
     private static readonly DemoCategory[] Categories =
@@ -494,6 +566,16 @@ public static class DemoDataSeeder
     private static readonly string[] DemoWarehouseNames = Warehouses.Select(warehouse => warehouse.Name).ToArray();
 
     private static readonly string[] DemoProductCodes = Products.Select(product => product.Code).ToArray();
+
+    private static readonly string[] DemoMovementObservations =
+    [
+        "Ingreso inicial de inventario para operación principal.",
+        "Ingreso de inventario para atención regional norte.",
+        "Salida de equipos para implementación interna.",
+        "Transferencia de periféricos para abastecimiento regional.",
+        "Distribución de equipos para áreas administrativas.",
+        "Salida por instalación en oficina regional."
+    ];
 
     private sealed record DemoCategory(string Name, string Description);
 

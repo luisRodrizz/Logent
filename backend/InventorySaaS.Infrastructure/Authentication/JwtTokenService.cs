@@ -9,7 +9,7 @@ namespace InventorySaaS.Infrastructure.Authentication;
 
 public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
 {
-    public string GenerateToken(string userId, string email, IEnumerable<string> roles)
+    public string GenerateToken(string userId, string email, IEnumerable<string> roles, Guid? companyId = null)
     {
         var claims = new List<Claim>
         {
@@ -17,6 +17,11 @@ public class JwtTokenService(IConfiguration configuration) : IJwtTokenService
             new(ClaimTypes.Email, email),
             new(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
         };
+
+        if (companyId.HasValue)
+        {
+            claims.Add(new Claim("companyId", companyId.Value.ToString()));
+        }
 
         claims.AddRange(roles.Select(role => new Claim(ClaimTypes.Role, role)));
 

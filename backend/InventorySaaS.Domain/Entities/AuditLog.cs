@@ -5,6 +5,10 @@ namespace InventorySaaS.Domain.Entities;
 
 public class AuditLog : BaseEntity
 {
+    public Guid? CompanyId { get; set; }
+
+    public Company? Company { get; set; }
+
     public string? UserId { get; set; }
 
     public AuditAction Action { get; set; }

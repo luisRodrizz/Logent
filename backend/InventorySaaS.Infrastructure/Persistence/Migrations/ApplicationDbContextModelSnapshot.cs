@@ -31,6 +31,9 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.Property<int>("Action")
                         .HasColumnType("int");
 
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -54,6 +57,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId");
+
                     b.ToTable("AuditLogs", (string)null);
                 });
 
@@ -61,6 +66,9 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -83,13 +91,76 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[CompanyId] IS NOT NULL");
+
                     b.ToTable("Categories", (string)null);
+                });
+
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.Company", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int>("Plan")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Ruc")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Ruc")
+                        .IsUnique()
+                        .HasFilter("[Ruc] IS NOT NULL");
+
+                    b.HasIndex("Slug")
+                        .IsUnique();
+
+                    b.ToTable("Companies", (string)null);
                 });
 
             modelBuilder.Entity("InventorySaaS.Domain.Entities.KardexEntry", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("CreatedByUserId")
@@ -132,6 +203,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId");
+
                     b.HasIndex("MovementId");
 
                     b.HasIndex("ProductId");
@@ -145,6 +218,9 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -177,6 +253,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
 
                     b.HasIndex("WarehouseDestinationId");
 
@@ -226,6 +304,9 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -260,10 +341,11 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.HasIndex("Code")
-                        .IsUnique();
-
                     b.HasIndex("SupplierId");
+
+                    b.HasIndex("CompanyId", "Code")
+                        .IsUnique()
+                        .HasFilter("[CompanyId] IS NOT NULL");
 
                     b.ToTable("Products", (string)null);
                 });
@@ -272,6 +354,9 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("ProductId")
@@ -288,10 +373,13 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ProductId");
+
                     b.HasIndex("WarehouseId");
 
-                    b.HasIndex("ProductId", "WarehouseId")
-                        .IsUnique();
+                    b.HasIndex("CompanyId", "ProductId", "WarehouseId")
+                        .IsUnique()
+                        .HasFilter("[CompanyId] IS NOT NULL");
 
                     b.ToTable("StockItems", (string)null);
                 });
@@ -310,6 +398,9 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                         .IsRequired()
                         .HasMaxLength(160)
                         .HasColumnType("nvarchar(160)");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -334,6 +425,10 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId", "Ruc")
+                        .IsUnique()
+                        .HasFilter("[Ruc] IS NOT NULL");
+
                     b.ToTable("Suppliers", (string)null);
                 });
 
@@ -341,6 +436,9 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("CompanyId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("CreatedAt")
@@ -367,6 +465,10 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("CompanyId", "Name")
+                        .IsUnique()
+                        .HasFilter("[CompanyId] IS NOT NULL");
+
                     b.ToTable("Warehouses", (string)null);
                 });
 
@@ -377,6 +479,9 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
@@ -437,6 +542,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                         .HasColumnType("nvarchar(256)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
 
                     b.HasIndex("NormalizedEmail")
                         .HasDatabaseName("EmailIndex");
@@ -582,8 +689,33 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.AuditLog", b =>
+                {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("AuditLogs")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.Category", b =>
+                {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("Categories")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("InventorySaaS.Domain.Entities.KardexEntry", b =>
                 {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("KardexEntries")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InventorySaaS.Domain.Entities.Movement", "Movement")
                         .WithMany()
                         .HasForeignKey("MovementId")
@@ -602,6 +734,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Company");
+
                     b.Navigation("Movement");
 
                     b.Navigation("Product");
@@ -611,6 +745,11 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
             modelBuilder.Entity("InventorySaaS.Domain.Entities.Movement", b =>
                 {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("Movements")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InventorySaaS.Domain.Entities.Warehouse", "WarehouseDestination")
                         .WithMany()
                         .HasForeignKey("WarehouseDestinationId")
@@ -620,6 +759,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                         .WithMany()
                         .HasForeignKey("WarehouseOriginId")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
 
                     b.Navigation("WarehouseDestination");
 
@@ -653,6 +794,11 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("Products")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InventorySaaS.Domain.Entities.Supplier", "Supplier")
                         .WithMany("Products")
                         .HasForeignKey("SupplierId")
@@ -660,11 +806,18 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.Navigation("Category");
 
+                    b.Navigation("Company");
+
                     b.Navigation("Supplier");
                 });
 
             modelBuilder.Entity("InventorySaaS.Domain.Entities.StockItem", b =>
                 {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("StockItems")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InventorySaaS.Domain.Entities.Product", "Product")
                         .WithMany("StockItems")
                         .HasForeignKey("ProductId")
@@ -677,9 +830,41 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.Navigation("Company");
+
                     b.Navigation("Product");
 
                     b.Navigation("Warehouse");
+                });
+
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.Supplier", b =>
+                {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("Suppliers")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.Warehouse", b =>
+                {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("Warehouses")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
+                });
+
+            modelBuilder.Entity("InventorySaaS.Infrastructure.Identity.ApplicationUser", b =>
+                {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany()
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
@@ -736,6 +921,25 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
             modelBuilder.Entity("InventorySaaS.Domain.Entities.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.Company", b =>
+                {
+                    b.Navigation("AuditLogs");
+
+                    b.Navigation("Categories");
+
+                    b.Navigation("KardexEntries");
+
+                    b.Navigation("Movements");
+
+                    b.Navigation("Products");
+
+                    b.Navigation("StockItems");
+
+                    b.Navigation("Suppliers");
+
+                    b.Navigation("Warehouses");
                 });
 
             modelBuilder.Entity("InventorySaaS.Domain.Entities.Movement", b =>

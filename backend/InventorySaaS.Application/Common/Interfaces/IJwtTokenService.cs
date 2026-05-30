@@ -2,7 +2,7 @@ namespace InventorySaaS.Application.Common.Interfaces;
 
 public interface IJwtTokenService
 {
-    string GenerateToken(string userId, string email, IEnumerable<string> roles);
+    string GenerateToken(string userId, string email, IEnumerable<string> roles, Guid? companyId = null);
 
     DateTime GetExpirationTime();
 }

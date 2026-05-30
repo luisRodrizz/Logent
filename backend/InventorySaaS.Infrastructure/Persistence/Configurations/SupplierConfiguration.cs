@@ -36,6 +36,15 @@ public class SupplierConfiguration : IEntityTypeConfiguration<Supplier>
         builder.Property(supplier => supplier.IsActive)
             .IsRequired();
 
+        builder.HasIndex(supplier => new { supplier.CompanyId, supplier.Ruc })
+            .IsUnique()
+            .HasFilter("[Ruc] IS NOT NULL");
+
+        builder.HasOne(supplier => supplier.Company)
+            .WithMany(company => company.Suppliers)
+            .HasForeignKey(supplier => supplier.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(supplier => supplier.Products)
             .WithOne(product => product.Supplier)
             .HasForeignKey(product => product.SupplierId)

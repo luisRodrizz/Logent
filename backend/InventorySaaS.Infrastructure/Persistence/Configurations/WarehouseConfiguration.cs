@@ -30,6 +30,14 @@ public class WarehouseConfiguration : IEntityTypeConfiguration<Warehouse>
         builder.Property(warehouse => warehouse.IsActive)
             .IsRequired();
 
+        builder.HasIndex(warehouse => new { warehouse.CompanyId, warehouse.Name })
+            .IsUnique();
+
+        builder.HasOne(warehouse => warehouse.Company)
+            .WithMany(company => company.Warehouses)
+            .HasForeignKey(warehouse => warehouse.CompanyId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasMany(warehouse => warehouse.StockItems)
             .WithOne(stockItem => stockItem.Warehouse)
             .HasForeignKey(stockItem => stockItem.WarehouseId)
