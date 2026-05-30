@@ -6,6 +6,8 @@ using InventorySaaS.Infrastructure.Persistence;
 using InventorySaaS.WebApi.Common;
 using InventorySaaS.WebApi.Extensions;
 using InventorySaaS.WebApi.Middleware;
+using InventorySaaS.Application.Common.Interfaces;
+using InventorySaaS.WebApi.Services;
 using Microsoft.AspNetCore.Mvc;
 using Serilog;
 using System.Text.Json.Serialization;
@@ -44,6 +46,8 @@ try
         };
     });
     builder.Services.AddValidatorsFromAssemblyContaining<CreateCategoryRequestValidator>();
+    builder.Services.AddHttpContextAccessor();
+    builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddJwtAuthentication(builder.Configuration);
     builder.Services.AddCorsPolicy();
