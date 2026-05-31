@@ -1,5 +1,7 @@
 using System.Security.Claims;
+using FluentValidation;
 using InventorySaaS.Application.Auth.DTOs;
+using InventorySaaS.Application.Auth.Interfaces;
 using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Infrastructure.Identity;
 using InventorySaaS.Infrastructure.Persistence;
@@ -15,7 +17,9 @@ namespace InventorySaaS.WebApi.Controllers;
 public class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
-    IJwtTokenService jwtTokenService) : ControllerBase
+    IJwtTokenService jwtTokenService,
+    ICompanyRegistrationService companyRegistrationService,
+    IValidator<RegisterCompanyRequest> registerCompanyValidator) : ControllerBase
 {
     private static readonly HashSet<string> AllowedRoles = new(StringComparer.Ordinal)
     {
@@ -23,6 +27,24 @@ public class AuthController(
         IdentitySeeder.WarehouseRole,
         IdentitySeeder.ReadOnlyRole
     };
+
+    [AllowAnonymous]
+    [HttpPost("register-company")]
+    public async Task<ActionResult<AuthResponse>> RegisterCompany(
+        RegisterCompanyRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await registerCompanyValidator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            return ApiErrorResponseFactory.Validation(
+                HttpContext,
+                validationResult.Errors.Select(error => error.ErrorMessage));
+        }
+
+        return Ok(await companyRegistrationService.RegisterAsync(request, cancellationToken));
+    }
 
     [Authorize(Roles = IdentitySeeder.AdminRole)]
     [HttpPost("register")]

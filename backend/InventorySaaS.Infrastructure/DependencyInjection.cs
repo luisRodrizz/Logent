@@ -1,4 +1,5 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
+using InventorySaaS.Application.Auth.Interfaces;
 using InventorySaaS.Application.Categories.Interfaces;
 using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Dashboard.Interfaces;
@@ -75,6 +76,7 @@ public static class DependencyInjection
         services.AddScoped<IProfileService, ProfileService>();
 
         // Authentication / audit helpers
+        services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuditLogWriter, AuditLogWriter>();
 
