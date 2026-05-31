@@ -19,6 +19,17 @@ export async function resendConfirmationEmail(email: string): Promise<MessageRes
   return response.data
 }
 
+export async function confirmEmail(userId: string, token: string): Promise<MessageResponse> {
+  const response = await api.get<MessageResponse>('/auth/confirm-email', {
+    params: {
+      token,
+      userId,
+    },
+  })
+
+  return response.data
+}
+
 export async function getCurrentUser(): Promise<AuthUser> {
   const response = await api.get<AuthUser>('/auth/me')
 

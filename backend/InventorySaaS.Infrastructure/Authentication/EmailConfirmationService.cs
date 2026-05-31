@@ -140,15 +140,15 @@ public class EmailConfirmationService(
 
     private string BuildConfirmationUrl(string userId, string token)
     {
-        if (string.IsNullOrWhiteSpace(urls.BackendBaseUrl))
+        if (string.IsNullOrWhiteSpace(urls.FrontendBaseUrl))
         {
-            throw new InvalidOperationException("Application URL settings are not configured. Configure AppUrls:BackendBaseUrl.");
+            throw new InvalidOperationException("Application URL settings are not configured. Configure AppUrls:FrontendBaseUrl.");
         }
 
         var encodedUserId = Uri.EscapeDataString(userId);
         var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
 
-        return $"{urls.BackendBaseUrl.TrimEnd('/')}/api/auth/confirm-email?userId={encodedUserId}&token={encodedToken}";
+        return $"{urls.FrontendBaseUrl.TrimEnd('/')}/confirm-email?userId={encodedUserId}&token={encodedToken}";
     }
 
     private static string BuildConfirmationEmailBody(

@@ -1,0 +1,125 @@
+.logent-confirm-email {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100dvh;
+  overflow-x: clip;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: 24px;
+}
+
+.logent-confirm-email-card {
+  width: min(100%, 520px);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgb(15 23 42 / 0.06);
+  padding: 34px;
+  text-align: center;
+}
+
+.logent-confirm-email-logo {
+  display: block;
+  width: auto;
+  height: 48px;
+  margin: 0 auto 28px;
+  object-fit: contain;
+}
+
+.logent-confirm-email-loading {
+  padding: 18px 0 4px;
+}
+
+.logent-confirm-email-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  margin: 0 auto 18px;
+}
+
+.logent-confirm-email-icon-success {
+  border: 1px solid rgb(40 224 0 / 0.28);
+  background: rgb(40 224 0 / 0.08);
+  color: #0f6e00;
+}
+
+.logent-confirm-email-icon-error {
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  color: #c2410c;
+}
+
+.logent-confirm-email-eyebrow {
+  margin: 0 0 9px;
+  color: #0f6e00;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.logent-confirm-email-card h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 27px;
+  font-weight: 780;
+  line-height: 1.2;
+}
+
+.logent-confirm-email-card h1 + p {
+  margin-top: 14px;
+}
+
+.logent-confirm-email-card p:not(.logent-confirm-email-eyebrow) {
+  margin-bottom: 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.logent-confirm-email-card p + p {
+  margin-top: 5px;
+}
+
+.logent-confirm-email-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 22px;
+  border: 1px solid #1017d8;
+  border-radius: 9px;
+  background: #1017d8;
+  color: #ffffff;
+  font-size: 14px;
+  font-weight: 780;
+  text-decoration: none;
+  transition: background-color 180ms ease;
+}
+
+.logent-confirm-email-primary:hover {
+  background: #0b119e;
+}
+
+@media (max-width: 640px) {
+  .logent-confirm-email {
+    padding: 16px;
+  }
+
+  .logent-confirm-email-card {
+    padding: 27px 20px;
+  }
+
+  .logent-confirm-email-logo {
+    height: 43px;
+  }
+
+  .logent-confirm-email-card h1 {
+    font-size: 24px;
+  }
+}

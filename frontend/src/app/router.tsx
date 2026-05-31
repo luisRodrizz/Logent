@@ -14,6 +14,9 @@ const AuditLogsPage = lazy(() =>
 const CategoriesPage = lazy(() =>
   import('../features/categories/CategoriesPage').then((module) => ({ default: module.CategoriesPage })),
 )
+const ConfirmEmailPage = lazy(() =>
+  import('../features/auth/ConfirmEmailPage').then((module) => ({ default: module.ConfirmEmailPage })),
+)
 const DashboardPage = lazy(() =>
   import('../features/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage })),
 )
@@ -99,6 +102,14 @@ export function AppRouter() {
           element={
             <Suspense fallback={<FullPageFallback />}>
               <LoginPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/confirm-email"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <ConfirmEmailPage />
             </Suspense>
           }
         />
