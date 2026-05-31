@@ -79,6 +79,7 @@ public static class DependencyInjection
         // Authentication / audit helpers
         services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
         services.AddScoped<IEmailConfirmationService, EmailConfirmationService>();
+        services.AddScoped<IPasswordRecoveryService, PasswordRecoveryService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuditLogWriter, AuditLogWriter>();
         services.Configure<AppUrlSettings>(configuration.GetSection(AppUrlSettings.SectionName));

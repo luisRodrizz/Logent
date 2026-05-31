@@ -20,8 +20,11 @@ public class AuthController(
     IJwtTokenService jwtTokenService,
     ICompanyRegistrationService companyRegistrationService,
     IEmailConfirmationService emailConfirmationService,
+    IPasswordRecoveryService passwordRecoveryService,
     IValidator<RegisterCompanyRequest> registerCompanyValidator,
-    IValidator<ResendConfirmationEmailRequest> resendConfirmationEmailValidator) : ControllerBase
+    IValidator<ResendConfirmationEmailRequest> resendConfirmationEmailValidator,
+    IValidator<ForgotPasswordRequest> forgotPasswordValidator,
+    IValidator<ResetPasswordRequest> resetPasswordValidator) : ControllerBase
 {
     private static readonly HashSet<string> AllowedRoles = new(StringComparer.Ordinal)
     {
@@ -91,6 +94,42 @@ public class AuthController(
         }
 
         return Ok(await emailConfirmationService.ResendConfirmationEmailAsync(request.Email, cancellationToken));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("forgot-password")]
+    public async Task<ActionResult<MessageResponse>> ForgotPassword(
+        ForgotPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await forgotPasswordValidator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            return ApiErrorResponseFactory.Validation(
+                HttpContext,
+                validationResult.Errors.Select(error => error.ErrorMessage));
+        }
+
+        return Ok(await passwordRecoveryService.ForgotPasswordAsync(request, cancellationToken));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("reset-password")]
+    public async Task<ActionResult<MessageResponse>> ResetPassword(
+        ResetPasswordRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await resetPasswordValidator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            return ApiErrorResponseFactory.Validation(
+                HttpContext,
+                validationResult.Errors.Select(error => error.ErrorMessage));
+        }
+
+        return Ok(await passwordRecoveryService.ResetPasswordAsync(request, cancellationToken));
     }
 
     [Authorize(Roles = IdentitySeeder.AdminRole)]
