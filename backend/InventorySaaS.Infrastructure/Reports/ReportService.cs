@@ -1,3 +1,4 @@
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Reports.DTOs;
 using InventorySaaS.Application.Reports.Interfaces;
 using InventorySaaS.Domain.Entities;
@@ -7,12 +8,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Reports;
 
-public class ReportService(ApplicationDbContext context) : IReportService
+public class ReportService(ApplicationDbContext context, ICurrentUserContext currentUserContext) : IReportService
 {
     public async Task<IReadOnlyList<StockSummaryResponse>> GetStockSummaryAsync(
         CancellationToken cancellationToken = default)
     {
-        return await GetActiveStockItemsQuery()
+        var companyId = currentUserContext.RequireCompanyId();
+
+        return await GetActiveStockItemsQuery(companyId)
             .OrderBy(stockItem => stockItem.Product!.Name)
             .ThenBy(stockItem => stockItem.Warehouse!.Name)
             .Select(stockItem => new StockSummaryResponse
@@ -33,7 +36,9 @@ public class ReportService(ApplicationDbContext context) : IReportService
     public async Task<IReadOnlyList<LowStockResponse>> GetLowStockAsync(
         CancellationToken cancellationToken = default)
     {
-        return await GetActiveStockItemsQuery()
+        var companyId = currentUserContext.RequireCompanyId();
+
+        return await GetActiveStockItemsQuery(companyId)
             .Where(stockItem => stockItem.Quantity <= stockItem.Product!.MinimumStock)
             .OrderBy(stockItem => stockItem.Product!.Name)
             .ThenBy(stockItem => stockItem.Warehouse!.Name)
@@ -56,8 +61,13 @@ public class ReportService(ApplicationDbContext context) : IReportService
     public async Task<MovementsSummaryResponse> GetMovementsSummaryAsync(
         CancellationToken cancellationToken = default)
     {
-        var movements = context.Movements.AsNoTracking();
-        var movementDetails = context.MovementDetails.AsNoTracking();
+        var companyId = currentUserContext.RequireCompanyId();
+        var movements = context.Movements
+            .AsNoTracking()
+            .Where(movement => movement.CompanyId == companyId);
+        var movementDetails = context.MovementDetails
+            .AsNoTracking()
+            .Where(detail => detail.Movement != null && detail.Movement.CompanyId == companyId);
 
         return new MovementsSummaryResponse
         {
@@ -81,7 +91,10 @@ public class ReportService(ApplicationDbContext context) : IReportService
     public async Task<KardexSummaryResponse> GetKardexSummaryAsync(
         CancellationToken cancellationToken = default)
     {
-        var kardexEntries = context.KardexEntries.AsNoTracking();
+        var companyId = currentUserContext.RequireCompanyId();
+        var kardexEntries = context.KardexEntries
+            .AsNoTracking()
+            .Where(entry => entry.CompanyId == companyId);
 
         return new KardexSummaryResponse
         {
@@ -92,7 +105,7 @@ public class ReportService(ApplicationDbContext context) : IReportService
             TotalExitUnits = await kardexEntries.SumAsync(
                 entry => (int?)entry.QuantityOut,
                 cancellationToken) ?? 0,
-            TotalInventoryValue = await GetActiveStockItemsQuery()
+            TotalInventoryValue = await GetActiveStockItemsQuery(companyId)
                 .SumAsync(
                     stockItem => (decimal?)(stockItem.Quantity * stockItem.Product!.PurchasePrice),
                     cancellationToken) ?? 0,
@@ -103,7 +116,7 @@ public class ReportService(ApplicationDbContext context) : IReportService
         };
     }
 
-    private IQueryable<StockItem> GetActiveStockItemsQuery()
+    private IQueryable<StockItem> GetActiveStockItemsQuery(Guid companyId)
     {
         return context.StockItems
             .AsNoTracking()
@@ -111,9 +124,12 @@ public class ReportService(ApplicationDbContext context) : IReportService
             .Include(stockItem => stockItem.Warehouse)
             .Where(
                 stockItem =>
-                    stockItem.Product != null
+                    stockItem.CompanyId == companyId
+                    && stockItem.Product != null
+                    && stockItem.Product.CompanyId == companyId
                     && stockItem.Product.IsActive
                     && stockItem.Warehouse != null
+                    && stockItem.Warehouse.CompanyId == companyId
                     && stockItem.Warehouse.IsActive);
     }
 }

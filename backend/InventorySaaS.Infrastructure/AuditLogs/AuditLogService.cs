@@ -1,6 +1,7 @@
 using InventorySaaS.Application.AuditLogs.DTOs;
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Common.Extensions;
@@ -9,13 +10,14 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.AuditLogs;
 
-public class AuditLogService(ApplicationDbContext context) : IAuditLogService
+public class AuditLogService(ApplicationDbContext context, ICurrentUserContext currentUserContext) : IAuditLogService
 {
     public async Task<PagedResponse<AuditLogResponse>> GetAllAsync(
         PagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var query = GetAuditLogsQuery();
+        var companyId = currentUserContext.RequireCompanyId();
+        var query = GetAuditLogsQuery(companyId);
         var search = request.NormalizeSearch();
 
         if (search is not null)
@@ -36,7 +38,9 @@ public class AuditLogService(ApplicationDbContext context) : IAuditLogService
 
     public async Task<AuditLogResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        return await GetAuditLogsQuery()
+        var companyId = currentUserContext.RequireCompanyId();
+
+        return await GetAuditLogsQuery(companyId)
             .Where(auditLog => auditLog.Id == id)
             .Select(auditLog => MapToResponse(auditLog))
             .FirstOrDefaultAsync(cancellationToken);
@@ -46,6 +50,8 @@ public class AuditLogService(ApplicationDbContext context) : IAuditLogService
         string userId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         if (string.IsNullOrWhiteSpace(userId))
         {
             return [];
@@ -53,7 +59,7 @@ public class AuditLogService(ApplicationDbContext context) : IAuditLogService
 
         var normalizedUserId = userId.Trim();
 
-        return await GetAuditLogsQuery()
+        return await GetAuditLogsQuery(companyId)
             .Where(auditLog => auditLog.UserId == normalizedUserId)
             .OrderByDescending(auditLog => auditLog.CreatedAt)
             .Select(auditLog => MapToResponse(auditLog))
@@ -64,6 +70,8 @@ public class AuditLogService(ApplicationDbContext context) : IAuditLogService
         string entityName,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         if (string.IsNullOrWhiteSpace(entityName))
         {
             return [];
@@ -71,7 +79,7 @@ public class AuditLogService(ApplicationDbContext context) : IAuditLogService
 
         var normalizedEntityName = entityName.Trim().ToLower();
 
-        return await GetAuditLogsQuery()
+        return await GetAuditLogsQuery(companyId)
             .Where(auditLog => auditLog.EntityName.ToLower() == normalizedEntityName)
             .OrderByDescending(auditLog => auditLog.CreatedAt)
             .Select(auditLog => MapToResponse(auditLog))
@@ -82,16 +90,20 @@ public class AuditLogService(ApplicationDbContext context) : IAuditLogService
         AuditAction action,
         CancellationToken cancellationToken = default)
     {
-        return await GetAuditLogsQuery()
+        var companyId = currentUserContext.RequireCompanyId();
+
+        return await GetAuditLogsQuery(companyId)
             .Where(auditLog => auditLog.Action == action)
             .OrderByDescending(auditLog => auditLog.CreatedAt)
             .Select(auditLog => MapToResponse(auditLog))
             .ToListAsync(cancellationToken);
     }
 
-    private IQueryable<AuditLog> GetAuditLogsQuery()
+    private IQueryable<AuditLog> GetAuditLogsQuery(Guid companyId)
     {
-        return context.AuditLogs.AsNoTracking();
+        return context.AuditLogs
+            .AsNoTracking()
+            .Where(auditLog => auditLog.CompanyId == companyId);
     }
 
     private static AuditLogResponse MapToResponse(AuditLog auditLog)

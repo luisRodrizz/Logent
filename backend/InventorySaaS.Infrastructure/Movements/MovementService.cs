@@ -1,5 +1,6 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Movements.DTOs;
 using InventorySaaS.Application.Movements.Interfaces;
 using InventorySaaS.Domain.Entities;
@@ -10,13 +11,17 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Movements;
 
-public class MovementService(ApplicationDbContext context, IAuditLogWriter auditLogWriter) : IMovementService
+public class MovementService(
+    ApplicationDbContext context,
+    IAuditLogWriter auditLogWriter,
+    ICurrentUserContext currentUserContext) : IMovementService
 {
     public async Task<PagedResponse<MovementResponse>> GetAllAsync(
         PagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var query = GetMovementsQuery();
+        var companyId = currentUserContext.RequireCompanyId();
+        var query = GetMovementsQuery(companyId);
         var search = request.NormalizeSearch();
 
         if (search is not null)
@@ -44,7 +49,8 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
 
     public async Task<MovementResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default)
     {
-        var movement = await GetMovementsQuery()
+        var companyId = currentUserContext.RequireCompanyId();
+        var movement = await GetMovementsQuery(companyId)
             .Where(movement => movement.Id == id)
             .FirstOrDefaultAsync(cancellationToken);
 
@@ -55,8 +61,10 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
         CreateMovementRequest request,
         string userId,
         CancellationToken cancellationToken = default,
-        Guid? companyId = null)
+        Guid? seedCompanyId = null)
     {
+        var companyId = seedCompanyId ?? currentUserContext.RequireCompanyId();
+
         await ValidateWarehousesAsync(request, companyId, cancellationToken);
         await ValidateProductsAsync(request, companyId, cancellationToken);
 
@@ -108,13 +116,16 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
             companyId);
         await transaction.CommitAsync(cancellationToken);
 
-        var createdMovement = await GetByIdAsync(movement.Id, cancellationToken);
+        var createdMovement = await GetMovementsQuery(companyId)
+            .Where(createdMovement => createdMovement.Id == movement.Id)
+            .FirstOrDefaultAsync(cancellationToken);
 
-        return createdMovement
-            ?? throw new InvalidOperationException("The created movement could not be loaded.");
+        return createdMovement is null
+            ? throw new InvalidOperationException("The created movement could not be loaded.")
+            : MapToResponse(createdMovement);
     }
 
-    private IQueryable<Movement> GetMovementsQuery()
+    private IQueryable<Movement> GetMovementsQuery(Guid companyId)
     {
         return context.Movements
             .AsNoTracking()
@@ -122,12 +133,13 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
             .Include(movement => movement.WarehouseOrigin)
             .Include(movement => movement.WarehouseDestination)
             .Include(movement => movement.Details)
-            .ThenInclude(detail => detail.Product);
+            .ThenInclude(detail => detail.Product)
+            .Where(movement => movement.CompanyId == companyId);
     }
 
     private async Task ValidateWarehousesAsync(
         CreateMovementRequest request,
-        Guid? companyId,
+        Guid companyId,
         CancellationToken cancellationToken)
     {
         if (request.WarehouseOriginId.HasValue)
@@ -151,20 +163,17 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
 
     private async Task EnsureActiveWarehouseExistsAsync(
         Guid warehouseId,
-        Guid? companyId,
+        Guid companyId,
         string errorMessage,
         CancellationToken cancellationToken)
     {
-        var query = context.Warehouses
+        var exists = await context.Warehouses
             .AsNoTracking()
-            .Where(warehouse => warehouse.Id == warehouseId && warehouse.IsActive);
-
-        if (companyId.HasValue)
-        {
-            query = query.Where(warehouse => warehouse.CompanyId == companyId);
-        }
-
-        var exists = await query.AnyAsync(cancellationToken);
+            .AnyAsync(
+                warehouse => warehouse.Id == warehouseId
+                    && warehouse.CompanyId == companyId
+                    && warehouse.IsActive,
+                cancellationToken);
 
         if (!exists)
         {
@@ -174,7 +183,7 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
 
     private async Task ValidateProductsAsync(
         CreateMovementRequest request,
-        Guid? companyId,
+        Guid companyId,
         CancellationToken cancellationToken)
     {
         var productIds = request.Details
@@ -182,16 +191,11 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
             .Distinct()
             .ToList();
 
-        var query = context.Products
+        var activeProductIds = await context.Products
             .AsNoTracking()
-            .Where(product => productIds.Contains(product.Id) && product.IsActive);
-
-        if (companyId.HasValue)
-        {
-            query = query.Where(product => product.CompanyId == companyId);
-        }
-
-        var activeProductIds = await query
+            .Where(product => productIds.Contains(product.Id)
+                && product.CompanyId == companyId
+                && product.IsActive)
             .Select(product => product.Id)
             .ToListAsync(cancellationToken);
 
@@ -208,7 +212,7 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
         MovementDetail detail,
         string userId,
         DateTime date,
-        Guid? companyId,
+        Guid companyId,
         CancellationToken cancellationToken)
     {
         switch (movement.Type)
@@ -262,7 +266,7 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
         Guid warehouseId,
         string userId,
         DateTime date,
-        Guid? companyId,
+        Guid companyId,
         CancellationToken cancellationToken)
     {
         var stockItem = await GetOrCreateStockItemAsync(detail.ProductId, warehouseId, date, companyId, cancellationToken);
@@ -291,7 +295,7 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
         Guid warehouseId,
         string userId,
         DateTime date,
-        Guid? companyId,
+        Guid companyId,
         CancellationToken cancellationToken)
     {
         var stockItem = await context.StockItems
@@ -330,7 +334,7 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
         Guid productId,
         Guid warehouseId,
         DateTime date,
-        Guid? companyId,
+        Guid companyId,
         CancellationToken cancellationToken)
     {
         var stockItem = await context.StockItems
@@ -371,7 +375,7 @@ public class MovementService(ApplicationDbContext context, IAuditLogWriter audit
         int stockBefore,
         int stockAfter,
         string userId,
-        Guid? companyId)
+        Guid companyId)
     {
         context.KardexEntries.Add(new KardexEntry
         {

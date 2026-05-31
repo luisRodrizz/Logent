@@ -1,3 +1,4 @@
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Dashboard.DTOs;
 using InventorySaaS.Application.Dashboard.Interfaces;
 using InventorySaaS.Domain.Entities;
@@ -6,28 +7,29 @@ using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Dashboard;
 
-public class DashboardService(ApplicationDbContext context) : IDashboardService
+public class DashboardService(ApplicationDbContext context, ICurrentUserContext currentUserContext) : IDashboardService
 {
     private const int DashboardItemsLimit = 10;
 
     public async Task<DashboardSummaryResponse> GetSummaryAsync(CancellationToken cancellationToken = default)
     {
-        var activeStockItems = GetActiveStockItemsQuery();
+        var companyId = currentUserContext.RequireCompanyId();
+        var activeStockItems = GetActiveStockItemsQuery(companyId);
 
         return new DashboardSummaryResponse
         {
             TotalCategories = await context.Categories
                 .AsNoTracking()
-                .CountAsync(category => category.IsActive, cancellationToken),
+                .CountAsync(category => category.CompanyId == companyId && category.IsActive, cancellationToken),
             TotalSuppliers = await context.Suppliers
                 .AsNoTracking()
-                .CountAsync(supplier => supplier.IsActive, cancellationToken),
+                .CountAsync(supplier => supplier.CompanyId == companyId && supplier.IsActive, cancellationToken),
             TotalWarehouses = await context.Warehouses
                 .AsNoTracking()
-                .CountAsync(warehouse => warehouse.IsActive, cancellationToken),
+                .CountAsync(warehouse => warehouse.CompanyId == companyId && warehouse.IsActive, cancellationToken),
             TotalProducts = await context.Products
                 .AsNoTracking()
-                .CountAsync(product => product.IsActive, cancellationToken),
+                .CountAsync(product => product.CompanyId == companyId && product.IsActive, cancellationToken),
             TotalStockItems = await activeStockItems.CountAsync(cancellationToken),
             LowStockItems = await activeStockItems
                 .CountAsync(
@@ -35,10 +37,10 @@ public class DashboardService(ApplicationDbContext context) : IDashboardService
                     cancellationToken),
             TotalMovements = await context.Movements
                 .AsNoTracking()
-                .CountAsync(cancellationToken),
+                .CountAsync(movement => movement.CompanyId == companyId, cancellationToken),
             TotalKardexEntries = await context.KardexEntries
                 .AsNoTracking()
-                .CountAsync(cancellationToken),
+                .CountAsync(entry => entry.CompanyId == companyId, cancellationToken),
             TotalInventoryValue = await activeStockItems
                 .SumAsync(
                     stockItem => (decimal?)(stockItem.Quantity * stockItem.Product!.PurchasePrice),
@@ -49,7 +51,9 @@ public class DashboardService(ApplicationDbContext context) : IDashboardService
     public async Task<IReadOnlyList<StockOverviewItemResponse>> GetStockOverviewAsync(
         CancellationToken cancellationToken = default)
     {
-        return await GetActiveStockItemsQuery()
+        var companyId = currentUserContext.RequireCompanyId();
+
+        return await GetActiveStockItemsQuery(companyId)
             .GroupBy(stockItem => new
             {
                 stockItem.ProductId,
@@ -76,11 +80,14 @@ public class DashboardService(ApplicationDbContext context) : IDashboardService
     public async Task<IReadOnlyList<RecentMovementResponse>> GetRecentMovementsAsync(
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
+
         return await context.Movements
             .AsNoTracking()
             .Include(movement => movement.WarehouseOrigin)
             .Include(movement => movement.WarehouseDestination)
             .Include(movement => movement.Details)
+            .Where(movement => movement.CompanyId == companyId)
             .OrderByDescending(movement => movement.Date)
             .Take(DashboardItemsLimit)
             .Select(movement => new RecentMovementResponse
@@ -101,7 +108,9 @@ public class DashboardService(ApplicationDbContext context) : IDashboardService
     public async Task<IReadOnlyList<LowStockAlertResponse>> GetLowStockAlertsAsync(
         CancellationToken cancellationToken = default)
     {
-        return await GetActiveStockItemsQuery()
+        var companyId = currentUserContext.RequireCompanyId();
+
+        return await GetActiveStockItemsQuery(companyId)
             .Where(stockItem => stockItem.Quantity <= stockItem.Product!.MinimumStock)
             .Select(stockItem => new LowStockAlertResponse
             {
@@ -122,7 +131,7 @@ public class DashboardService(ApplicationDbContext context) : IDashboardService
             .ToListAsync(cancellationToken);
     }
 
-    private IQueryable<StockItem> GetActiveStockItemsQuery()
+    private IQueryable<StockItem> GetActiveStockItemsQuery(Guid companyId)
     {
         return context.StockItems
             .AsNoTracking()
@@ -130,9 +139,12 @@ public class DashboardService(ApplicationDbContext context) : IDashboardService
             .Include(stockItem => stockItem.Warehouse)
             .Where(
                 stockItem =>
-                    stockItem.Product != null
+                    stockItem.CompanyId == companyId
+                    && stockItem.Product != null
+                    && stockItem.Product.CompanyId == companyId
                     && stockItem.Product.IsActive
                     && stockItem.Warehouse != null
+                    && stockItem.Warehouse.CompanyId == companyId
                     && stockItem.Warehouse.IsActive);
     }
 }
