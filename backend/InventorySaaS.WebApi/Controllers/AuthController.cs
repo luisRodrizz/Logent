@@ -9,6 +9,7 @@ using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.WebApi.Controllers;
 
@@ -17,6 +18,7 @@ namespace InventorySaaS.WebApi.Controllers;
 public class AuthController(
     UserManager<ApplicationUser> userManager,
     SignInManager<ApplicationUser> signInManager,
+    ApplicationDbContext context,
     IJwtTokenService jwtTokenService,
     ICompanyRegistrationService companyRegistrationService,
     IEmailConfirmationService emailConfirmationService,
@@ -192,7 +194,9 @@ public class AuthController(
     }
 
     [HttpPost("login")]
-    public async Task<ActionResult<AuthResponse>> Login(LoginRequest request)
+    public async Task<ActionResult<AuthResponse>> Login(
+        LoginRequest request,
+        CancellationToken cancellationToken)
     {
         var user = await userManager.FindByEmailAsync(request.Email);
 
@@ -232,6 +236,23 @@ public class AuthController(
                 StatusCodes.Status401Unauthorized,
                 "Debes confirmar tu correo electrónico antes de iniciar sesión.",
                 "Revisa tu bandeja de entrada o solicita un nuevo enlace de confirmación.");
+        }
+
+        if (user.CompanyId.HasValue)
+        {
+            var companyIsActive = await context.Companies
+                .AnyAsync(
+                    company => company.Id == user.CompanyId.Value && company.IsActive,
+                    cancellationToken);
+
+            if (!companyIsActive)
+            {
+                return ApiErrorResponseFactory.Result(
+                    HttpContext,
+                    StatusCodes.Status403Forbidden,
+                    "La empresa asociada a tu cuenta se encuentra suspendida.",
+                    "Contacta al administrador de LOGENT.");
+            }
         }
 
         return Ok(await CreateAuthResponseAsync(user));

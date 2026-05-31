@@ -44,7 +44,8 @@ public static class IdentitySeeder
             company = new Company
             {
                 Id = DemoTenantDefaults.CompanyId,
-                CreatedAt = DateTime.UtcNow
+                CreatedAt = DateTime.UtcNow,
+                IsActive = true
             };
 
             context.Companies.Add(company);
@@ -54,7 +55,6 @@ public static class IdentitySeeder
         company.Slug = DemoTenantDefaults.CompanySlug;
         company.Email = DemoTenantDefaults.CompanyEmail;
         company.Plan = DemoTenantDefaults.CompanyPlan;
-        company.IsActive = true;
         company.UpdatedAt = DateTime.UtcNow;
 
         await context.SaveChangesAsync();

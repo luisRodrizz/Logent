@@ -66,6 +66,7 @@ try
     app.UseHttpsRedirection();
     app.UseCors(CorsServiceExtensions.FrontendCorsPolicy);
     app.UseAuthentication();
+    app.UseMiddleware<CompanyStatusMiddleware>();
     app.UseAuthorization();
 
     app.MapControllers();
