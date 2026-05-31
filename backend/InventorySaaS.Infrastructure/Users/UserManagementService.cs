@@ -1,20 +1,24 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Common.Exceptions;
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Users.DTOs;
 using InventorySaaS.Application.Users.Interfaces;
 using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Common.Extensions;
 using InventorySaaS.Infrastructure.Identity;
+using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventorySaaS.Infrastructure.Users;
 
 public class UserManagementService(
+    ApplicationDbContext context,
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager,
-    IAuditLogWriter auditLogWriter) : IUserManagementService
+    IAuditLogWriter auditLogWriter,
+    ICurrentUserContext currentUserContext) : IUserManagementService
 {
     private static readonly HashSet<string> AllowedRoles = new(StringComparer.Ordinal)
     {
@@ -27,7 +31,19 @@ public class UserManagementService(
         PagedRequest request,
         CancellationToken cancellationToken = default)
     {
-        var query = userManager.Users.AsNoTracking();
+        var companyId = currentUserContext.RequireCompanyId();
+        var query = userManager.Users
+            .AsNoTracking()
+            .Where(
+                user =>
+                    user.CompanyId == companyId
+                    && !context.UserRoles.Any(
+                        userRole =>
+                            userRole.UserId == user.Id
+                            && context.Roles.Any(
+                                role =>
+                                    role.Id == userRole.RoleId
+                                    && role.Name == IdentitySeeder.SuperAdminRole)));
         var search = request.NormalizeSearch();
 
         if (search is not null)
@@ -58,7 +74,8 @@ public class UserManagementService(
 
     public async Task<UserDetailResponse?> GetByIdAsync(string id, CancellationToken cancellationToken = default)
     {
-        var user = await FindUserAsync(id, cancellationToken);
+        var companyId = currentUserContext.RequireCompanyId();
+        var user = await FindTenantUserAsync(id, companyId, cancellationToken);
 
         return user is null ? null : await MapToDetailAsync(user);
     }
@@ -68,9 +85,9 @@ public class UserManagementService(
         string currentUserId,
         CancellationToken cancellationToken = default)
     {
+        var companyId = currentUserContext.RequireCompanyId();
         var role = await NormalizeAndValidateRoleAsync(request.Role);
         var email = NormalizeEmail(request.Email);
-        var currentUser = await FindUserAsync(currentUserId, cancellationToken);
 
         await EnsureEmailIsUniqueAsync(email, excludedUserId: null);
 
@@ -80,7 +97,7 @@ public class UserManagementService(
             UserName = email,
             Email = email,
             EmailConfirmed = true,
-            CompanyId = currentUser?.CompanyId,
+            CompanyId = companyId,
             FirstName = name.FirstName,
             LastName = name.LastName,
             IsActive = request.IsActive,
@@ -99,7 +116,8 @@ public class UserManagementService(
             "User",
             user.Id,
             $"User created: {email} ({role})",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return await MapToDetailAsync(user);
     }
@@ -110,7 +128,8 @@ public class UserManagementService(
         string currentUserId,
         CancellationToken cancellationToken = default)
     {
-        var user = await FindUserAsync(id, cancellationToken);
+        var companyId = currentUserContext.RequireCompanyId();
+        var user = await FindTenantUserAsync(id, companyId, cancellationToken);
 
         if (user is null)
         {
@@ -120,7 +139,7 @@ public class UserManagementService(
         var email = NormalizeEmail(request.Email);
 
         await EnsureEmailIsUniqueAsync(email, id);
-        await EnsureCanChangeAdminAvailabilityAsync(user, newIsActive: request.IsActive);
+        await EnsureCanChangeAdminAvailabilityAsync(user, companyId, newIsActive: request.IsActive);
 
         var name = SplitFullName(request.FullName);
         user.FirstName = name.FirstName;
@@ -144,7 +163,8 @@ public class UserManagementService(
             "User",
             user.Id,
             $"User updated: {email}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
@@ -155,7 +175,8 @@ public class UserManagementService(
         string currentUserId,
         CancellationToken cancellationToken = default)
     {
-        var user = await FindUserAsync(id, cancellationToken);
+        var companyId = currentUserContext.RequireCompanyId();
+        var user = await FindTenantUserAsync(id, companyId, cancellationToken);
 
         if (user is null)
         {
@@ -171,7 +192,7 @@ public class UserManagementService(
             return true;
         }
 
-        await EnsureCanChangeAdminRoleAsync(user, newRole);
+        await EnsureCanChangeAdminRoleAsync(user, companyId, newRole);
 
         if (roles.Count > 0)
         {
@@ -188,7 +209,8 @@ public class UserManagementService(
             "User",
             user.Id,
             $"User role changed: {user.Email} from {currentRole} to {newRole}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
@@ -199,14 +221,15 @@ public class UserManagementService(
         string currentUserId,
         CancellationToken cancellationToken = default)
     {
-        var user = await FindUserAsync(id, cancellationToken);
+        var companyId = currentUserContext.RequireCompanyId();
+        var user = await FindTenantUserAsync(id, companyId, cancellationToken);
 
         if (user is null)
         {
             return false;
         }
 
-        await EnsureCanChangeAdminAvailabilityAsync(user, request.IsActive);
+        await EnsureCanChangeAdminAvailabilityAsync(user, companyId, request.IsActive);
 
         user.IsActive = request.IsActive;
         var updateResult = await userManager.UpdateAsync(user);
@@ -218,7 +241,8 @@ public class UserManagementService(
             "User",
             user.Id,
             $"User status changed: {user.Email} active={request.IsActive}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
@@ -229,7 +253,8 @@ public class UserManagementService(
         string currentUserId,
         CancellationToken cancellationToken = default)
     {
-        var user = await FindUserAsync(id, cancellationToken);
+        var companyId = currentUserContext.RequireCompanyId();
+        var user = await FindTenantUserAsync(id, companyId, cancellationToken);
 
         if (user is null)
         {
@@ -246,14 +271,26 @@ public class UserManagementService(
             "User",
             user.Id,
             $"User password reset: {user.Email}",
-            cancellationToken);
+            cancellationToken,
+            companyId);
 
         return true;
     }
 
-    private async Task<ApplicationUser?> FindUserAsync(string id, CancellationToken cancellationToken)
+    private async Task<ApplicationUser?> FindTenantUserAsync(
+        string id,
+        Guid companyId,
+        CancellationToken cancellationToken)
     {
-        return await userManager.Users.FirstOrDefaultAsync(user => user.Id == id, cancellationToken);
+        var user = await userManager.Users
+            .FirstOrDefaultAsync(user => user.Id == id && user.CompanyId == companyId, cancellationToken);
+
+        if (user is null || await userManager.IsInRoleAsync(user, IdentitySeeder.SuperAdminRole))
+        {
+            return null;
+        }
+
+        return user;
     }
 
     private async Task<UserListItemResponse> MapToListItemAsync(ApplicationUser user)
@@ -354,17 +391,20 @@ public class UserManagementService(
         }
     }
 
-    private async Task EnsureCanChangeAdminAvailabilityAsync(ApplicationUser user, bool newIsActive)
+    private async Task EnsureCanChangeAdminAvailabilityAsync(
+        ApplicationUser user,
+        Guid companyId,
+        bool newIsActive)
     {
         if (newIsActive || !await userManager.IsInRoleAsync(user, IdentitySeeder.AdminRole))
         {
             return;
         }
 
-        await EnsureMoreThanOneActiveAdminAsync();
+        await EnsureMoreThanOneActiveAdminAsync(companyId);
     }
 
-    private async Task EnsureCanChangeAdminRoleAsync(ApplicationUser user, string newRole)
+    private async Task EnsureCanChangeAdminRoleAsync(ApplicationUser user, Guid companyId, string newRole)
     {
         if (string.Equals(newRole, IdentitySeeder.AdminRole, StringComparison.Ordinal)
             || !user.IsActive
@@ -373,13 +413,13 @@ public class UserManagementService(
             return;
         }
 
-        await EnsureMoreThanOneActiveAdminAsync();
+        await EnsureMoreThanOneActiveAdminAsync(companyId);
     }
 
-    private async Task EnsureMoreThanOneActiveAdminAsync()
+    private async Task EnsureMoreThanOneActiveAdminAsync(Guid companyId)
     {
         var adminUsers = await userManager.GetUsersInRoleAsync(IdentitySeeder.AdminRole);
-        var activeAdminCount = adminUsers.Count(user => user.IsActive);
+        var activeAdminCount = adminUsers.Count(user => user.CompanyId == companyId && user.IsActive);
 
         if (activeAdminCount <= 1)
         {
