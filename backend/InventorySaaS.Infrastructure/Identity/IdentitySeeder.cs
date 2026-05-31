@@ -15,6 +15,8 @@ public static class IdentitySeeder
 
     private const string AdminEmail = "admin@inventorysaas.com";
     private const string AdminPassword = "Admin123";
+    private const string SuperAdminEmail = "superadmin@logent.local";
+    private const string SuperAdminPassword = "SuperAdmin123";
 
     public static async Task SeedAsync(IServiceProvider serviceProvider)
     {
@@ -26,9 +28,13 @@ public static class IdentitySeeder
         {
             if (!await roleManager.RoleExistsAsync(role))
             {
-                await roleManager.CreateAsync(new IdentityRole(role));
+                EnsureSucceeded(
+                    await roleManager.CreateAsync(new IdentityRole(role)),
+                    $"Failed to create role {role}.");
             }
         }
+
+        await SeedSuperAdminAsync(userManager);
 
         var company = await context.Companies
             .FirstOrDefaultAsync(company => company.Id == DemoTenantDefaults.CompanyId);
@@ -107,7 +113,76 @@ public static class IdentitySeeder
 
         if (!await userManager.IsInRoleAsync(adminUser, AdminRole))
         {
-            await userManager.AddToRoleAsync(adminUser, AdminRole);
+            EnsureSucceeded(
+                await userManager.AddToRoleAsync(adminUser, AdminRole),
+                "Failed to assign admin role.");
         }
+    }
+
+    private static async Task SeedSuperAdminAsync(UserManager<ApplicationUser> userManager)
+    {
+        var superAdmin = await userManager.FindByEmailAsync(SuperAdminEmail);
+
+        if (superAdmin is null)
+        {
+            superAdmin = new ApplicationUser
+            {
+                UserName = SuperAdminEmail,
+                Email = SuperAdminEmail,
+                EmailConfirmed = true,
+                CompanyId = null,
+                FirstName = "Super",
+                LastName = "Administrador LOGENT",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+
+            EnsureSucceeded(
+                await userManager.CreateAsync(superAdmin, SuperAdminPassword),
+                "Failed to create super admin user.");
+        }
+        else
+        {
+            superAdmin.CompanyId = null;
+            superAdmin.EmailConfirmed = true;
+            superAdmin.IsActive = true;
+            superAdmin.FirstName = "Super";
+            superAdmin.LastName = "Administrador LOGENT";
+
+            EnsureSucceeded(
+                await userManager.UpdateAsync(superAdmin),
+                "Failed to update super admin user.");
+        }
+
+        var currentRoles = await userManager.GetRolesAsync(superAdmin);
+        var rolesToRemove = currentRoles
+            .Where(role => !string.Equals(role, SuperAdminRole, StringComparison.Ordinal))
+            .ToArray();
+
+        if (rolesToRemove.Length > 0)
+        {
+            EnsureSucceeded(
+                await userManager.RemoveFromRolesAsync(superAdmin, rolesToRemove),
+                "Failed to remove tenant roles from super admin user.");
+        }
+
+        if (!await userManager.IsInRoleAsync(superAdmin, SuperAdminRole))
+        {
+            EnsureSucceeded(
+                await userManager.AddToRoleAsync(superAdmin, SuperAdminRole),
+                "Failed to assign super admin role.");
+        }
+    }
+
+    private static void EnsureSucceeded(IdentityResult result, string message)
+    {
+        if (result.Succeeded)
+        {
+            return;
+        }
+
+        var errors = string.Join("; ", result.Errors.Select(error => error.Description));
+
+        throw new InvalidOperationException($"{message} {errors}");
     }
 }
