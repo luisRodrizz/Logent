@@ -20,6 +20,9 @@ const ConfirmEmailPage = lazy(() =>
 const DashboardPage = lazy(() =>
   import('../features/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage })),
 )
+const ForgotPasswordPage = lazy(() =>
+  import('../features/auth/ForgotPasswordPage').then((module) => ({ default: module.ForgotPasswordPage })),
+)
 const KardexPage = lazy(() =>
   import('../features/kardex/KardexPage').then((module) => ({ default: module.KardexPage })),
 )
@@ -44,6 +47,9 @@ const ProfilePage = lazy(() =>
 )
 const ReportsPage = lazy(() =>
   import('../features/reports/ReportsPage').then((module) => ({ default: module.ReportsPage })),
+)
+const ResetPasswordPage = lazy(() =>
+  import('../features/auth/ResetPasswordPage').then((module) => ({ default: module.ResetPasswordPage })),
 )
 const StockPage = lazy(() => import('../features/stock/StockPage').then((module) => ({ default: module.StockPage })))
 const SuppliersPage = lazy(() =>
@@ -110,6 +116,22 @@ export function AppRouter() {
           element={
             <Suspense fallback={<FullPageFallback />}>
               <ConfirmEmailPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/forgot-password"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <ForgotPasswordPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/reset-password"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <ResetPasswordPage />
             </Suspense>
           }
         />

@@ -219,6 +219,7 @@
 }
 
 .logent-login-forgot {
+  display: block;
   width: 100%;
   margin-top: 14px;
   border: 0;
@@ -227,6 +228,7 @@
   cursor: pointer;
   font-size: 13px;
   font-weight: 700;
+  text-decoration: none;
   text-align: center;
 }
 

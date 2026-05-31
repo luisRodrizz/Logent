@@ -1,5 +1,13 @@
 import { api } from '../../lib/api'
-import type { AuthUser, LoginRequest, LoginResponse, MessageResponse, RegisterCompanyRequest } from '../../types/auth'
+import type {
+  AuthUser,
+  ForgotPasswordRequest,
+  LoginRequest,
+  LoginResponse,
+  MessageResponse,
+  RegisterCompanyRequest,
+  ResetPasswordRequest,
+} from '../../types/auth'
 
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
   const response = await api.post<LoginResponse>('/auth/login', payload)
@@ -26,6 +34,18 @@ export async function confirmEmail(userId: string, token: string): Promise<Messa
       userId,
     },
   })
+
+  return response.data
+}
+
+export async function forgotPassword(payload: ForgotPasswordRequest): Promise<MessageResponse> {
+  const response = await api.post<MessageResponse>('/auth/forgot-password', payload)
+
+  return response.data
+}
+
+export async function resetPassword(payload: ResetPasswordRequest): Promise<MessageResponse> {
+  const response = await api.post<MessageResponse>('/auth/reset-password', payload)
 
   return response.data
 }

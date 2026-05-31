@@ -114,10 +114,6 @@ export function LoginPage() {
     }
   }
 
-  function handleForgotPassword() {
-    toast.info('Recuperación de contraseña simulada. Esta función se implementará en una fase posterior.')
-  }
-
   if (isLoading) {
     return (
       <main className="logent-login-loading">
@@ -207,9 +203,9 @@ export function LoginPage() {
             {isSubmitting ? 'Validando...' : 'Entrar'}
           </button>
 
-          <button className="logent-login-forgot" onClick={handleForgotPassword} type="button">
+          <Link className="logent-login-forgot" to="/forgot-password">
             ¿Olvidaste tu contraseña?
-          </button>
+          </Link>
 
           {confirmationEmail ? (
             <div className="logent-login-confirmation" role="status">
