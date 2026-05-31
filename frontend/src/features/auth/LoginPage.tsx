@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { motion, type Variants } from 'framer-motion'
 import { ArrowLeft, LockKeyhole, Mail, ShieldCheck } from 'lucide-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -9,6 +9,8 @@ import { z } from 'zod'
 
 import { LoadingState } from '../../components/common/LoadingState'
 import logentLogo from '../../assets/brand/logent-logo.png'
+import { getApiErrorMessage } from '../../lib/api-error'
+import { resendConfirmationEmail } from './auth.api'
 import { useAuth } from './useAuth'
 import './LoginPage.css'
 
@@ -61,6 +63,8 @@ const stagger: Variants = {
 export function LoginPage() {
   const navigate = useNavigate()
   const { isAuthenticated, isLoading, login } = useAuth()
+  const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null)
+  const [isResendingConfirmation, setIsResendingConfirmation] = useState(false)
 
   const {
     formState: { errors, isSubmitting },
@@ -83,9 +87,30 @@ export function LoginPage() {
   async function onSubmit(values: LoginFormValues) {
     try {
       await login(values.email, values.password)
+      setConfirmationEmail(null)
       navigate('/dashboard', { replace: true })
-    } catch {
-      toast.error('Credenciales incorrectas o usuario no autorizado.')
+    } catch (error) {
+      const message = getApiErrorMessage(error, 'Credenciales incorrectas o usuario no autorizado.')
+      const isEmailConfirmationRequired = message.toLocaleLowerCase().includes('confirmar tu correo')
+
+      setConfirmationEmail(isEmailConfirmationRequired ? values.email : null)
+      toast.error(isEmailConfirmationRequired ? 'Debes confirmar tu correo antes de iniciar sesión.' : message)
+    }
+  }
+
+  async function handleResendConfirmation() {
+    if (!confirmationEmail) {
+      return
+    }
+
+    try {
+      setIsResendingConfirmation(true)
+      const response = await resendConfirmationEmail(confirmationEmail)
+      toast.success(response.message)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo reenviar el correo de confirmación. Inténtalo nuevamente.'))
+    } finally {
+      setIsResendingConfirmation(false)
     }
   }
 
@@ -185,6 +210,16 @@ export function LoginPage() {
           <button className="logent-login-forgot" onClick={handleForgotPassword} type="button">
             ¿Olvidaste tu contraseña?
           </button>
+
+          {confirmationEmail ? (
+            <div className="logent-login-confirmation" role="status">
+              <strong>Confirma tu correo electrónico</strong>
+              <p>Debes confirmar tu correo antes de iniciar sesión.</p>
+              <button disabled={isResendingConfirmation} onClick={handleResendConfirmation} type="button">
+                {isResendingConfirmation ? 'Reenviando...' : 'Reenviar correo de confirmación'}
+              </button>
+            </div>
+          ) : null}
 
           <p className="logent-login-register">
             ¿Tu empresa aún no usa LOGENT? <Link to="/register-company">Regístrala aquí</Link>

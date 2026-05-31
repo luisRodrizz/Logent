@@ -1,5 +1,5 @@
 import { api } from '../../lib/api'
-import type { AuthUser, LoginRequest, LoginResponse, RegisterCompanyRequest } from '../../types/auth'
+import type { AuthUser, LoginRequest, LoginResponse, MessageResponse, RegisterCompanyRequest } from '../../types/auth'
 
 export async function login(payload: LoginRequest): Promise<LoginResponse> {
   const response = await api.post<LoginResponse>('/auth/login', payload)
@@ -7,8 +7,14 @@ export async function login(payload: LoginRequest): Promise<LoginResponse> {
   return response.data
 }
 
-export async function registerCompany(payload: RegisterCompanyRequest): Promise<LoginResponse> {
-  const response = await api.post<LoginResponse>('/auth/register-company', payload)
+export async function registerCompany(payload: RegisterCompanyRequest): Promise<MessageResponse> {
+  const response = await api.post<MessageResponse>('/auth/register-company', payload)
+
+  return response.data
+}
+
+export async function resendConfirmationEmail(email: string): Promise<MessageResponse> {
+  const response = await api.post<MessageResponse>('/auth/resend-confirmation-email', { email })
 
   return response.data
 }

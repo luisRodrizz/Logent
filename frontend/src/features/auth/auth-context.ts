@@ -1,5 +1,5 @@
 import { createContext } from 'react'
-import type { AuthUser, RegisterCompanyRequest } from '../../types/auth'
+import type { AuthUser, MessageResponse, RegisterCompanyRequest } from '../../types/auth'
 
 export type AuthContextValue = {
   isAuthenticated: boolean
@@ -7,7 +7,7 @@ export type AuthContextValue = {
   loadUser: () => Promise<AuthUser | null>
   login: (email: string, password: string) => Promise<void>
   logout: () => void
-  registerCompany: (payload: RegisterCompanyRequest) => Promise<void>
+  registerCompany: (payload: RegisterCompanyRequest) => Promise<MessageResponse>
   refreshUser: () => Promise<AuthUser | null>
   user: AuthUser | null
 }

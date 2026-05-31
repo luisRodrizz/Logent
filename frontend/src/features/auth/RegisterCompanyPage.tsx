@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, Building2, LockKeyhole, Mail, MapPin, Phone, UserRound } from 'lucide-react'
-import { useEffect } from 'react'
+import { ArrowLeft, Building2, CheckCircle2, LockKeyhole, Mail, MapPin, Phone, RefreshCw, UserRound } from 'lucide-react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -8,13 +8,20 @@ import { toast } from 'sonner'
 import logentLogo from '../../assets/brand/logent-logo.png'
 import { LoadingState } from '../../components/common/LoadingState'
 import { getApiErrorMessage } from '../../lib/api-error'
+import { resendConfirmationEmail } from './auth.api'
 import { registerCompanySchema, type RegisterCompanyFormValues } from './register-company.schema'
 import { useAuth } from './useAuth'
 import './RegisterCompanyPage.css'
 
+type RegistrationSuccess = {
+  adminEmail: string
+}
+
 export function RegisterCompanyPage() {
   const navigate = useNavigate()
   const { isAuthenticated, isLoading, registerCompany } = useAuth()
+  const [isResending, setIsResending] = useState(false)
+  const [registrationSuccess, setRegistrationSuccess] = useState<RegistrationSuccess | null>(null)
 
   const {
     formState: { errors, isSubmitting },
@@ -43,11 +50,29 @@ export function RegisterCompanyPage() {
 
   async function onSubmit(values: RegisterCompanyFormValues) {
     try {
-      await registerCompany(values)
-      toast.success('Empresa registrada correctamente.')
-      navigate('/dashboard', { replace: true })
+      const response = await registerCompany(values)
+      setRegistrationSuccess({
+        adminEmail: values.adminEmail,
+      })
+      toast.success(response.message)
     } catch (error) {
       toast.error(getApiErrorMessage(error, 'No se pudo registrar la empresa. Revisa los datos e inténtalo nuevamente.'))
+    }
+  }
+
+  async function handleResendConfirmation() {
+    if (!registrationSuccess) {
+      return
+    }
+
+    try {
+      setIsResending(true)
+      const response = await resendConfirmationEmail(registrationSuccess.adminEmail)
+      toast.success(response.message)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo reenviar el correo de confirmación. Inténtalo nuevamente.'))
+    } finally {
+      setIsResending(false)
     }
   }
 
@@ -61,6 +86,40 @@ export function RegisterCompanyPage() {
 
   if (isAuthenticated) {
     return <Navigate replace to="/dashboard" />
+  }
+
+  if (registrationSuccess) {
+    return (
+      <main className="logent-register logent-register-confirmation-page">
+        <Link className="logent-register-back" to="/">
+          <ArrowLeft size={16} />
+          Volver al inicio
+        </Link>
+
+        <section aria-labelledby="registration-success-title" className="logent-register-success">
+          <div className="logent-register-success-icon">
+            <CheckCircle2 size={28} />
+          </div>
+
+          <p className="logent-register-eyebrow">Confirmación pendiente</p>
+          <h1 id="registration-success-title">Empresa registrada correctamente</h1>
+          <p>Revisa tu correo para confirmar tu cuenta antes de iniciar sesión.</p>
+
+          <div className="logent-register-success-email">
+            <span>Correo del administrador</span>
+            <strong>{registrationSuccess.adminEmail}</strong>
+          </div>
+
+          <div className="logent-register-success-actions">
+            <Link to="/login">Ir al login</Link>
+            <button disabled={isResending} onClick={handleResendConfirmation} type="button">
+              <RefreshCw className={isResending ? 'logent-register-spin' : undefined} size={16} />
+              {isResending ? 'Reenviando...' : 'Reenviar correo de confirmación'}
+            </button>
+          </div>
+        </section>
+      </main>
+    )
   }
 
   return (

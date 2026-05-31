@@ -108,10 +108,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   const registerCompany = useCallback(
     async (payload: RegisterCompanyRequest) => {
-      const response = await registerCompanyRequest(payload)
-      await establishSession(response)
+      return registerCompanyRequest(payload)
     },
-    [establishSession],
+    [],
   )
 
   const logout = useCallback(() => {

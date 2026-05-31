@@ -19,7 +19,9 @@ public class AuthController(
     SignInManager<ApplicationUser> signInManager,
     IJwtTokenService jwtTokenService,
     ICompanyRegistrationService companyRegistrationService,
-    IValidator<RegisterCompanyRequest> registerCompanyValidator) : ControllerBase
+    IEmailConfirmationService emailConfirmationService,
+    IValidator<RegisterCompanyRequest> registerCompanyValidator,
+    IValidator<ResendConfirmationEmailRequest> resendConfirmationEmailValidator) : ControllerBase
 {
     private static readonly HashSet<string> AllowedRoles = new(StringComparer.Ordinal)
     {
@@ -30,7 +32,7 @@ public class AuthController(
 
     [AllowAnonymous]
     [HttpPost("register-company")]
-    public async Task<ActionResult<AuthResponse>> RegisterCompany(
+    public async Task<ActionResult<MessageResponse>> RegisterCompany(
         RegisterCompanyRequest request,
         CancellationToken cancellationToken)
     {
@@ -50,7 +52,8 @@ public class AuthController(
     [HttpGet("confirm-email")]
     public async Task<ActionResult<MessageResponse>> ConfirmEmail(
         [FromQuery] string? userId,
-        [FromQuery] string? token)
+        [FromQuery] string? token,
+        CancellationToken cancellationToken)
     {
         var errors = new List<string>();
 
@@ -69,7 +72,25 @@ public class AuthController(
             return ApiErrorResponseFactory.Validation(HttpContext, errors);
         }
 
-        return Ok(await companyRegistrationService.ConfirmEmailAsync(userId!, token!));
+        return Ok(await emailConfirmationService.ConfirmEmailAsync(userId!, token!, cancellationToken));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("resend-confirmation-email")]
+    public async Task<ActionResult<MessageResponse>> ResendConfirmationEmail(
+        ResendConfirmationEmailRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await resendConfirmationEmailValidator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            return ApiErrorResponseFactory.Validation(
+                HttpContext,
+                validationResult.Errors.Select(error => error.ErrorMessage));
+        }
+
+        return Ok(await emailConfirmationService.ResendConfirmationEmailAsync(request.Email, cancellationToken));
     }
 
     [Authorize(Roles = IdentitySeeder.AdminRole)]
@@ -163,6 +184,15 @@ public class AuthController(
                 StatusCodes.Status401Unauthorized,
                 "Invalid email or password.",
                 "The provided credentials are not valid.");
+        }
+
+        if (!user.EmailConfirmed)
+        {
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status401Unauthorized,
+                "Debes confirmar tu correo electrónico antes de iniciar sesión.",
+                "Revisa tu bandeja de entrada o solicita un nuevo enlace de confirmación.");
         }
 
         return Ok(await CreateAuthResponseAsync(user));

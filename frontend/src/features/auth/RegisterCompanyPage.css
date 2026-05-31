@@ -15,6 +15,12 @@
   padding: 24px;
 }
 
+.logent-register-confirmation-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .logent-register-back {
   display: inline-flex;
   align-items: center;
@@ -240,6 +246,127 @@
   opacity: 0.68;
 }
 
+.logent-register-success {
+  width: min(100%, 560px);
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgb(15 23 42 / 0.06);
+  padding: 34px;
+  text-align: center;
+}
+
+.logent-register-success-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 58px;
+  height: 58px;
+  border: 1px solid rgb(40 224 0 / 0.28);
+  border-radius: 50%;
+  background: rgb(40 224 0 / 0.08);
+  color: #0f6e00;
+  margin: 0 auto 18px;
+}
+
+.logent-register-success h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 27px;
+  font-weight: 780;
+  line-height: 1.2;
+}
+
+.logent-register-success > p:not(.logent-register-eyebrow) {
+  margin: 13px auto 0;
+  color: #64748b;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.logent-register-success-email {
+  display: grid;
+  gap: 6px;
+  margin-top: 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #f8fafc;
+  padding: 14px;
+}
+
+.logent-register-success-email span {
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.logent-register-success-email strong {
+  overflow-wrap: anywhere;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+.logent-register-success-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.logent-register-success-actions a,
+.logent-register-success-actions button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  border-radius: 9px;
+  cursor: pointer;
+  padding: 0 16px;
+  font-size: 14px;
+  font-weight: 780;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.logent-register-success-actions a {
+  border: 1px solid #1017d8;
+  background: #1017d8;
+  color: #ffffff;
+}
+
+.logent-register-success-actions a:hover {
+  background: #0b119e;
+}
+
+.logent-register-success-actions button {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #1017d8;
+}
+
+.logent-register-success-actions button:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.logent-register-success-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.64;
+}
+
+.logent-register-spin {
+  animation: logent-register-spin 900ms linear infinite;
+}
+
+@keyframes logent-register-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (max-width: 640px) {
   .logent-register {
     padding: 24px 16px 32px;
@@ -274,5 +401,13 @@
     flex-direction: column-reverse;
     padding: 18px 20px 20px;
     text-align: center;
+  }
+
+  .logent-register-success {
+    padding: 27px 20px;
+  }
+
+  .logent-register-success h1 {
+    font-size: 24px;
   }
 }

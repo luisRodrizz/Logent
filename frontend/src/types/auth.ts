@@ -32,3 +32,7 @@ export type LoginResponse = {
   roles: string[]
   expiresAt: string
 }
+
+export type MessageResponse = {
+  message: string
+}

@@ -234,6 +234,49 @@
   text-decoration: underline;
 }
 
+.logent-login-confirmation {
+  margin-top: 15px;
+  border: 1px solid #fde68a;
+  border-radius: 9px;
+  background: #fffbeb;
+  padding: 12px;
+}
+
+.logent-login-confirmation strong {
+  display: block;
+  color: #92400e;
+  font-size: 13px;
+  font-weight: 780;
+}
+
+.logent-login-confirmation p {
+  margin: 5px 0 0;
+  color: #a16207;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.logent-login-confirmation button {
+  margin-top: 9px;
+  border: 0;
+  background: transparent;
+  color: #1017d8;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 780;
+  text-align: left;
+}
+
+.logent-login-confirmation button:hover {
+  text-decoration: underline;
+}
+
+.logent-login-confirmation button:disabled {
+  cursor: not-allowed;
+  opacity: 0.64;
+}
+
 .logent-login-register {
   margin: 13px 0 0;
   color: #64748b;

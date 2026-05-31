@@ -77,15 +77,31 @@ public static class IdentitySeeder
                 throw new InvalidOperationException($"Failed to create admin user: {errors}");
             }
         }
-        else if (adminUser.CompanyId != company.Id)
+        else
         {
-            adminUser.CompanyId = company.Id;
-            var updateResult = await userManager.UpdateAsync(adminUser);
+            var shouldUpdateAdmin = false;
 
-            if (!updateResult.Succeeded)
+            if (adminUser.CompanyId != company.Id)
             {
-                var errors = string.Join("; ", updateResult.Errors.Select(error => error.Description));
-                throw new InvalidOperationException($"Failed to update admin user company: {errors}");
+                adminUser.CompanyId = company.Id;
+                shouldUpdateAdmin = true;
+            }
+
+            if (!adminUser.EmailConfirmed)
+            {
+                adminUser.EmailConfirmed = true;
+                shouldUpdateAdmin = true;
+            }
+
+            if (shouldUpdateAdmin)
+            {
+                var updateResult = await userManager.UpdateAsync(adminUser);
+
+                if (!updateResult.Succeeded)
+                {
+                    var errors = string.Join("; ", updateResult.Errors.Select(error => error.Description));
+                    throw new InvalidOperationException($"Failed to update admin user: {errors}");
+                }
             }
         }
 

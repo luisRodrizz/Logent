@@ -4,11 +4,7 @@ namespace InventorySaaS.Application.Auth.Interfaces;
 
 public interface ICompanyRegistrationService
 {
-    Task<AuthResponse> RegisterAsync(
+    Task<MessageResponse> RegisterAsync(
         RegisterCompanyRequest request,
         CancellationToken cancellationToken = default);
-
-    Task<MessageResponse> ConfirmEmailAsync(
-        string userId,
-        string token);
 }
