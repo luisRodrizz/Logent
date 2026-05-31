@@ -16,6 +16,7 @@ using InventorySaaS.Infrastructure.Authentication;
 using InventorySaaS.Infrastructure.AuditLogs;
 using InventorySaaS.Infrastructure.Categories;
 using InventorySaaS.Infrastructure.Dashboard;
+using InventorySaaS.Infrastructure.Email;
 using InventorySaaS.Infrastructure.Identity;
 using InventorySaaS.Infrastructure.Kardex;
 using InventorySaaS.Infrastructure.Movements;
@@ -79,6 +80,8 @@ public static class DependencyInjection
         services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuditLogWriter, AuditLogWriter>();
+        services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         return services;
     }
