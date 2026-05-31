@@ -186,6 +186,10 @@ export function LoginPage() {
             ¿Olvidaste tu contraseña?
           </button>
 
+          <p className="logent-login-register">
+            ¿Tu empresa aún no usa LOGENT? <Link to="/register-company">Regístrala aquí</Link>
+          </p>
+
           <div className="logent-login-demo">
             <div className="logent-login-demo-head">
               <div>

@@ -1,0 +1,278 @@
+.logent-register {
+  min-height: 100dvh;
+  overflow-x: clip;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: 42px 24px 56px;
+}
+
+.logent-register-loading {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafc;
+  padding: 24px;
+}
+
+.logent-register-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #64748b;
+  font-size: 14px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: color 180ms ease;
+}
+
+.logent-register-back:hover {
+  color: #0f172a;
+}
+
+.logent-register-shell {
+  width: min(100%, 900px);
+  margin: 34px auto 0;
+}
+
+.logent-register-header {
+  max-width: 680px;
+  margin: 0 auto 26px;
+  text-align: center;
+}
+
+.logent-register-logo {
+  display: block;
+  width: auto;
+  height: 52px;
+  margin: 0 auto 22px;
+  object-fit: contain;
+}
+
+.logent-register-eyebrow {
+  margin: 0 0 9px;
+  color: #0f6e00;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.logent-register-header h1 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 32px;
+  font-weight: 780;
+  line-height: 1.18;
+}
+
+.logent-register-header > p:last-child {
+  margin: 12px auto 0;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.logent-register-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 18px 48px rgb(15 23 42 / 0.06);
+}
+
+.logent-register-section {
+  padding: 26px;
+}
+
+.logent-register-section + .logent-register-section {
+  border-top: 1px solid #e2e8f0;
+}
+
+.logent-register-section-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  margin-bottom: 20px;
+}
+
+.logent-register-section-heading > svg {
+  flex: 0 0 auto;
+  color: #1017d8;
+  margin-top: 2px;
+}
+
+.logent-register-section-heading h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 17px;
+  font-weight: 780;
+}
+
+.logent-register-section-heading p {
+  margin: 4px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.logent-register-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 17px;
+}
+
+.logent-register-field {
+  min-width: 0;
+}
+
+.logent-register-field-wide {
+  grid-column: 1 / -1;
+}
+
+.logent-register-field > span {
+  display: block;
+  margin-bottom: 7px;
+  color: #334155;
+  font-size: 13px;
+  font-weight: 740;
+}
+
+.logent-register-field em {
+  color: #94a3b8;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 650;
+}
+
+.logent-register-input-wrap {
+  position: relative;
+}
+
+.logent-register-input-wrap svg {
+  position: absolute;
+  top: 50%;
+  left: 13px;
+  color: #94a3b8;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+
+.logent-register-input-wrap input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #e2e8f0;
+  border-radius: 9px;
+  background: #f8fafc;
+  color: #0f172a;
+  padding: 0 13px 0 40px;
+  font-size: 14px;
+  outline: none;
+  transition:
+    border-color 180ms ease,
+    background-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.logent-register-input-wrap input::placeholder {
+  color: #94a3b8;
+}
+
+.logent-register-input-wrap input:focus {
+  border-color: #1017d8;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgb(16 23 216 / 0.07);
+}
+
+.logent-register-field small {
+  display: block;
+  margin-top: 7px;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 650;
+}
+
+.logent-register-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  border-top: 1px solid #e2e8f0;
+  padding: 20px 26px;
+}
+
+.logent-register-actions p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.logent-register-actions a {
+  color: #1017d8;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.logent-register-actions a:hover {
+  text-decoration: underline;
+}
+
+.logent-register-actions button {
+  min-height: 44px;
+  border: 0;
+  border-radius: 9px;
+  background: #1017d8;
+  color: #ffffff;
+  cursor: pointer;
+  padding: 0 18px;
+  font-size: 14px;
+  font-weight: 780;
+  transition:
+    background-color 180ms ease,
+    opacity 180ms ease;
+}
+
+.logent-register-actions button:hover {
+  background: #0b119e;
+}
+
+.logent-register-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.68;
+}
+
+@media (max-width: 640px) {
+  .logent-register {
+    padding: 24px 16px 32px;
+  }
+
+  .logent-register-shell {
+    margin-top: 26px;
+  }
+
+  .logent-register-logo {
+    height: 45px;
+  }
+
+  .logent-register-header h1 {
+    font-size: 27px;
+  }
+
+  .logent-register-section {
+    padding: 20px;
+  }
+
+  .logent-register-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .logent-register-field-wide {
+    grid-column: auto;
+  }
+
+  .logent-register-actions {
+    align-items: stretch;
+    flex-direction: column-reverse;
+    padding: 18px 20px 20px;
+    text-align: center;
+  }
+}

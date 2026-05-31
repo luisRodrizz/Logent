@@ -5,6 +5,18 @@ export type LoginRequest = {
   password: string
 }
 
+export type RegisterCompanyRequest = {
+  companyName: string
+  ruc?: string
+  email: string
+  phone?: string
+  address?: string
+  adminFullName: string
+  adminEmail: string
+  adminPassword: string
+  confirmPassword: string
+}
+
 export type AuthUser = {
   id: string
   email: string

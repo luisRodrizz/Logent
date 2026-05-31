@@ -24,6 +24,9 @@ const LandingPage = lazy(() =>
   import('../features/landing/LandingPage').then((module) => ({ default: module.LandingPage })),
 )
 const LoginPage = lazy(() => import('../features/auth/LoginPage').then((module) => ({ default: module.LoginPage })))
+const RegisterCompanyPage = lazy(() =>
+  import('../features/auth/RegisterCompanyPage').then((module) => ({ default: module.RegisterCompanyPage })),
+)
 const MovementsPage = lazy(() =>
   import('../features/movements/MovementsPage').then((module) => ({ default: module.MovementsPage })),
 )
@@ -96,6 +99,14 @@ export function AppRouter() {
           element={
             <Suspense fallback={<FullPageFallback />}>
               <LoginPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/register-company"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <RegisterCompanyPage />
             </Suspense>
           }
         />

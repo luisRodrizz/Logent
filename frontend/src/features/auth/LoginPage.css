@@ -234,6 +234,24 @@
   text-decoration: underline;
 }
 
+.logent-login-register {
+  margin: 13px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.logent-login-register a {
+  color: #1017d8;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.logent-login-register a:hover {
+  text-decoration: underline;
+}
+
 .logent-login-demo {
   margin-top: 18px;
   padding: 16px;

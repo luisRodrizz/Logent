@@ -1,15 +1,15 @@
 import type { ReactNode } from 'react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { AUTH_TOKEN_CLEARED_EVENT, clearAccessToken, getAccessToken, setAccessToken } from '../../lib/auth'
-import type { AuthUser } from '../../types/auth'
-import { getCurrentUser, login as loginRequest } from './auth.api'
+import type { AuthUser, LoginResponse, RegisterCompanyRequest } from '../../types/auth'
+import { getCurrentUser, login as loginRequest, registerCompany as registerCompanyRequest } from './auth.api'
 import { AuthContext } from './auth-context'
 
 type AuthProviderProps = {
   children: ReactNode
 }
 
-function buildUserFromLoginResponse(response: Awaited<ReturnType<typeof loginRequest>>): AuthUser {
+function buildUserFromLoginResponse(response: LoginResponse): AuthUser {
   return {
     id: '',
     email: response.email,
@@ -87,8 +87,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
 
-  const login = useCallback(async (email: string, password: string) => {
-    const response = await loginRequest({ email, password })
+  const establishSession = useCallback(async (response: LoginResponse) => {
     setAccessToken(response.token)
 
     try {
@@ -98,6 +97,22 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setUser(buildUserFromLoginResponse(response))
     }
   }, [])
+
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const response = await loginRequest({ email, password })
+      await establishSession(response)
+    },
+    [establishSession],
+  )
+
+  const registerCompany = useCallback(
+    async (payload: RegisterCompanyRequest) => {
+      const response = await registerCompanyRequest(payload)
+      await establishSession(response)
+    },
+    [establishSession],
+  )
 
   const logout = useCallback(() => {
     clearAccessToken()
@@ -111,10 +126,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
       loadUser,
       login,
       logout,
+      registerCompany,
       refreshUser: loadUser,
       user,
     }),
-    [isLoading, loadUser, login, logout, user],
+    [isLoading, loadUser, login, logout, registerCompany, user],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
