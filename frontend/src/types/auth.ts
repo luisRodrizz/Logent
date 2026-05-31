@@ -1,4 +1,4 @@
-export type AuthRole = 'Admin' | 'Almacenero' | 'Consulta'
+export type AuthRole = 'SuperAdmin' | 'Admin' | 'Almacenero' | 'Consulta'
 
 export type LoginRequest = {
   email: string

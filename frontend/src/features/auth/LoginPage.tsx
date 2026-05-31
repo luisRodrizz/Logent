@@ -62,7 +62,7 @@ const stagger: Variants = {
 
 export function LoginPage() {
   const navigate = useNavigate()
-  const { isAuthenticated, isLoading, login } = useAuth()
+  const { isAuthenticated, isLoading, login, user } = useAuth()
   const [confirmationEmail, setConfirmationEmail] = useState<string | null>(null)
   const [isResendingConfirmation, setIsResendingConfirmation] = useState(false)
 
@@ -80,15 +80,15 @@ export function LoginPage() {
 
   useEffect(() => {
     if (!isLoading && isAuthenticated) {
-      navigate('/dashboard', { replace: true })
+      navigate(user?.roles.includes('SuperAdmin') ? '/platform/companies' : '/dashboard', { replace: true })
     }
-  }, [isAuthenticated, isLoading, navigate])
+  }, [isAuthenticated, isLoading, navigate, user?.roles])
 
   async function onSubmit(values: LoginFormValues) {
     try {
-      await login(values.email, values.password)
+      const currentUser = await login(values.email, values.password)
       setConfirmationEmail(null)
-      navigate('/dashboard', { replace: true })
+      navigate(currentUser.roles.includes('SuperAdmin') ? '/platform/companies' : '/dashboard', { replace: true })
     } catch (error) {
       const message = getApiErrorMessage(error, 'Credenciales incorrectas o usuario no autorizado.')
       const isEmailConfirmationRequired = message.toLocaleLowerCase().includes('confirmar tu correo')
@@ -123,7 +123,7 @@ export function LoginPage() {
   }
 
   if (isAuthenticated) {
-    return <Navigate replace to="/dashboard" />
+    return <Navigate replace to={user?.roles.includes('SuperAdmin') ? '/platform/companies' : '/dashboard'} />
   }
 
   return (

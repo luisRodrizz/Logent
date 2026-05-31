@@ -87,21 +87,24 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   }, [])
 
-  const establishSession = useCallback(async (response: LoginResponse) => {
+  const establishSession = useCallback(async (response: LoginResponse): Promise<AuthUser> => {
     setAccessToken(response.token)
 
     try {
       const currentUser = await getCurrentUser()
       setUser(currentUser)
+      return currentUser
     } catch {
-      setUser(buildUserFromLoginResponse(response))
+      const fallbackUser = buildUserFromLoginResponse(response)
+      setUser(fallbackUser)
+      return fallbackUser
     }
   }, [])
 
   const login = useCallback(
     async (email: string, password: string) => {
       const response = await loginRequest({ email, password })
-      await establishSession(response)
+      return establishSession(response)
     },
     [establishSession],
   )

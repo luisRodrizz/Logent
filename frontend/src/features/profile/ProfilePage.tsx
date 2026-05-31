@@ -15,6 +15,7 @@ import { useChangeProfilePassword, useProfile } from './profile.queries'
 import type { ChangePasswordPayload, Profile } from './profile.types'
 
 const roleBadgeVariants: Record<AuthRole, 'default' | 'success' | 'muted'> = {
+  SuperAdmin: 'default',
   Admin: 'default',
   Almacenero: 'success',
   Consulta: 'muted',

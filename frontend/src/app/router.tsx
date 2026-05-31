@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { LoadingState } from '../components/common/LoadingState'
 import { ProtectedLayout } from '../components/layout/ProtectedLayout'
 import { routeRoles } from '../components/layout/navigation'
@@ -41,6 +41,17 @@ const NotFoundPage = lazy(() =>
 )
 const ProductsPage = lazy(() =>
   import('../features/products/ProductsPage').then((module) => ({ default: module.ProductsPage })),
+)
+const PlatformCompaniesPage = lazy(() =>
+  import('../features/platform/PlatformCompaniesPage').then((module) => ({ default: module.PlatformCompaniesPage })),
+)
+const PlatformCompanyDetailPage = lazy(() =>
+  import('../features/platform/PlatformCompanyDetailPage').then((module) => ({
+    default: module.PlatformCompanyDetailPage,
+  })),
+)
+const PlatformLayout = lazy(() =>
+  import('../features/platform/PlatformLayout').then((module) => ({ default: module.PlatformLayout })),
 )
 const ProfilePage = lazy(() =>
   import('../features/profile/ProfilePage').then((module) => ({ default: module.ProfilePage })),
@@ -165,6 +176,11 @@ export function AppRouter() {
             <Route path="/profile" element={lazyRoute(<ProfilePage />)} />
             <Route path="/admin/users" element={protectedRoute(<UsersPage />, routeRoles.users)} />
             <Route path="/audit-logs" element={protectedRoute(<AuditLogsPage />, routeRoles.auditLogs)} />
+          </Route>
+          <Route path="/platform" element={protectedRoute(<PlatformLayout />, ['SuperAdmin'])}>
+            <Route index element={<Navigate replace to="/platform/companies" />} />
+            <Route path="companies" element={lazyRoute(<PlatformCompaniesPage />)} />
+            <Route path="companies/:id" element={lazyRoute(<PlatformCompanyDetailPage />)} />
           </Route>
         </Route>
         <Route
