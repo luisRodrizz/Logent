@@ -3,11 +3,13 @@ import {
   AlertTriangle,
   ArrowDownCircle,
   ArrowLeftRight,
+  ArrowRight,
   ArrowUpCircle,
   Boxes,
   ClipboardList,
   DollarSign,
 } from 'lucide-react'
+import { Link } from 'react-router-dom'
 import { Bar, BarChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts'
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
@@ -24,6 +26,7 @@ import {
   useRecentMovements,
   useStockOverview,
 } from './dashboard.queries'
+import { TenantOnboardingCard } from './TenantOnboardingCard'
 
 const movementLabels: Record<MovementType, string> = {
   Adjustment: 'Ajuste',
@@ -62,6 +65,18 @@ function CompactMetric({
   )
 }
 
+function DashboardEmptyAction({ href, label }: { href: string; label: string }) {
+  return (
+    <Link
+      className="inline-flex items-center gap-2 text-sm font-semibold text-[#1017D8] transition-colors hover:text-[#0E16B8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1017D8] focus-visible:ring-offset-2"
+      to={href}
+    >
+      {label}
+      <ArrowRight className="h-4 w-4" />
+    </Link>
+  )
+}
+
 export function DashboardPage() {
   const summaryQuery = useDashboardSummary()
   const stockOverviewQuery = useStockOverview()
@@ -75,6 +90,12 @@ export function DashboardPage() {
     name: item.productCode || item.productName,
     quantity: item.totalQuantity,
   }))
+  const isEmptyTenant =
+    summaryQuery.data?.totalProducts === 0 &&
+    summaryQuery.data.totalCategories === 0 &&
+    summaryQuery.data.totalSuppliers === 0 &&
+    summaryQuery.data.totalWarehouses === 0 &&
+    summaryQuery.data.totalMovements === 0
 
   return (
     <div className="space-y-5">
@@ -161,6 +182,8 @@ export function DashboardPage() {
         </Card>
       ) : null}
 
+      {isEmptyTenant ? <TenantOnboardingCard /> : null}
+
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] xl:items-start">
         <Card>
           <CardHeader>
@@ -174,7 +197,8 @@ export function DashboardPage() {
               <SectionError text="No se pudo cargar el resumen de stock." />
             ) : stockOverview.length === 0 ? (
               <EmptyState
-                description="Aún no hay datos de stock para mostrar en el dashboard."
+                action={<DashboardEmptyAction href="/products" label="Ir a productos" />}
+                description="Aún no tienes stock registrado. Crea productos y registra una entrada para comenzar."
                 icon={<Boxes className="h-6 w-6" />}
                 title="Sin stock registrado"
               />
@@ -230,7 +254,7 @@ export function DashboardPage() {
               <SectionError text="No se pudieron cargar las alertas de stock bajo." />
             ) : lowStockAlerts.length === 0 ? (
               <EmptyState
-                description="No hay productos por debajo del stock mínimo."
+                description="Sin alertas por ahora. Cuando configures productos con stock mínimo, LOGENT te avisará aquí."
                 icon={<AlertTriangle className="h-6 w-6" />}
                 title="Sin alertas"
               />
@@ -281,7 +305,8 @@ export function DashboardPage() {
             <SectionError text="No se pudieron cargar los movimientos recientes." />
           ) : recentMovements.length === 0 ? (
             <EmptyState
-              description="Aún no hay movimientos para mostrar en el dashboard."
+              action={<DashboardEmptyAction href="/movements" label="Registrar una entrada" />}
+              description="Aún no hay movimientos. Registra una entrada para iniciar el Kardex."
               icon={<ArrowLeftRight className="h-6 w-6" />}
               title="Sin movimientos recientes"
             />
