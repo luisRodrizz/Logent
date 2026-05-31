@@ -80,6 +80,7 @@ public static class DependencyInjection
         services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuditLogWriter, AuditLogWriter>();
+        services.Configure<AppUrlSettings>(configuration.GetSection(AppUrlSettings.SectionName));
         services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
 

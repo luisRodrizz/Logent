@@ -7,4 +7,8 @@ public interface ICompanyRegistrationService
     Task<AuthResponse> RegisterAsync(
         RegisterCompanyRequest request,
         CancellationToken cancellationToken = default);
+
+    Task<MessageResponse> ConfirmEmailAsync(
+        string userId,
+        string token);
 }

@@ -46,6 +46,32 @@ public class AuthController(
         return Ok(await companyRegistrationService.RegisterAsync(request, cancellationToken));
     }
 
+    [AllowAnonymous]
+    [HttpGet("confirm-email")]
+    public async Task<ActionResult<MessageResponse>> ConfirmEmail(
+        [FromQuery] string? userId,
+        [FromQuery] string? token)
+    {
+        var errors = new List<string>();
+
+        if (string.IsNullOrWhiteSpace(userId))
+        {
+            errors.Add("User id is required.");
+        }
+
+        if (string.IsNullOrWhiteSpace(token))
+        {
+            errors.Add("Email confirmation token is required.");
+        }
+
+        if (errors.Count > 0)
+        {
+            return ApiErrorResponseFactory.Validation(HttpContext, errors);
+        }
+
+        return Ok(await companyRegistrationService.ConfirmEmailAsync(userId!, token!));
+    }
+
     [Authorize(Roles = IdentitySeeder.AdminRole)]
     [HttpPost("register")]
     public async Task<ActionResult<AuthResponse>> Register(RegisterRequest request)

@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Net;
 using System.Text;
 using InventorySaaS.Application.Auth.DTOs;
 using InventorySaaS.Application.Auth.Interfaces;
@@ -9,7 +10,9 @@ using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Identity;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 
 namespace InventorySaaS.Infrastructure.Authentication;
 
@@ -17,9 +20,12 @@ public class CompanyRegistrationService(
     ApplicationDbContext context,
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager,
-    IJwtTokenService jwtTokenService) : ICompanyRegistrationService
+    IJwtTokenService jwtTokenService,
+    IEmailSender emailSender,
+    IOptions<AppUrlSettings> appUrlSettings) : ICompanyRegistrationService
 {
     private const int MaximumSlugLength = 80;
+    private readonly AppUrlSettings urls = appUrlSettings.Value;
 
     public async Task<AuthResponse> RegisterAsync(
         RegisterCompanyRequest request,
@@ -72,7 +78,7 @@ public class CompanyRegistrationService(
             {
                 UserName = adminEmail,
                 Email = adminEmail,
-                EmailConfirmed = true,
+                EmailConfirmed = false,
                 CompanyId = company.Id,
                 FirstName = name.FirstName,
                 LastName = name.LastName,
@@ -85,6 +91,16 @@ public class CompanyRegistrationService(
 
             var roleResult = await userManager.AddToRoleAsync(adminUser, IdentitySeeder.AdminRole);
             EnsureIdentitySucceeded(roleResult, "Could not assign company Admin role.");
+
+            var confirmationToken = await userManager.GenerateEmailConfirmationTokenAsync(adminUser);
+            var confirmationUrl = BuildConfirmationUrl(adminUser.Id, confirmationToken);
+            var emailBody = BuildConfirmationEmailBody(GetFullName(adminUser), companyName, confirmationUrl);
+
+            await emailSender.SendEmailAsync(
+                adminEmail,
+                "Confirma tu correo en LOGENT",
+                emailBody,
+                cancellationToken);
 
             roles = await userManager.GetRolesAsync(adminUser);
             await transaction.CommitAsync(cancellationToken);
@@ -102,6 +118,57 @@ public class CompanyRegistrationService(
             FullName = GetFullName(adminUser),
             Roles = roles,
             ExpiresAt = jwtTokenService.GetExpirationTime()
+        };
+    }
+
+    public async Task<MessageResponse> ConfirmEmailAsync(string userId, string token)
+    {
+        var user = await userManager.FindByIdAsync(userId);
+
+        if (user is null)
+        {
+            throw new ApiException(
+                404,
+                "User not found.",
+                "No user was found with the provided id.");
+        }
+
+        if (user.EmailConfirmed)
+        {
+            return new MessageResponse
+            {
+                Message = "El correo ya estaba confirmado."
+            };
+        }
+
+        string decodedToken;
+
+        try
+        {
+            decodedToken = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(token));
+        }
+        catch (FormatException)
+        {
+            throw new ApiException(
+                400,
+                "Invalid email confirmation token.",
+                "The email confirmation token is not valid.");
+        }
+
+        var confirmationResult = await userManager.ConfirmEmailAsync(user, decodedToken);
+
+        if (!confirmationResult.Succeeded)
+        {
+            throw new ApiException(
+                400,
+                "Invalid email confirmation token.",
+                "The email confirmation token is not valid.",
+                confirmationResult.Errors.Select(error => error.Description));
+        }
+
+        return new MessageResponse
+        {
+            Message = "Correo confirmado correctamente."
         };
     }
 
@@ -225,6 +292,46 @@ public class CompanyRegistrationService(
     private static string GetFullName(ApplicationUser user)
     {
         return $"{user.FirstName} {user.LastName}".Trim();
+    }
+
+    private string BuildConfirmationUrl(string userId, string token)
+    {
+        if (string.IsNullOrWhiteSpace(urls.BackendBaseUrl))
+        {
+            throw new InvalidOperationException("Application URL settings are not configured. Configure AppUrls:BackendBaseUrl.");
+        }
+
+        var encodedUserId = Uri.EscapeDataString(userId);
+        var encodedToken = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+
+        return $"{urls.BackendBaseUrl.TrimEnd('/')}/api/auth/confirm-email?userId={encodedUserId}&token={encodedToken}";
+    }
+
+    private static string BuildConfirmationEmailBody(
+        string adminFullName,
+        string companyName,
+        string confirmationUrl)
+    {
+        var safeAdminFullName = WebUtility.HtmlEncode(adminFullName);
+        var safeCompanyName = WebUtility.HtmlEncode(companyName);
+        var safeConfirmationUrl = WebUtility.HtmlEncode(confirmationUrl);
+
+        return $"""
+            <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.6;">
+                <h2 style="margin-bottom: 16px;">Confirma tu correo en LOGENT</h2>
+                <p>Hola, {safeAdminFullName}.</p>
+                <p>La empresa <strong>{safeCompanyName}</strong> fue registrada correctamente en LOGENT.</p>
+                <p>Confirma tu correo para completar la verificación de tu cuenta administrativa.</p>
+                <p style="margin: 24px 0;">
+                    <a href="{safeConfirmationUrl}" style="display: inline-block; border-radius: 6px; background: #1017d8; color: #ffffff; padding: 12px 18px; text-decoration: none;">
+                        Confirmar correo
+                    </a>
+                </p>
+                <p>Si el botón no funciona, abre este enlace:</p>
+                <p><a href="{safeConfirmationUrl}">{safeConfirmationUrl}</a></p>
+                <p>Si no solicitaste este registro, ignora este mensaje.</p>
+            </div>
+            """;
     }
 
     private static void EnsureIdentitySucceeded(IdentityResult result, string message)
