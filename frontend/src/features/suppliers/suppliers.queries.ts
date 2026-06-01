@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { CreateSupplierRequest, SupplierFilters, UpdateSupplierRequest } from '../../types/supplier'
+import { planQueryKeys } from '../plan/plan.queries'
 import { createSupplier, deleteSupplier, getSupplierById, getSuppliers, updateSupplier } from './suppliers.api'
 
 export const suppliersQueryKeys = {
@@ -30,6 +31,7 @@ export function useCreateSupplier() {
     mutationFn: (payload: CreateSupplierRequest) => createSupplier(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: suppliersQueryKeys.all })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }

@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatDate, formatNumber } from '../../lib/format'
 import type { Category, CreateCategoryRequest } from '../../types/category'
+import { PlanLimitInlineNotice } from '../plan/PlanLimitInlineNotice'
+import { usePlanResourceLimit } from '../plan/plan-limit.helpers'
 import { CategoryModal } from './CategoryModal'
 import { useCategories, useCreateCategory, useDeleteCategory, useUpdateCategory } from './categories.queries'
 
@@ -64,8 +66,10 @@ export function CategoriesPage() {
   const createCategoryMutation = useCreateCategory()
   const updateCategoryMutation = useUpdateCategory()
   const deleteCategoryMutation = useDeleteCategory()
+  const categoryLimit = usePlanResourceLimit('categories')
 
   const categories = categoriesQuery.data?.items ?? []
+  const isCategoryCreationBlocked = categoryLimit.status?.isAtLimit ?? false
   const isFormSubmitting = createCategoryMutation.isPending || updateCategoryMutation.isPending
   const isSearching = Boolean(search)
   const visibleActiveCategories = categories.filter((category) => category.isActive).length
@@ -111,6 +115,15 @@ export function CategoriesPage() {
     setPageNumber(1)
   }
 
+  function handleOpenCreateModal() {
+    if (isCategoryCreationBlocked) {
+      toast.error('Has alcanzado el límite de tu plan.')
+      return
+    }
+
+    setModalState({ mode: 'create' })
+  }
+
   function handlePageSizeChange(value: string) {
     setPageSize(Number(value))
     setPageNumber(1)
@@ -120,7 +133,11 @@ export function CategoriesPage() {
     <div className="space-y-6">
       <PageHeader
         action={
-          <Button onClick={() => setModalState({ mode: 'create' })}>
+          <Button
+            disabled={isCategoryCreationBlocked}
+            onClick={handleOpenCreateModal}
+            title={isCategoryCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+          >
             <Plus className="h-4 w-4" />
             Nueva categoria
           </Button>
@@ -129,6 +146,8 @@ export function CategoriesPage() {
         eyebrow="Datos maestros"
         title="Categorias"
       />
+
+      <PlanLimitInlineNotice resource="categories" />
 
       <Card>
         <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -193,7 +212,11 @@ export function CategoriesPage() {
         <EmptyState
           action={
             isSearching ? null : (
-              <Button onClick={() => setModalState({ mode: 'create' })}>
+              <Button
+                disabled={isCategoryCreationBlocked}
+                onClick={handleOpenCreateModal}
+                title={isCategoryCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+              >
                 <Plus className="h-4 w-4" />
                 Crear primera categoria
               </Button>

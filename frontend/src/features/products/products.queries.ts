@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getCategories } from '../categories/categories.api'
 import { getSuppliers } from '../suppliers/suppliers.api'
+import { planQueryKeys } from '../plan/plan.queries'
 import type { CreateProductRequest, ProductFilters, UpdateProductRequest } from '../../types/product'
 import { createProduct, deleteProduct, getProductById, getProducts, updateProduct } from './products.api'
 
@@ -48,6 +49,7 @@ export function useCreateProduct() {
     mutationFn: (payload: CreateProductRequest) => createProduct(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: productsQueryKeys.all })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }

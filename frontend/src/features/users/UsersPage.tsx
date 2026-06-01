@@ -21,6 +21,8 @@ import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatDate, formatNumber } from '../../lib/format'
+import { PlanLimitInlineNotice } from '../plan/PlanLimitInlineNotice'
+import { usePlanResourceLimit } from '../plan/plan-limit.helpers'
 import { ResetPasswordModal } from './ResetPasswordModal'
 import { RoleModal } from './RoleModal'
 import { UserModal } from './UserModal'
@@ -102,8 +104,10 @@ export function UsersPage() {
   const updateUserRoleMutation = useUpdateUserRole()
   const updateUserStatusMutation = useUpdateUserStatus()
   const resetUserPasswordMutation = useResetUserPassword()
+  const userLimit = usePlanResourceLimit('users')
 
   const users = useMemo(() => usersQuery.data?.items ?? [], [usersQuery.data?.items])
+  const isUserCreationBlocked = userLimit.status?.isAtLimit ?? false
   const stats = useMemo(
     () => ({
       active: users.filter((user) => user.isActive).length,
@@ -184,6 +188,15 @@ export function UsersPage() {
     setPageNumber(1)
   }
 
+  function handleOpenCreateModal() {
+    if (isUserCreationBlocked) {
+      toast.error('Has alcanzado el límite de tu plan.')
+      return
+    }
+
+    setModalState({ mode: 'create' })
+  }
+
   function handlePageSizeChange(value: string) {
     setPageSize(Number(value))
     setPageNumber(1)
@@ -193,7 +206,11 @@ export function UsersPage() {
     <div className="space-y-6">
       <PageHeader
         action={
-          <Button onClick={() => setModalState({ mode: 'create' })}>
+          <Button
+            disabled={isUserCreationBlocked}
+            onClick={handleOpenCreateModal}
+            title={isUserCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+          >
             <Plus className="h-4 w-4" />
             Nuevo usuario
           </Button>
@@ -202,6 +219,8 @@ export function UsersPage() {
         eyebrow="Administracion"
         title="Usuarios"
       />
+
+      <PlanLimitInlineNotice resource="users" />
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <Card>
@@ -272,7 +291,11 @@ export function UsersPage() {
         <EmptyState
           action={
             isSearching ? null : (
-              <Button onClick={() => setModalState({ mode: 'create' })}>
+              <Button
+                disabled={isUserCreationBlocked}
+                onClick={handleOpenCreateModal}
+                title={isUserCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+              >
                 <Plus className="h-4 w-4" />
                 Crear primer usuario
               </Button>

@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { CreateWarehouseRequest, UpdateWarehouseRequest, WarehouseFilters } from '../../types/warehouse'
+import { planQueryKeys } from '../plan/plan.queries'
 import { createWarehouse, deleteWarehouse, getWarehouseById, getWarehouses, updateWarehouse } from './warehouses.api'
 
 export const warehousesQueryKeys = {
@@ -30,6 +31,7 @@ export function useCreateWarehouse() {
     mutationFn: (payload: CreateWarehouseRequest) => createWarehouse(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: warehousesQueryKeys.all })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }

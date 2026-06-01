@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatCurrency, formatDate, formatNumber } from '../../lib/format'
 import type { CreateProductRequest, Product } from '../../types/product'
+import { PlanLimitInlineNotice } from '../plan/PlanLimitInlineNotice'
+import { usePlanResourceLimit } from '../plan/plan-limit.helpers'
 import { ProductModal } from './ProductModal'
 import {
   useCreateProduct,
@@ -73,10 +75,12 @@ export function ProductsPage() {
   const createProductMutation = useCreateProduct()
   const updateProductMutation = useUpdateProduct()
   const deleteProductMutation = useDeleteProduct()
+  const productLimit = usePlanResourceLimit('products')
 
   const products = productsQuery.data?.items ?? []
   const categories = categoriesQuery.data?.items ?? []
   const suppliers = suppliersQuery.data?.items ?? []
+  const isProductCreationBlocked = productLimit.status?.isAtLimit ?? false
   const isFormSubmitting = createProductMutation.isPending || updateProductMutation.isPending
   const isLoadingOptions = categoriesQuery.isLoading || suppliersQuery.isLoading
   const isSearching = Boolean(search)
@@ -119,6 +123,11 @@ export function ProductsPage() {
   }
 
   function handleOpenCreateModal() {
+    if (isProductCreationBlocked) {
+      toast.error('Has alcanzado el límite de tu plan.')
+      return
+    }
+
     if (categoriesQuery.isError || suppliersQuery.isError) {
       toast.error('No se pudieron cargar las categorias o proveedores para el formulario.')
       return
@@ -141,7 +150,11 @@ export function ProductsPage() {
     <div className="space-y-6">
       <PageHeader
         action={
-          <Button onClick={handleOpenCreateModal}>
+          <Button
+            disabled={isProductCreationBlocked}
+            onClick={handleOpenCreateModal}
+            title={isProductCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+          >
             <Plus className="h-4 w-4" />
             Nuevo producto
           </Button>
@@ -150,6 +163,8 @@ export function ProductsPage() {
         eyebrow="Datos maestros"
         title="Productos"
       />
+
+      <PlanLimitInlineNotice resource="products" />
 
       <Card>
         <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -214,7 +229,11 @@ export function ProductsPage() {
         <EmptyState
           action={
             isSearching ? null : (
-              <Button onClick={handleOpenCreateModal}>
+              <Button
+                disabled={isProductCreationBlocked}
+                onClick={handleOpenCreateModal}
+                title={isProductCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+              >
                 <Plus className="h-4 w-4" />
                 Crear primer producto
               </Button>

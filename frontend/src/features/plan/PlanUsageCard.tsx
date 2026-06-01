@@ -7,10 +7,9 @@ import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatNumber } from '../../lib/format'
+import { enterpriseLimit } from './plan-limit.helpers'
 import { usePlanUsage } from './plan.queries'
 import type { PlanType, PlanUsageMetrics } from './plan.types'
-
-const enterpriseLimit = 2147483647
 
 const metrics: Array<{
   icon: React.ComponentType<{ className?: string }>

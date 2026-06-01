@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatDate, formatNumber } from '../../lib/format'
 import type { CreateWarehouseRequest, Warehouse as WarehouseType } from '../../types/warehouse'
+import { PlanLimitInlineNotice } from '../plan/PlanLimitInlineNotice'
+import { usePlanResourceLimit } from '../plan/plan-limit.helpers'
 import { WarehouseModal } from './WarehouseModal'
 import { useCreateWarehouse, useDeleteWarehouse, useUpdateWarehouse, useWarehouses } from './warehouses.queries'
 
@@ -64,8 +66,10 @@ export function WarehousesPage() {
   const createWarehouseMutation = useCreateWarehouse()
   const updateWarehouseMutation = useUpdateWarehouse()
   const deleteWarehouseMutation = useDeleteWarehouse()
+  const warehouseLimit = usePlanResourceLimit('warehouses')
 
   const warehouses = warehousesQuery.data?.items ?? []
+  const isWarehouseCreationBlocked = warehouseLimit.status?.isAtLimit ?? false
   const isFormSubmitting = createWarehouseMutation.isPending || updateWarehouseMutation.isPending
   const isSearching = Boolean(search)
   const visibleActiveWarehouses = warehouses.filter((warehouse) => warehouse.isActive).length
@@ -111,6 +115,15 @@ export function WarehousesPage() {
     setPageNumber(1)
   }
 
+  function handleOpenCreateModal() {
+    if (isWarehouseCreationBlocked) {
+      toast.error('Has alcanzado el límite de tu plan.')
+      return
+    }
+
+    setModalState({ mode: 'create' })
+  }
+
   function handlePageSizeChange(value: string) {
     setPageSize(Number(value))
     setPageNumber(1)
@@ -120,7 +133,11 @@ export function WarehousesPage() {
     <div className="space-y-6">
       <PageHeader
         action={
-          <Button onClick={() => setModalState({ mode: 'create' })}>
+          <Button
+            disabled={isWarehouseCreationBlocked}
+            onClick={handleOpenCreateModal}
+            title={isWarehouseCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+          >
             <Plus className="h-4 w-4" />
             Nuevo almacen
           </Button>
@@ -129,6 +146,8 @@ export function WarehousesPage() {
         eyebrow="Datos maestros"
         title="Almacenes"
       />
+
+      <PlanLimitInlineNotice resource="warehouses" />
 
       <Card>
         <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -193,7 +212,11 @@ export function WarehousesPage() {
         <EmptyState
           action={
             isSearching ? null : (
-              <Button onClick={() => setModalState({ mode: 'create' })}>
+              <Button
+                disabled={isWarehouseCreationBlocked}
+                onClick={handleOpenCreateModal}
+                title={isWarehouseCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+              >
                 <Plus className="h-4 w-4" />
                 Crear primer almacen
               </Button>

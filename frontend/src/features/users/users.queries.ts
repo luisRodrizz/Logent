@@ -16,6 +16,7 @@ import type {
   UpdateUserStatusPayload,
   UserFilters,
 } from './users.types'
+import { planQueryKeys } from '../plan/plan.queries'
 
 export const usersQueryKeys = {
   all: ['users'] as const,
@@ -45,6 +46,7 @@ export function useCreateUser() {
     mutationFn: (payload: CreateUserPayload) => createUser(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: usersQueryKeys.all })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }

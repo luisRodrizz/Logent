@@ -13,6 +13,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatDate, formatNumber } from '../../lib/format'
 import type { CreateSupplierRequest, Supplier } from '../../types/supplier'
+import { PlanLimitInlineNotice } from '../plan/PlanLimitInlineNotice'
+import { usePlanResourceLimit } from '../plan/plan-limit.helpers'
 import { SupplierModal } from './SupplierModal'
 import { useCreateSupplier, useDeleteSupplier, useSuppliers, useUpdateSupplier } from './suppliers.queries'
 
@@ -64,8 +66,10 @@ export function SuppliersPage() {
   const createSupplierMutation = useCreateSupplier()
   const updateSupplierMutation = useUpdateSupplier()
   const deleteSupplierMutation = useDeleteSupplier()
+  const supplierLimit = usePlanResourceLimit('suppliers')
 
   const suppliers = suppliersQuery.data?.items ?? []
+  const isSupplierCreationBlocked = supplierLimit.status?.isAtLimit ?? false
   const isFormSubmitting = createSupplierMutation.isPending || updateSupplierMutation.isPending
   const isSearching = Boolean(search)
   const visibleActiveSuppliers = suppliers.filter((supplier) => supplier.isActive).length
@@ -111,6 +115,15 @@ export function SuppliersPage() {
     setPageNumber(1)
   }
 
+  function handleOpenCreateModal() {
+    if (isSupplierCreationBlocked) {
+      toast.error('Has alcanzado el límite de tu plan.')
+      return
+    }
+
+    setModalState({ mode: 'create' })
+  }
+
   function handlePageSizeChange(value: string) {
     setPageSize(Number(value))
     setPageNumber(1)
@@ -120,7 +133,11 @@ export function SuppliersPage() {
     <div className="space-y-6">
       <PageHeader
         action={
-          <Button onClick={() => setModalState({ mode: 'create' })}>
+          <Button
+            disabled={isSupplierCreationBlocked}
+            onClick={handleOpenCreateModal}
+            title={isSupplierCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+          >
             <Plus className="h-4 w-4" />
             Nuevo proveedor
           </Button>
@@ -129,6 +146,8 @@ export function SuppliersPage() {
         eyebrow="Datos maestros"
         title="Proveedores"
       />
+
+      <PlanLimitInlineNotice resource="suppliers" />
 
       <Card>
         <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">
@@ -193,7 +212,11 @@ export function SuppliersPage() {
         <EmptyState
           action={
             isSearching ? null : (
-              <Button onClick={() => setModalState({ mode: 'create' })}>
+              <Button
+                disabled={isSupplierCreationBlocked}
+                onClick={handleOpenCreateModal}
+                title={isSupplierCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+              >
                 <Plus className="h-4 w-4" />
                 Crear primer proveedor
               </Button>
