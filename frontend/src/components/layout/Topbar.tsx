@@ -12,6 +12,7 @@ type TopbarProps = {
 
 const pageTitles = [
   { match: '/admin/users', subtitle: 'Cuentas y roles internos', title: 'Usuarios' },
+  { match: '/plan', subtitle: 'Capacidad y plan actual', title: 'Plan y uso' },
   { match: '/profile', subtitle: 'Cuenta y seguridad', title: 'Mi perfil' },
   { match: '/audit-logs', subtitle: 'Administración', title: 'Auditoría' },
   { match: '/categories', subtitle: 'Datos maestros', title: 'Categorías' },

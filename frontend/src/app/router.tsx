@@ -53,6 +53,7 @@ const PlatformCompanyDetailPage = lazy(() =>
 const PlatformLayout = lazy(() =>
   import('../features/platform/PlatformLayout').then((module) => ({ default: module.PlatformLayout })),
 )
+const PlanPage = lazy(() => import('../features/plan/PlanPage').then((module) => ({ default: module.PlanPage })))
 const ProfilePage = lazy(() =>
   import('../features/profile/ProfilePage').then((module) => ({ default: module.ProfilePage })),
 )
@@ -173,6 +174,7 @@ export function AppRouter() {
             <Route path="/movements" element={protectedRoute(<MovementsPage />, routeRoles.movements)} />
             <Route path="/kardex" element={protectedRoute(<KardexPage />, routeRoles.kardex)} />
             <Route path="/reports" element={protectedRoute(<ReportsPage />, routeRoles.reports)} />
+            <Route path="/plan" element={protectedRoute(<PlanPage />, routeRoles.plan)} />
             <Route path="/profile" element={lazyRoute(<ProfilePage />)} />
             <Route path="/admin/users" element={protectedRoute(<UsersPage />, routeRoles.users)} />
             <Route path="/audit-logs" element={protectedRoute(<AuditLogsPage />, routeRoles.auditLogs)} />
