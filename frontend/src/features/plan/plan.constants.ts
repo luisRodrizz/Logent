@@ -63,3 +63,9 @@ export const planDefinitions: PlanDefinition[] = [
     plan: 'Enterprise',
   },
 ]
+
+export function getHigherPlans(plan: PlanType): PlanType[] {
+  const currentPlanIndex = planDefinitions.findIndex((definition) => definition.plan === plan)
+
+  return planDefinitions.slice(currentPlanIndex + 1).map((definition) => definition.plan)
+}

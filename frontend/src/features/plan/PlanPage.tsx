@@ -1,15 +1,19 @@
 import { Check, CircleAlert } from 'lucide-react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { PageHeader } from '../../components/common/PageHeader'
+import { SectionError } from '../../components/common/SectionError'
 import { Badge } from '../../components/ui/Badge'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
-import { formatNumber } from '../../lib/format'
+import { getApiErrorMessage } from '../../lib/api-error'
+import { formatDateTime, formatNumber } from '../../lib/format'
 import { getPlanResourceLimitStatus } from './plan-limit.helpers'
-import { planDefinitions, planResourceLabels, planResources } from './plan.constants'
-import { usePlanUsage } from './plan.queries'
+import { getHigherPlans, planDefinitions, planResourceLabels, planResources } from './plan.constants'
+import { useCreatePlanUpgradeRequest, useMyLatestPlanUpgradeRequest, usePlanUsage } from './plan.queries'
+import { PlanUpgradeRequestModal } from './PlanUpgradeRequestModal'
 import { PlanUsageCard } from './PlanUsageCard'
-import type { PlanType } from './plan.types'
+import type { CreatePlanUpgradeRequestPayload, PlanType, PlanUpgradeRequestStatus } from './plan.types'
 
 const planBadgeVariants: Record<PlanType, 'default' | 'muted' | 'success' | 'warning'> = {
   Enterprise: 'warning',
@@ -18,17 +22,56 @@ const planBadgeVariants: Record<PlanType, 'default' | 'muted' | 'success' | 'war
   Starter: 'default',
 }
 
-function handleRequestUpgrade() {
-  toast.info('La actualización de plan se gestiona con el administrador de LOGENT.')
+const requestStatusBadgeVariants: Record<PlanUpgradeRequestStatus, 'success' | 'warning' | 'danger'> = {
+  Approved: 'success',
+  Pending: 'warning',
+  Rejected: 'danger',
+}
+
+const requestStatusLabels: Record<PlanUpgradeRequestStatus, string> = {
+  Approved: 'Aprobada',
+  Pending: 'Pendiente',
+  Rejected: 'Rechazada',
 }
 
 export function PlanPage() {
+  const [selectedRequestedPlan, setSelectedRequestedPlan] = useState<PlanType | null>(null)
+  const createUpgradeRequestMutation = useCreatePlanUpgradeRequest()
+  const latestUpgradeRequestQuery = useMyLatestPlanUpgradeRequest()
   const planUsageQuery = usePlanUsage()
+  const currentPlan = planUsageQuery.data?.plan
+  const higherPlans = currentPlan ? getHigherPlans(currentPlan) : []
+  const latestUpgradeRequest = latestUpgradeRequestQuery.data
+  const hasPendingUpgradeRequest = latestUpgradeRequest?.status === 'Pending'
   const resourceStatuses = planUsageQuery.data
     ? planResources.map((resource) => getPlanResourceLimitStatus(planUsageQuery.data, resource))
     : []
   const hasReachedLimit = resourceStatuses.some((status) => status.isAtLimit)
   const isNearLimit = !hasReachedLimit && resourceStatuses.some((status) => status.isNearLimit)
+
+  function openUpgradeRequestModal(requestedPlan?: PlanType) {
+    if (hasPendingUpgradeRequest) {
+      toast.info('Tu empresa ya tiene una solicitud pendiente de revisión.')
+      return
+    }
+
+    if (higherPlans.length === 0) {
+      toast.info('Tu empresa ya cuenta con el plan Enterprise.')
+      return
+    }
+
+    setSelectedRequestedPlan(requestedPlan ?? higherPlans[0])
+  }
+
+  async function handleCreateUpgradeRequest(payload: CreatePlanUpgradeRequestPayload) {
+    try {
+      await createUpgradeRequestMutation.mutateAsync(payload)
+      setSelectedRequestedPlan(null)
+      toast.success('Solicitud de actualización enviada correctamente.')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo enviar la solicitud de actualización.'))
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -50,7 +93,58 @@ export function PlanPage() {
         </div>
       ) : null}
 
-      <PlanUsageCard />
+      <PlanUsageCard onRequestUpgrade={() => openUpgradeRequestModal()} />
+
+      {latestUpgradeRequestQuery.isError ? (
+        <SectionError
+          text={getApiErrorMessage(
+            latestUpgradeRequestQuery.error,
+            'No se pudo cargar el estado de la solicitud de actualización.',
+          )}
+        />
+      ) : null}
+
+      {latestUpgradeRequest ? (
+        <Card className={hasPendingUpgradeRequest ? 'border-amber-200' : undefined}>
+          <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+            <div>
+              <CardTitle>Solicitud de actualización</CardTitle>
+              <CardDescription>Consulta el estado de la solicitud más reciente enviada por tu empresa.</CardDescription>
+            </div>
+            <Badge variant={requestStatusBadgeVariants[latestUpgradeRequest.status]}>
+              {requestStatusLabels[latestUpgradeRequest.status]}
+            </Badge>
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Cambio solicitado</dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">
+                  {latestUpgradeRequest.currentPlan} → {latestUpgradeRequest.requestedPlan}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Fecha</dt>
+                <dd className="mt-1 text-sm font-medium text-foreground">
+                  {formatDateTime(latestUpgradeRequest.createdAt)}
+                </dd>
+              </div>
+              <div className="sm:col-span-3">
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Mensaje</dt>
+                <dd className="mt-1 text-sm leading-6 text-foreground">
+                  {latestUpgradeRequest.message || 'Sin mensaje adicional.'}
+                </dd>
+              </div>
+              {latestUpgradeRequest.resolutionNote ? (
+                <div className="sm:col-span-3">
+                  <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Nota de resolución</dt>
+                  <dd className="mt-1 text-sm leading-6 text-foreground">{latestUpgradeRequest.resolutionNote}</dd>
+                </div>
+              ) : null}
+            </dl>
+          </CardContent>
+        </Card>
+      ) : null}
 
       <section className="space-y-4">
         <div>
@@ -63,6 +157,7 @@ export function PlanPage() {
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
           {planDefinitions.map((definition) => {
             const isCurrentPlan = definition.plan === planUsageQuery.data?.plan
+            const isHigherPlan = higherPlans.includes(definition.plan)
 
             return (
               <Card
@@ -104,11 +199,17 @@ export function PlanPage() {
                   <div className="mt-auto pt-6">
                     <Button
                       className="w-full"
-                      disabled={isCurrentPlan}
-                      onClick={handleRequestUpgrade}
+                      disabled={isCurrentPlan || !isHigherPlan || hasPendingUpgradeRequest}
+                      onClick={() => openUpgradeRequestModal(definition.plan)}
                       variant={isCurrentPlan ? 'secondary' : 'primary'}
                     >
-                      {isCurrentPlan ? 'Plan actual' : 'Solicitar actualización'}
+                      {isCurrentPlan
+                        ? 'Plan actual'
+                        : !isHigherPlan
+                          ? 'No disponible'
+                          : hasPendingUpgradeRequest
+                            ? 'Solicitud pendiente'
+                            : 'Solicitar actualización'}
                     </Button>
                   </div>
                 </CardContent>
@@ -117,6 +218,16 @@ export function PlanPage() {
           })}
         </div>
       </section>
+
+      {selectedRequestedPlan ? (
+        <PlanUpgradeRequestModal
+          availablePlans={higherPlans}
+          initialPlan={selectedRequestedPlan}
+          isSubmitting={createUpgradeRequestMutation.isPending}
+          onClose={() => setSelectedRequestedPlan(null)}
+          onSubmit={handleCreateUpgradeRequest}
+        />
+      ) : null}
     </div>
   )
 }

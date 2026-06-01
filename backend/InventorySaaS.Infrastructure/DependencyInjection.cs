@@ -5,6 +5,7 @@ using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Dashboard.Interfaces;
 using InventorySaaS.Application.Kardex.Interfaces;
 using InventorySaaS.Application.Movements.Interfaces;
+using InventorySaaS.Application.PlanUpgradeRequests.Interfaces;
 using InventorySaaS.Application.Platform.Companies.Interfaces;
 using InventorySaaS.Application.Products.Interfaces;
 using InventorySaaS.Application.Profile.Interfaces;
@@ -21,6 +22,7 @@ using InventorySaaS.Infrastructure.Email;
 using InventorySaaS.Infrastructure.Identity;
 using InventorySaaS.Infrastructure.Kardex;
 using InventorySaaS.Infrastructure.Movements;
+using InventorySaaS.Infrastructure.PlanUpgradeRequests;
 using InventorySaaS.Infrastructure.Platform.Companies;
 using InventorySaaS.Infrastructure.Persistence;
 using InventorySaaS.Infrastructure.PlanLimits;
@@ -80,6 +82,7 @@ public static class DependencyInjection
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IPlatformCompanyService, PlatformCompanyService>();
         services.AddScoped<IPlanLimitService, PlanLimitService>();
+        services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
 
         // Authentication / audit helpers
         services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();

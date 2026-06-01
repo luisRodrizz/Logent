@@ -1,4 +1,4 @@
-import { Building2, LogOut, Menu, ShieldCheck, X } from 'lucide-react'
+import { ArrowUpCircle, Building2, LogOut, Menu, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import logentLogo from '../../assets/brand/logent-logo.png'
@@ -11,6 +11,11 @@ const platformNavigation = [
     href: '/platform/companies',
     icon: Building2,
     label: 'Empresas',
+  },
+  {
+    href: '/platform/upgrade-requests',
+    icon: ArrowUpCircle,
+    label: 'Solicitudes',
   },
 ]
 
@@ -74,7 +79,13 @@ export function PlatformLayout() {
   const { logout, user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  const pageTitle = location.pathname.includes('/companies/') ? 'Detalle de empresa' : 'Empresas'
+  const pageTitle = location.pathname.includes('/upgrade-requests/')
+    ? 'Detalle de solicitud'
+    : location.pathname === '/platform/upgrade-requests'
+      ? 'Solicitudes de plan'
+      : location.pathname.includes('/companies/')
+        ? 'Detalle de empresa'
+        : 'Empresas'
 
   function handleLogout() {
     logout()

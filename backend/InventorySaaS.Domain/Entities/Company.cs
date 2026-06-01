@@ -34,4 +34,6 @@ public class Company : AuditableEntity
     public ICollection<KardexEntry> KardexEntries { get; set; } = new List<KardexEntry>();
 
     public ICollection<AuditLog> AuditLogs { get; set; } = new List<AuditLog>();
+
+    public ICollection<PlanUpgradeRequest> PlanUpgradeRequests { get; set; } = new List<PlanUpgradeRequest>();
 }

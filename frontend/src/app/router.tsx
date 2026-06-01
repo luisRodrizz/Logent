@@ -50,6 +50,16 @@ const PlatformCompanyDetailPage = lazy(() =>
     default: module.PlatformCompanyDetailPage,
   })),
 )
+const PlatformPlanUpgradeRequestDetailPage = lazy(() =>
+  import('../features/platform/PlatformPlanUpgradeRequestDetailPage').then((module) => ({
+    default: module.PlatformPlanUpgradeRequestDetailPage,
+  })),
+)
+const PlatformPlanUpgradeRequestsPage = lazy(() =>
+  import('../features/platform/PlatformPlanUpgradeRequestsPage').then((module) => ({
+    default: module.PlatformPlanUpgradeRequestsPage,
+  })),
+)
 const PlatformLayout = lazy(() =>
   import('../features/platform/PlatformLayout').then((module) => ({ default: module.PlatformLayout })),
 )
@@ -183,6 +193,8 @@ export function AppRouter() {
             <Route index element={<Navigate replace to="/platform/companies" />} />
             <Route path="companies" element={lazyRoute(<PlatformCompaniesPage />)} />
             <Route path="companies/:id" element={lazyRoute(<PlatformCompanyDetailPage />)} />
+            <Route path="upgrade-requests" element={lazyRoute(<PlatformPlanUpgradeRequestsPage />)} />
+            <Route path="upgrade-requests/:id" element={lazyRoute(<PlatformPlanUpgradeRequestDetailPage />)} />
           </Route>
         </Route>
         <Route

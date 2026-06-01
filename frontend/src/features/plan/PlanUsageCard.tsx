@@ -54,7 +54,11 @@ function getProgress(used: number, limit: number) {
   return Math.min(100, Math.round((used / limit) * 100))
 }
 
-export function PlanUsageCard() {
+type PlanUsageCardProps = {
+  onRequestUpgrade?: () => void
+}
+
+export function PlanUsageCard({ onRequestUpgrade }: PlanUsageCardProps) {
   const planUsageQuery = usePlanUsage()
 
   return (
@@ -71,7 +75,7 @@ export function PlanUsageCard() {
         </div>
         <Button
           className="shrink-0"
-          onClick={() => toast.info('La actualización de plan se gestiona con el administrador de LOGENT.')}
+          onClick={onRequestUpgrade ?? (() => toast.info('Revisa la página Plan para solicitar una actualización.'))}
           size="sm"
           variant="secondary"
         >

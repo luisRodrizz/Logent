@@ -290,6 +290,56 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.ToTable("MovementDetails", (string)null);
                 });
 
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.PlanUpgradeRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CurrentPlan")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Message")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("RequestedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("RequestedPlan")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ResolutionNote")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ResolvedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ResolvedByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("CompanyId", "Status");
+
+                    b.ToTable("PlanUpgradeRequests", (string)null);
+                });
+
             modelBuilder.Entity("InventorySaaS.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -786,6 +836,17 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.PlanUpgradeRequest", b =>
+                {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("PlanUpgradeRequests")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("InventorySaaS.Domain.Entities.Product", b =>
                 {
                     b.HasOne("InventorySaaS.Domain.Entities.Category", "Category")
@@ -932,6 +993,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.Navigation("KardexEntries");
 
                     b.Navigation("Movements");
+
+                    b.Navigation("PlanUpgradeRequests");
 
                     b.Navigation("Products");
 
