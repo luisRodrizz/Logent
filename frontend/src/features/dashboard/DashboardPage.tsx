@@ -20,6 +20,7 @@ import { Badge } from '../../components/ui/Badge'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { formatCurrency, formatDateTime, formatNumber } from '../../lib/format'
 import type { MovementType } from '../../types/dashboard'
+import { PlanUsageCard } from '../plan/PlanUsageCard'
 import {
   useDashboardSummary,
   useLowStockAlerts,
@@ -183,6 +184,8 @@ export function DashboardPage() {
       ) : null}
 
       {isEmptyTenant ? <TenantOnboardingCard /> : null}
+
+      <PlanUsageCard />
 
       <div className="grid gap-5 xl:grid-cols-[minmax(0,1.45fr)_minmax(320px,0.75fr)] xl:items-start">
         <Card>

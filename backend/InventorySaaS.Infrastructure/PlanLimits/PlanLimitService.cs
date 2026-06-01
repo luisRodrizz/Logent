@@ -1,5 +1,6 @@
 using InventorySaaS.Application.Common.Exceptions;
 using InventorySaaS.Application.Common.Interfaces;
+using InventorySaaS.Application.Plans.DTOs;
 using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
@@ -21,6 +22,27 @@ public class PlanLimitService(ApplicationDbContext context) : IPlanLimitService
                 int.MaxValue,
                 int.MaxValue)
         };
+
+    public async Task<PlanUsageResponse> GetUsageAsync(Guid companyId, CancellationToken cancellationToken = default)
+    {
+        var limits = await GetCompanyLimitsAsync(companyId, cancellationToken);
+
+        return new PlanUsageResponse
+        {
+            Plan = limits.Plan,
+            Usage = new PlanUsageMetrics
+            {
+                Users = await context.Users.CountAsync(user => user.CompanyId == companyId, cancellationToken),
+                Products = await context.Products.CountAsync(product => product.CompanyId == companyId, cancellationToken),
+                Warehouses = await context.Warehouses.CountAsync(
+                    warehouse => warehouse.CompanyId == companyId,
+                    cancellationToken),
+                Suppliers = await context.Suppliers.CountAsync(supplier => supplier.CompanyId == companyId, cancellationToken),
+                Categories = await context.Categories.CountAsync(category => category.CompanyId == companyId, cancellationToken)
+            },
+            Limits = MapLimits(limits.Values)
+        };
+    }
 
     public Task EnsureCanCreateUserAsync(Guid companyId, CancellationToken cancellationToken = default)
     {
@@ -79,6 +101,29 @@ public class PlanLimitService(ApplicationDbContext context) : IPlanLimitService
         string resourceName,
         CancellationToken cancellationToken)
     {
+        var limits = await GetCompanyLimitsAsync(companyId, cancellationToken);
+        var limit = getLimit(limits.Values);
+
+        if (limit == int.MaxValue)
+        {
+            return;
+        }
+
+        var currentCount = await getCurrentCount();
+
+        if (currentCount >= limit)
+        {
+            var message = $"Tu plan actual permite un máximo de {limit} {resourceName}.";
+
+            throw new ApiException(
+                403,
+                message,
+                "Actualiza el plan de tu empresa para crear más recursos.");
+        }
+    }
+
+    private async Task<CompanyLimits> GetCompanyLimitsAsync(Guid companyId, CancellationToken cancellationToken)
+    {
         var company = await context.Companies
             .AsNoTracking()
             .Where(company => company.Id == companyId)
@@ -101,25 +146,22 @@ public class PlanLimitService(ApplicationDbContext context) : IPlanLimitService
                 "Contact the platform administrator to reactivate this company.");
         }
 
-        var limit = getLimit(LimitsByPlan[company.Plan]);
-
-        if (limit == int.MaxValue)
-        {
-            return;
-        }
-
-        var currentCount = await getCurrentCount();
-
-        if (currentCount >= limit)
-        {
-            var message = $"Tu plan actual permite un máximo de {limit} {resourceName}.";
-
-            throw new ApiException(
-                403,
-                message,
-                "Actualiza el plan de tu empresa para crear más recursos.");
-        }
+        return new CompanyLimits(company.Plan, LimitsByPlan[company.Plan]);
     }
+
+    private static PlanUsageMetrics MapLimits(PlanLimits limits)
+    {
+        return new PlanUsageMetrics
+        {
+            Users = limits.MaxUsers,
+            Products = limits.MaxProducts,
+            Warehouses = limits.MaxWarehouses,
+            Suppliers = limits.MaxSuppliers,
+            Categories = limits.MaxCategories
+        };
+    }
+
+    private sealed record CompanyLimits(PlanType Plan, PlanLimits Values);
 
     private sealed record PlanLimits(
         int MaxUsers,
