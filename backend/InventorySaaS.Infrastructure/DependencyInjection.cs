@@ -23,6 +23,7 @@ using InventorySaaS.Infrastructure.Kardex;
 using InventorySaaS.Infrastructure.Movements;
 using InventorySaaS.Infrastructure.Platform.Companies;
 using InventorySaaS.Infrastructure.Persistence;
+using InventorySaaS.Infrastructure.PlanLimits;
 using InventorySaaS.Infrastructure.Products;
 using InventorySaaS.Infrastructure.Profile;
 using InventorySaaS.Infrastructure.Reports;
@@ -78,6 +79,7 @@ public static class DependencyInjection
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IPlatformCompanyService, PlatformCompanyService>();
+        services.AddScoped<IPlanLimitService, PlanLimitService>();
 
         // Authentication / audit helpers
         services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();

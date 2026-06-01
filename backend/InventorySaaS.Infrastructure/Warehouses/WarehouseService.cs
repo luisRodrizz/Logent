@@ -14,7 +14,8 @@ namespace InventorySaaS.Infrastructure.Warehouses;
 public class WarehouseService(
     ApplicationDbContext context,
     IAuditLogWriter auditLogWriter,
-    ICurrentUserContext currentUserContext) : IWarehouseService
+    ICurrentUserContext currentUserContext,
+    IPlanLimitService planLimitService) : IWarehouseService
 {
     public async Task<PagedResponse<WarehouseResponse>> GetAllAsync(
         PagedRequest request,
@@ -63,6 +64,7 @@ public class WarehouseService(
         var name = request.Name.Trim();
 
         await EnsureActiveNameIsUniqueAsync(companyId, name, excludedWarehouseId: null, cancellationToken);
+        await planLimitService.EnsureCanCreateWarehouseAsync(companyId, cancellationToken);
 
         var warehouse = new Warehouse
         {

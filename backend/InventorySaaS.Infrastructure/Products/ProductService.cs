@@ -14,7 +14,8 @@ namespace InventorySaaS.Infrastructure.Products;
 public class ProductService(
     ApplicationDbContext context,
     IAuditLogWriter auditLogWriter,
-    ICurrentUserContext currentUserContext) : IProductService
+    ICurrentUserContext currentUserContext,
+    IPlanLimitService planLimitService) : IProductService
 {
     public async Task<PagedResponse<ProductResponse>> GetAllAsync(
         PagedRequest request,
@@ -72,6 +73,7 @@ public class ProductService(
         await EnsureActiveCodeIsUniqueAsync(companyId, code, excludedProductId: null, cancellationToken);
         await EnsureActiveCategoryExistsAsync(companyId, request.CategoryId, cancellationToken);
         await EnsureActiveSupplierExistsAsync(companyId, request.SupplierId, cancellationToken);
+        await planLimitService.EnsureCanCreateProductAsync(companyId, cancellationToken);
 
         var product = new Product
         {

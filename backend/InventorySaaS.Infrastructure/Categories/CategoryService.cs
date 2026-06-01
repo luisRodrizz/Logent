@@ -14,7 +14,8 @@ namespace InventorySaaS.Infrastructure.Categories;
 public class CategoryService(
     ApplicationDbContext context,
     IAuditLogWriter auditLogWriter,
-    ICurrentUserContext currentUserContext) : ICategoryService
+    ICurrentUserContext currentUserContext,
+    IPlanLimitService planLimitService) : ICategoryService
 {
     public async Task<PagedResponse<CategoryResponse>> GetAllAsync(
         PagedRequest request,
@@ -64,6 +65,7 @@ public class CategoryService(
         var name = request.Name.Trim();
 
         await EnsureActiveNameIsUniqueAsync(companyId, name, excludedCategoryId: null, cancellationToken);
+        await planLimitService.EnsureCanCreateCategoryAsync(companyId, cancellationToken);
 
         var category = new Category
         {

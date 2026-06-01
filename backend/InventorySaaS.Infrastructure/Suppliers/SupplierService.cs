@@ -14,7 +14,8 @@ namespace InventorySaaS.Infrastructure.Suppliers;
 public class SupplierService(
     ApplicationDbContext context,
     IAuditLogWriter auditLogWriter,
-    ICurrentUserContext currentUserContext) : ISupplierService
+    ICurrentUserContext currentUserContext,
+    IPlanLimitService planLimitService) : ISupplierService
 {
     public async Task<PagedResponse<SupplierResponse>> GetAllAsync(
         PagedRequest request,
@@ -70,6 +71,7 @@ public class SupplierService(
             excludedSupplierId: null,
             cancellationToken);
         await EnsureActiveRucIsUniqueAsync(companyId, ruc, excludedSupplierId: null, cancellationToken);
+        await planLimitService.EnsureCanCreateSupplierAsync(companyId, cancellationToken);
 
         var supplier = new Supplier
         {

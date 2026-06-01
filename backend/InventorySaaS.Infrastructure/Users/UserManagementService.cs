@@ -18,7 +18,8 @@ public class UserManagementService(
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager,
     IAuditLogWriter auditLogWriter,
-    ICurrentUserContext currentUserContext) : IUserManagementService
+    ICurrentUserContext currentUserContext,
+    IPlanLimitService planLimitService) : IUserManagementService
 {
     private static readonly HashSet<string> AllowedRoles = new(StringComparer.Ordinal)
     {
@@ -90,6 +91,7 @@ public class UserManagementService(
         var email = NormalizeEmail(request.Email);
 
         await EnsureEmailIsUniqueAsync(email, excludedUserId: null);
+        await planLimitService.EnsureCanCreateUserAsync(companyId, cancellationToken);
 
         var name = SplitFullName(request.FullName);
         var user = new ApplicationUser
