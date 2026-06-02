@@ -7,6 +7,7 @@ using InventorySaaS.Application.Kardex.Interfaces;
 using InventorySaaS.Application.Movements.Interfaces;
 using InventorySaaS.Application.PlanUpgradeRequests.Interfaces;
 using InventorySaaS.Application.Platform.Companies.Interfaces;
+using InventorySaaS.Application.Platform.Dashboard.Interfaces;
 using InventorySaaS.Application.Products.Interfaces;
 using InventorySaaS.Application.Profile.Interfaces;
 using InventorySaaS.Application.Reports.Interfaces;
@@ -24,6 +25,7 @@ using InventorySaaS.Infrastructure.Kardex;
 using InventorySaaS.Infrastructure.Movements;
 using InventorySaaS.Infrastructure.PlanUpgradeRequests;
 using InventorySaaS.Infrastructure.Platform.Companies;
+using InventorySaaS.Infrastructure.Platform.Dashboard;
 using InventorySaaS.Infrastructure.Persistence;
 using InventorySaaS.Infrastructure.PlanLimits;
 using InventorySaaS.Infrastructure.Products;
@@ -81,6 +83,7 @@ public static class DependencyInjection
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<IPlatformCompanyService, PlatformCompanyService>();
+        services.AddScoped<IPlatformDashboardService, PlatformDashboardService>();
         services.AddScoped<IPlanLimitService, PlanLimitService>();
         services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
 

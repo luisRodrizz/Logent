@@ -1,6 +1,6 @@
 import { ArrowUpCircle, ChevronLeft, ChevronRight, Eye, Search } from 'lucide-react'
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
@@ -33,10 +33,17 @@ const statusBadgeVariants: Record<PlatformUpgradeRequestStatus, 'success' | 'war
 }
 
 export function PlatformPlanUpgradeRequestsPage() {
+  const [searchParams] = useSearchParams()
   const [companySearch, setCompanySearch] = useState('')
   const [pageNumber, setPageNumber] = useState(1)
   const [requestedPlan, setRequestedPlan] = useState('')
-  const [status, setStatus] = useState('')
+  const [status, setStatus] = useState(() => {
+    const initialStatus = searchParams.get('status')
+
+    return initialStatus && platformUpgradeRequestStatuses.some((requestStatus) => requestStatus === initialStatus)
+      ? initialStatus
+      : ''
+  })
   const requestsQuery = usePlatformPlanUpgradeRequests({
     companySearch: companySearch.trim() || undefined,
     pageNumber,

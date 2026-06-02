@@ -1,5 +1,5 @@
 import { lazy, Suspense, type ReactNode } from 'react'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { LoadingState } from '../components/common/LoadingState'
 import { ProtectedLayout } from '../components/layout/ProtectedLayout'
 import { routeRoles } from '../components/layout/navigation'
@@ -44,6 +44,9 @@ const ProductsPage = lazy(() =>
 )
 const PlatformCompaniesPage = lazy(() =>
   import('../features/platform/PlatformCompaniesPage').then((module) => ({ default: module.PlatformCompaniesPage })),
+)
+const PlatformDashboardPage = lazy(() =>
+  import('../features/platform/PlatformDashboardPage').then((module) => ({ default: module.PlatformDashboardPage })),
 )
 const PlatformCompanyDetailPage = lazy(() =>
   import('../features/platform/PlatformCompanyDetailPage').then((module) => ({
@@ -190,7 +193,7 @@ export function AppRouter() {
             <Route path="/audit-logs" element={protectedRoute(<AuditLogsPage />, routeRoles.auditLogs)} />
           </Route>
           <Route path="/platform" element={protectedRoute(<PlatformLayout />, ['SuperAdmin'])}>
-            <Route index element={<Navigate replace to="/platform/companies" />} />
+            <Route index element={lazyRoute(<PlatformDashboardPage />)} />
             <Route path="companies" element={lazyRoute(<PlatformCompaniesPage />)} />
             <Route path="companies/:id" element={lazyRoute(<PlatformCompanyDetailPage />)} />
             <Route path="upgrade-requests" element={lazyRoute(<PlatformPlanUpgradeRequestsPage />)} />

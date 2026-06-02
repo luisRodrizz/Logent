@@ -1,4 +1,4 @@
-import { ArrowUpCircle, Building2, LogOut, Menu, ShieldCheck, X } from 'lucide-react'
+import { ArrowUpCircle, Building2, LayoutDashboard, LogOut, Menu, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import logentLogo from '../../assets/brand/logent-logo.png'
@@ -7,6 +7,11 @@ import { cn } from '../../lib/utils'
 import { useAuth } from '../auth/useAuth'
 
 const platformNavigation = [
+  {
+    href: '/platform',
+    icon: LayoutDashboard,
+    label: 'Dashboard',
+  },
   {
     href: '/platform/companies',
     icon: Building2,
@@ -36,6 +41,7 @@ function PlatformNavigation({ onNavigate }: { onNavigate?: () => void }) {
               )
             }
             key={item.href}
+            end={item.href === '/platform'}
             onClick={onNavigate}
             to={item.href}
           >
@@ -79,7 +85,9 @@ export function PlatformLayout() {
   const { logout, user } = useAuth()
   const location = useLocation()
   const navigate = useNavigate()
-  const pageTitle = location.pathname.includes('/upgrade-requests/')
+  const pageTitle = location.pathname === '/platform'
+    ? 'Dashboard'
+    : location.pathname.includes('/upgrade-requests/')
     ? 'Detalle de solicitud'
     : location.pathname === '/platform/upgrade-requests'
       ? 'Solicitudes de plan'
