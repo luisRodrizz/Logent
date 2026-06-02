@@ -5,6 +5,7 @@ import logentLogo from '../../assets/brand/logent-logo.png'
 import { Button } from '../../components/ui/Button'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../auth/useAuth'
+import { usePlatformDashboardSummary } from './platform-dashboard.queries'
 
 const platformNavigation = [
   {
@@ -24,7 +25,13 @@ const platformNavigation = [
   },
 ]
 
-function PlatformNavigation({ onNavigate }: { onNavigate?: () => void }) {
+function PlatformNavigation({
+  onNavigate,
+  pendingUpgradeRequests,
+}: {
+  onNavigate?: () => void
+  pendingUpgradeRequests?: number
+}) {
   return (
     <nav className="space-y-1" aria-label="Navegación de plataforma">
       {platformNavigation.map((item) => {
@@ -46,7 +53,12 @@ function PlatformNavigation({ onNavigate }: { onNavigate?: () => void }) {
             to={item.href}
           >
             <Icon className="h-4 w-4" aria-hidden="true" />
-            {item.label}
+            <span className="min-w-0 flex-1 truncate">{item.label}</span>
+            {item.href === '/platform/upgrade-requests' && pendingUpgradeRequests ? (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-amber-50 px-1.5 py-0.5 text-[10px] font-semibold text-amber-700 ring-1 ring-inset ring-amber-200">
+                {pendingUpgradeRequests}
+              </span>
+            ) : null}
           </NavLink>
         )
       })}
@@ -54,7 +66,13 @@ function PlatformNavigation({ onNavigate }: { onNavigate?: () => void }) {
   )
 }
 
-function PlatformSidebar({ onNavigate }: { onNavigate?: () => void }) {
+function PlatformSidebar({
+  onNavigate,
+  pendingUpgradeRequests,
+}: {
+  onNavigate?: () => void
+  pendingUpgradeRequests?: number
+}) {
   return (
     <div className="flex h-full flex-col border-r border-slate-200 bg-white">
       <div className="border-b border-slate-200 px-6 py-6">
@@ -69,7 +87,7 @@ function PlatformSidebar({ onNavigate }: { onNavigate?: () => void }) {
         <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
           Administración global
         </p>
-        <PlatformNavigation onNavigate={onNavigate} />
+        <PlatformNavigation onNavigate={onNavigate} pendingUpgradeRequests={pendingUpgradeRequests} />
       </div>
 
       <div className="border-t border-slate-200 px-6 py-4">
@@ -83,6 +101,7 @@ function PlatformSidebar({ onNavigate }: { onNavigate?: () => void }) {
 export function PlatformLayout() {
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
   const { logout, user } = useAuth()
+  const dashboardSummaryQuery = usePlatformDashboardSummary()
   const location = useLocation()
   const navigate = useNavigate()
   const pageTitle = location.pathname === '/platform'
@@ -103,7 +122,7 @@ export function PlatformLayout() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 lg:block">
-        <PlatformSidebar />
+        <PlatformSidebar pendingUpgradeRequests={dashboardSummaryQuery.data?.pendingUpgradeRequests} />
       </aside>
 
       {isMobileNavigationOpen ? (
@@ -123,7 +142,10 @@ export function PlatformLayout() {
             >
               <X className="h-5 w-5" aria-hidden="true" />
             </button>
-            <PlatformSidebar onNavigate={() => setIsMobileNavigationOpen(false)} />
+            <PlatformSidebar
+              onNavigate={() => setIsMobileNavigationOpen(false)}
+              pendingUpgradeRequests={dashboardSummaryQuery.data?.pendingUpgradeRequests}
+            />
           </aside>
         </div>
       ) : null}
