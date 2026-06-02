@@ -48,6 +48,11 @@ const PlatformCompaniesPage = lazy(() =>
 const PlatformActivityPage = lazy(() =>
   import('../features/platform/PlatformActivityPage').then((module) => ({ default: module.PlatformActivityPage })),
 )
+const PlatformNotificationsPage = lazy(() =>
+  import('../features/platform/PlatformNotificationsPage').then((module) => ({
+    default: module.PlatformNotificationsPage,
+  })),
+)
 const PlatformAnalyticsPage = lazy(() =>
   import('../features/platform/PlatformAnalyticsPage').then((module) => ({ default: module.PlatformAnalyticsPage })),
 )
@@ -202,6 +207,7 @@ export function AppRouter() {
             <Route index element={lazyRoute(<PlatformDashboardPage />)} />
             <Route path="activity" element={lazyRoute(<PlatformActivityPage />)} />
             <Route path="analytics" element={lazyRoute(<PlatformAnalyticsPage />)} />
+            <Route path="notifications" element={lazyRoute(<PlatformNotificationsPage />)} />
             <Route path="companies" element={lazyRoute(<PlatformCompaniesPage />)} />
             <Route path="companies/:id" element={lazyRoute(<PlatformCompanyDetailPage />)} />
             <Route path="upgrade-requests" element={lazyRoute(<PlatformPlanUpgradeRequestsPage />)} />

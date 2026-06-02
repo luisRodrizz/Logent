@@ -2,6 +2,9 @@ using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Platform.Companies.DTOs;
 using InventorySaaS.Application.Platform.Companies.Interfaces;
+using InventorySaaS.Application.Platform.Notifications.DTOs;
+using InventorySaaS.Application.Platform.Notifications.Interfaces;
+using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Common.Extensions;
 using InventorySaaS.Infrastructure.Persistence;
@@ -11,7 +14,8 @@ namespace InventorySaaS.Infrastructure.Platform.Companies;
 
 public class PlatformCompanyService(
     ApplicationDbContext context,
-    IAuditLogWriter auditLogWriter) : IPlatformCompanyService
+    IAuditLogWriter auditLogWriter,
+    IPlatformNotificationWriter platformNotificationWriter) : IPlatformCompanyService
 {
     public async Task<PagedResponse<PlatformCompanyListItemResponse>> GetAllAsync(
         PlatformCompanyQueryRequest request,
@@ -105,6 +109,8 @@ public class PlatformCompanyService(
             return false;
         }
 
+        var previousIsActive = company.IsActive;
+
         company.IsActive = request.IsActive;
         company.UpdatedAt = DateTime.UtcNow;
 
@@ -117,6 +123,29 @@ public class PlatformCompanyService(
             company.Id.ToString(),
             $"Platform company status changed: {company.Name} active={request.IsActive}. Reason: {request.Reason ?? "Not provided"}",
             cancellationToken);
+
+        if (previousIsActive != request.IsActive)
+        {
+            await platformNotificationWriter.WriteAsync(
+                new CreatePlatformNotificationRequest
+                {
+                    Title = request.IsActive ? "Empresa reactivada" : "Empresa suspendida",
+                    Message = request.IsActive
+                        ? $"La empresa {company.Name} recuperó el acceso a LOGENT."
+                        : $"La empresa {company.Name} fue suspendida temporalmente.",
+                    Type = request.IsActive
+                        ? PlatformNotificationType.CompanyReactivated
+                        : PlatformNotificationType.CompanySuspended,
+                    Severity = request.IsActive
+                        ? PlatformNotificationSeverity.Success
+                        : PlatformNotificationSeverity.Warning,
+                    CompanyId = company.Id,
+                    RelatedEntityName = nameof(Company),
+                    RelatedEntityId = company.Id.ToString(),
+                    ActionUrl = $"/platform/companies/{company.Id}"
+                },
+                cancellationToken);
+        }
 
         return true;
     }
@@ -134,6 +163,8 @@ public class PlatformCompanyService(
             return false;
         }
 
+        var previousPlan = company.Plan;
+
         company.Plan = Enum.Parse<PlanType>(request.Plan, ignoreCase: true);
         company.UpdatedAt = DateTime.UtcNow;
 
@@ -146,6 +177,23 @@ public class PlatformCompanyService(
             company.Id.ToString(),
             $"Platform company plan changed: {company.Name} plan={company.Plan}",
             cancellationToken);
+
+        if (previousPlan != company.Plan)
+        {
+            await platformNotificationWriter.WriteAsync(
+                new CreatePlatformNotificationRequest
+                {
+                    Title = "Plan de empresa actualizado",
+                    Message = $"La empresa {company.Name} cambió de {previousPlan} a {company.Plan}.",
+                    Type = PlatformNotificationType.PlanChanged,
+                    Severity = PlatformNotificationSeverity.Info,
+                    CompanyId = company.Id,
+                    RelatedEntityName = nameof(Company),
+                    RelatedEntityId = company.Id.ToString(),
+                    ActionUrl = $"/platform/companies/{company.Id}"
+                },
+                cancellationToken);
+        }
 
         return true;
     }

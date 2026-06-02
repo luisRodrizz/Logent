@@ -3,6 +3,8 @@ using System.Text;
 using InventorySaaS.Application.Auth.DTOs;
 using InventorySaaS.Application.Auth.Interfaces;
 using InventorySaaS.Application.Common.Exceptions;
+using InventorySaaS.Application.Platform.Notifications.DTOs;
+using InventorySaaS.Application.Platform.Notifications.Interfaces;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Identity;
@@ -16,7 +18,8 @@ public class CompanyRegistrationService(
     ApplicationDbContext context,
     UserManager<ApplicationUser> userManager,
     RoleManager<IdentityRole> roleManager,
-    IEmailConfirmationService emailConfirmationService) : ICompanyRegistrationService
+    IEmailConfirmationService emailConfirmationService,
+    IPlatformNotificationWriter platformNotificationWriter) : ICompanyRegistrationService
 {
     private const int MaximumSlugLength = 80;
 
@@ -86,6 +89,20 @@ public class CompanyRegistrationService(
             await emailConfirmationService.SendConfirmationEmailAsync(
                 adminUser.Id,
                 companyName,
+                cancellationToken);
+
+            await platformNotificationWriter.WriteAsync(
+                new CreatePlatformNotificationRequest
+                {
+                    Title = "Nueva empresa registrada",
+                    Message = $"La empresa {company.Name} completó su registro en LOGENT.",
+                    Type = PlatformNotificationType.CompanyRegistered,
+                    Severity = PlatformNotificationSeverity.Info,
+                    CompanyId = company.Id,
+                    RelatedEntityName = nameof(Company),
+                    RelatedEntityId = company.Id.ToString(),
+                    ActionUrl = $"/platform/companies/{company.Id}"
+                },
                 cancellationToken);
 
             await transaction.CommitAsync(cancellationToken);

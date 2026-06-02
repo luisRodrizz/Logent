@@ -1,4 +1,4 @@
-import { Activity, ArrowUpCircle, BarChart3, Building2, LayoutDashboard, LogOut, Menu, ShieldCheck, X } from 'lucide-react'
+import { Activity, ArrowUpCircle, BarChart3, Bell, Building2, LayoutDashboard, LogOut, Menu, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import logentLogo from '../../assets/brand/logent-logo.png'
@@ -6,6 +6,7 @@ import { Button } from '../../components/ui/Button'
 import { cn } from '../../lib/utils'
 import { useAuth } from '../auth/useAuth'
 import { usePlatformDashboardSummary } from './platform-dashboard.queries'
+import { usePlatformNotificationUnreadCount } from './platform-notifications.queries'
 
 const platformNavigation = [
   {
@@ -33,14 +34,21 @@ const platformNavigation = [
     icon: Activity,
     label: 'Actividad',
   },
+  {
+    href: '/platform/notifications',
+    icon: Bell,
+    label: 'Notificaciones',
+  },
 ]
 
 function PlatformNavigation({
   onNavigate,
   pendingUpgradeRequests,
+  unreadNotifications,
 }: {
   onNavigate?: () => void
   pendingUpgradeRequests?: number
+  unreadNotifications?: number
 }) {
   return (
     <nav className="space-y-1" aria-label="Navegación de plataforma">
@@ -69,6 +77,11 @@ function PlatformNavigation({
                 {pendingUpgradeRequests}
               </span>
             ) : null}
+            {item.href === '/platform/notifications' && unreadNotifications ? (
+              <span className="inline-flex min-w-5 items-center justify-center rounded-full bg-[#1017D8]/5 px-1.5 py-0.5 text-[10px] font-semibold text-primary ring-1 ring-inset ring-[#1017D8]/15">
+                {unreadNotifications}
+              </span>
+            ) : null}
           </NavLink>
         )
       })}
@@ -79,9 +92,11 @@ function PlatformNavigation({
 function PlatformSidebar({
   onNavigate,
   pendingUpgradeRequests,
+  unreadNotifications,
 }: {
   onNavigate?: () => void
   pendingUpgradeRequests?: number
+  unreadNotifications?: number
 }) {
   return (
     <div className="flex h-full flex-col border-r border-slate-200 bg-white">
@@ -97,7 +112,11 @@ function PlatformSidebar({
         <p className="mb-2 px-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-400">
           Administración global
         </p>
-        <PlatformNavigation onNavigate={onNavigate} pendingUpgradeRequests={pendingUpgradeRequests} />
+        <PlatformNavigation
+          onNavigate={onNavigate}
+          pendingUpgradeRequests={pendingUpgradeRequests}
+          unreadNotifications={unreadNotifications}
+        />
       </div>
 
       <div className="border-t border-slate-200 px-6 py-4">
@@ -112,6 +131,7 @@ export function PlatformLayout() {
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false)
   const { logout, user } = useAuth()
   const dashboardSummaryQuery = usePlatformDashboardSummary()
+  const unreadNotificationsQuery = usePlatformNotificationUnreadCount()
   const location = useLocation()
   const navigate = useNavigate()
   const pageTitle = location.pathname === '/platform'
@@ -120,6 +140,8 @@ export function PlatformLayout() {
       ? 'Analítica de plataforma'
     : location.pathname === '/platform/activity'
       ? 'Actividad de plataforma'
+    : location.pathname === '/platform/notifications'
+      ? 'Notificaciones'
     : location.pathname.includes('/upgrade-requests/')
     ? 'Detalle de solicitud'
     : location.pathname === '/platform/upgrade-requests'
@@ -136,7 +158,10 @@ export function PlatformLayout() {
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 lg:block">
-        <PlatformSidebar pendingUpgradeRequests={dashboardSummaryQuery.data?.pendingUpgradeRequests} />
+        <PlatformSidebar
+          pendingUpgradeRequests={dashboardSummaryQuery.data?.pendingUpgradeRequests}
+          unreadNotifications={unreadNotificationsQuery.data?.count}
+        />
       </aside>
 
       {isMobileNavigationOpen ? (
@@ -159,6 +184,7 @@ export function PlatformLayout() {
             <PlatformSidebar
               onNavigate={() => setIsMobileNavigationOpen(false)}
               pendingUpgradeRequests={dashboardSummaryQuery.data?.pendingUpgradeRequests}
+              unreadNotifications={unreadNotificationsQuery.data?.count}
             />
           </aside>
         </div>

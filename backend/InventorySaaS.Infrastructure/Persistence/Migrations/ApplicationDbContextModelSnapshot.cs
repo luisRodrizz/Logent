@@ -340,6 +340,61 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.ToTable("PlanUpgradeRequests", (string)null);
                 });
 
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.PlatformNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActionUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid?>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RelatedEntityId")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("RelatedEntityName")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<int>("Severity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("IsRead", "CreatedAt");
+
+                    b.ToTable("PlatformNotifications", (string)null);
+                });
+
             modelBuilder.Entity("InventorySaaS.Domain.Entities.Product", b =>
                 {
                     b.Property<Guid>("Id")
@@ -847,6 +902,16 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.PlatformNotification", b =>
+                {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("PlatformNotifications")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("InventorySaaS.Domain.Entities.Product", b =>
                 {
                     b.HasOne("InventorySaaS.Domain.Entities.Category", "Category")
@@ -995,6 +1060,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.Navigation("Movements");
 
                     b.Navigation("PlanUpgradeRequests");
+
+                    b.Navigation("PlatformNotifications");
 
                     b.Navigation("Products");
 

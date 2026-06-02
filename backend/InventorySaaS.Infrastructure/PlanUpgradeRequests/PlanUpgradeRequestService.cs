@@ -3,6 +3,8 @@ using InventorySaaS.Application.Common.DTOs;
 using InventorySaaS.Application.Common.Exceptions;
 using InventorySaaS.Application.PlanUpgradeRequests.DTOs;
 using InventorySaaS.Application.PlanUpgradeRequests.Interfaces;
+using InventorySaaS.Application.Platform.Notifications.DTOs;
+using InventorySaaS.Application.Platform.Notifications.Interfaces;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Common.Extensions;
@@ -13,7 +15,8 @@ namespace InventorySaaS.Infrastructure.PlanUpgradeRequests;
 
 public class PlanUpgradeRequestService(
     ApplicationDbContext context,
-    IAuditLogWriter auditLogWriter) : IPlanUpgradeRequestService
+    IAuditLogWriter auditLogWriter,
+    IPlatformNotificationWriter platformNotificationWriter) : IPlanUpgradeRequestService
 {
     public async Task<PlanUpgradeRequestResponse> CreateTenantRequestAsync(
         Guid companyId,
@@ -82,6 +85,20 @@ public class PlanUpgradeRequestService(
             $"Plan upgrade requested: {company.Plan} -> {upgradeRequest.RequestedPlan}.",
             cancellationToken,
             companyId);
+
+        await platformNotificationWriter.WriteAsync(
+            new CreatePlatformNotificationRequest
+            {
+                Title = "Nueva solicitud de actualización",
+                Message = $"La empresa {company.Name} solicitó cambiar de {company.Plan} a {upgradeRequest.RequestedPlan}.",
+                Type = PlatformNotificationType.UpgradeRequestCreated,
+                Severity = PlatformNotificationSeverity.Warning,
+                CompanyId = company.Id,
+                RelatedEntityName = nameof(PlanUpgradeRequest),
+                RelatedEntityId = upgradeRequest.Id.ToString(),
+                ActionUrl = $"/platform/upgrade-requests/{upgradeRequest.Id}"
+            },
+            cancellationToken);
 
         return MapTenantResponse(upgradeRequest);
     }
@@ -249,6 +266,26 @@ public class PlanUpgradeRequestService(
             $"Plan upgrade request {resolution.ToString().ToLowerInvariant()}: {upgradeRequest.CurrentPlan} -> {upgradeRequest.RequestedPlan}.",
             cancellationToken,
             upgradeRequest.CompanyId);
+
+        await platformNotificationWriter.WriteAsync(
+            new CreatePlatformNotificationRequest
+            {
+                Title = resolution == PlanUpgradeRequestStatus.Approved
+                    ? "Solicitud de actualización aprobada"
+                    : "Solicitud de actualización rechazada",
+                Message = $"La solicitud de {upgradeRequest.Company.Name} para cambiar de {upgradeRequest.CurrentPlan} a {upgradeRequest.RequestedPlan} fue {(resolution == PlanUpgradeRequestStatus.Approved ? "aprobada" : "rechazada")}.",
+                Type = resolution == PlanUpgradeRequestStatus.Approved
+                    ? PlatformNotificationType.UpgradeRequestApproved
+                    : PlatformNotificationType.UpgradeRequestRejected,
+                Severity = resolution == PlanUpgradeRequestStatus.Approved
+                    ? PlatformNotificationSeverity.Success
+                    : PlatformNotificationSeverity.Info,
+                CompanyId = upgradeRequest.CompanyId,
+                RelatedEntityName = nameof(PlanUpgradeRequest),
+                RelatedEntityId = upgradeRequest.Id.ToString(),
+                ActionUrl = $"/platform/upgrade-requests/{upgradeRequest.Id}"
+            },
+            cancellationToken);
 
         return true;
     }

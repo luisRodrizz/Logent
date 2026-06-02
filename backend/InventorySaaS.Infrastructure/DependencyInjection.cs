@@ -10,6 +10,7 @@ using InventorySaaS.Application.Platform.Activity.Interfaces;
 using InventorySaaS.Application.Platform.Analytics.Interfaces;
 using InventorySaaS.Application.Platform.Companies.Interfaces;
 using InventorySaaS.Application.Platform.Dashboard.Interfaces;
+using InventorySaaS.Application.Platform.Notifications.Interfaces;
 using InventorySaaS.Application.Products.Interfaces;
 using InventorySaaS.Application.Profile.Interfaces;
 using InventorySaaS.Application.Reports.Interfaces;
@@ -30,6 +31,7 @@ using InventorySaaS.Infrastructure.Platform.Activity;
 using InventorySaaS.Infrastructure.Platform.Analytics;
 using InventorySaaS.Infrastructure.Platform.Companies;
 using InventorySaaS.Infrastructure.Platform.Dashboard;
+using InventorySaaS.Infrastructure.Platform.Notifications;
 using InventorySaaS.Infrastructure.Persistence;
 using InventorySaaS.Infrastructure.PlanLimits;
 using InventorySaaS.Infrastructure.Products;
@@ -90,6 +92,11 @@ public static class DependencyInjection
         services.AddScoped<IPlatformAnalyticsService, PlatformAnalyticsService>();
         services.AddScoped<IPlatformCompanyService, PlatformCompanyService>();
         services.AddScoped<IPlatformDashboardService, PlatformDashboardService>();
+        services.AddScoped<PlatformNotificationService>();
+        services.AddScoped<IPlatformNotificationService>(
+            serviceProvider => serviceProvider.GetRequiredService<PlatformNotificationService>());
+        services.AddScoped<IPlatformNotificationWriter>(
+            serviceProvider => serviceProvider.GetRequiredService<PlatformNotificationService>());
         services.AddScoped<IPlanLimitService, PlanLimitService>();
         services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
 
