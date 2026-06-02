@@ -1,4 +1,4 @@
-import { ArrowUpCircle, BarChart3, Building2, LayoutDashboard, LogOut, Menu, ShieldCheck, X } from 'lucide-react'
+import { Activity, ArrowUpCircle, BarChart3, Building2, LayoutDashboard, LogOut, Menu, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import logentLogo from '../../assets/brand/logent-logo.png'
@@ -27,6 +27,11 @@ const platformNavigation = [
     href: '/platform/analytics',
     icon: BarChart3,
     label: 'Analítica',
+  },
+  {
+    href: '/platform/activity',
+    icon: Activity,
+    label: 'Actividad',
   },
 ]
 
@@ -113,6 +118,8 @@ export function PlatformLayout() {
     ? 'Dashboard'
     : location.pathname === '/platform/analytics'
       ? 'Analítica de plataforma'
+    : location.pathname === '/platform/activity'
+      ? 'Actividad de plataforma'
     : location.pathname.includes('/upgrade-requests/')
     ? 'Detalle de solicitud'
     : location.pathname === '/platform/upgrade-requests'

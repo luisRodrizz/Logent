@@ -45,6 +45,9 @@ const ProductsPage = lazy(() =>
 const PlatformCompaniesPage = lazy(() =>
   import('../features/platform/PlatformCompaniesPage').then((module) => ({ default: module.PlatformCompaniesPage })),
 )
+const PlatformActivityPage = lazy(() =>
+  import('../features/platform/PlatformActivityPage').then((module) => ({ default: module.PlatformActivityPage })),
+)
 const PlatformAnalyticsPage = lazy(() =>
   import('../features/platform/PlatformAnalyticsPage').then((module) => ({ default: module.PlatformAnalyticsPage })),
 )
@@ -197,6 +200,7 @@ export function AppRouter() {
           </Route>
           <Route path="/platform" element={protectedRoute(<PlatformLayout />, ['SuperAdmin'])}>
             <Route index element={lazyRoute(<PlatformDashboardPage />)} />
+            <Route path="activity" element={lazyRoute(<PlatformActivityPage />)} />
             <Route path="analytics" element={lazyRoute(<PlatformAnalyticsPage />)} />
             <Route path="companies" element={lazyRoute(<PlatformCompaniesPage />)} />
             <Route path="companies/:id" element={lazyRoute(<PlatformCompanyDetailPage />)} />
