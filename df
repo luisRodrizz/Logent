@@ -1,0 +1,17 @@
+warning: in the working copy of 'backend/InventorySaaS.WebApi/appsettings.Development.json', LF will be replaced by CRLF the next time Git touches it
+[1mdiff --git a/backend/InventorySaaS.WebApi/appsettings.Development.json b/backend/InventorySaaS.WebApi/appsettings.Development.json[m
+[1mindex 142796c..7d319cc 100644[m
+[1m--- a/backend/InventorySaaS.WebApi/appsettings.Development.json[m
+[1m+++ b/backend/InventorySaaS.WebApi/appsettings.Development.json[m
+[36m@@ -8,6 +8,11 @@[m
+     "FromName": "LOGENT",[m
+     "EnableSsl": false[m
+   },[m
+[32m+[m[32m  "Cloudinary": {[m
+[32m+[m[32m    "CloudName": "",[m
+[32m+[m[32m    "ApiKey": "",[m
+[32m+[m[32m    "ApiSecret": ""[m
+[32m+[m[32m  },[m
+   "AppUrls": {[m
+     "BackendBaseUrl": "http://localhost:5088",[m
+     "FrontendBaseUrl": "http://localhost:5173"[m

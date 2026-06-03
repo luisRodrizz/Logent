@@ -1,6 +1,17 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Building2, CheckCircle2, Globe, Image, Mail, MapPin, Phone, ShieldCheck } from 'lucide-react'
-import { useEffect } from 'react'
+import {
+  Building2,
+  CheckCircle2,
+  Globe,
+  Image,
+  Mail,
+  MapPin,
+  Phone,
+  ShieldCheck,
+  Trash2,
+  Upload,
+} from 'lucide-react'
+import { useEffect, useRef, type ChangeEvent } from 'react'
 import { useForm } from 'react-hook-form'
 import { toast } from 'sonner'
 import { z } from 'zod'
@@ -13,8 +24,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { useAuth } from '../auth/useAuth'
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatDate } from '../../lib/format'
-import { useTenantCompanySettings, useUpdateTenantCompanySettings } from './company-settings.queries'
+import {
+  useDeleteCompanyLogo,
+  useTenantCompanySettings,
+  useUpdateTenantCompanySettings,
+  useUploadCompanyLogo,
+} from './company-settings.queries'
 import type { TenantCompanySettings, UpdateTenantCompanySettingsPayload } from './company-settings.types'
+
+const allowedLogoFileTypes = ['image/jpeg', 'image/png', 'image/webp']
+const maxLogoFileSize = 2 * 1024 * 1024
 
 const urlField = z
   .string()
@@ -103,8 +122,11 @@ function FieldError({ message }: { message?: string }) {
 export function TenantCompanySettingsPage() {
   const { user } = useAuth()
   const canEdit = user?.roles.includes('Admin') ?? false
+  const logoInputRef = useRef<HTMLInputElement | null>(null)
   const companySettingsQuery = useTenantCompanySettings()
   const updateCompanySettingsMutation = useUpdateTenantCompanySettings()
+  const uploadCompanyLogoMutation = useUploadCompanyLogo()
+  const deleteCompanyLogoMutation = useDeleteCompanyLogo()
   const {
     formState: { errors, isDirty },
     handleSubmit,
@@ -136,6 +158,57 @@ export function TenantCompanySettingsPage() {
     }
   }
 
+  function handleOpenLogoPicker() {
+    if (!canEdit) {
+      toast.info('Solo los administradores pueden actualizar el logo de la empresa.')
+      return
+    }
+
+    logoInputRef.current?.click()
+  }
+
+  async function handleLogoFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+
+    if (!file) {
+      return
+    }
+
+    if (!allowedLogoFileTypes.includes(file.type)) {
+      toast.error('El logo debe ser JPG, PNG o WebP.')
+      return
+    }
+
+    if (file.size > maxLogoFileSize) {
+      toast.error('El logo no debe superar 2 MB.')
+      return
+    }
+
+    try {
+      const updatedCompany = await uploadCompanyLogoMutation.mutateAsync(file)
+      reset(toFormValues(updatedCompany))
+      toast.success('Logo actualizado correctamente.')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo subir el logo de la empresa.'))
+    }
+  }
+
+  async function handleDeleteLogo() {
+    if (!canEdit) {
+      toast.info('Solo los administradores pueden actualizar el logo de la empresa.')
+      return
+    }
+
+    try {
+      const updatedCompany = await deleteCompanyLogoMutation.mutateAsync()
+      reset(toFormValues(updatedCompany))
+      toast.success('Logo eliminado correctamente.')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo quitar el logo de la empresa.'))
+    }
+  }
+
   if (companySettingsQuery.isLoading) {
     return (
       <Card>
@@ -160,6 +233,7 @@ export function TenantCompanySettingsPage() {
 
   const company = companySettingsQuery.data
   const isSubmitting = updateCompanySettingsMutation.isPending
+  const isLogoSubmitting = uploadCompanyLogoMutation.isPending || deleteCompanyLogoMutation.isPending
 
   return (
     <div className="space-y-6">
@@ -216,6 +290,69 @@ export function TenantCompanySettingsPage() {
           <p className="font-medium">Solo los administradores pueden actualizar los datos de la empresa.</p>
         </div>
       ) : null}
+
+      <Card>
+        <CardHeader className="gap-4 sm:flex sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+          <div>
+            <CardTitle>Logo de empresa</CardTitle>
+            <CardDescription>
+              Usa una imagen clara para identificar tu organizacion en LOGENT.
+            </CardDescription>
+          </div>
+          <input
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={handleLogoFileChange}
+            ref={logoInputRef}
+            type="file"
+          />
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex items-center gap-4">
+              <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-slate-50 text-muted">
+                {company.logoUrl ? (
+                  <img
+                    alt={`Logo de ${getDisplayName(company)}`}
+                    className="h-full w-full object-contain p-2"
+                    src={company.logoUrl}
+                  />
+                ) : (
+                  <Image className="h-7 w-7" />
+                )}
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-foreground">
+                  {company.logoUrl ? 'Logo configurado' : 'Sin logo configurado'}
+                </p>
+                <p className="mt-1 max-w-xl text-sm leading-6 text-muted">
+                  Formatos permitidos: JPG, PNG o WebP. Maximo 2 MB.
+                </p>
+              </div>
+            </div>
+
+            {canEdit ? (
+              <div className="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <Button disabled={isLogoSubmitting} onClick={handleOpenLogoPicker} variant="secondary">
+                  <Upload className="h-4 w-4" />
+                  {uploadCompanyLogoMutation.isPending ? 'Subiendo...' : 'Subir logo'}
+                </Button>
+                {company.logoUrl ? (
+                  <Button
+                    className="border-red-200 bg-red-50 text-red-700 hover:bg-red-100"
+                    disabled={isLogoSubmitting}
+                    onClick={handleDeleteLogo}
+                    variant="secondary"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                    {deleteCompanyLogoMutation.isPending ? 'Quitando...' : 'Quitar logo'}
+                  </Button>
+                ) : null}
+              </div>
+            ) : null}
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -325,7 +462,9 @@ export function TenantCompanySettingsPage() {
                   />
                 </div>
                 <FieldError message={errors.logoUrl?.message} />
-                <p className="text-xs text-muted">Debe ser una URL publica http o https. No se suben archivos en esta fase.</p>
+                <p className="text-xs text-muted">
+                  Puede completarse manualmente o actualizarse automaticamente al subir un archivo.
+                </p>
               </div>
             </div>
 

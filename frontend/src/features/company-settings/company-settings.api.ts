@@ -14,3 +14,22 @@ export async function updateTenantCompanySettings(
 
   return response.data
 }
+
+export async function uploadCompanyLogo(file: File): Promise<TenantCompanySettings> {
+  const formData = new FormData()
+  formData.append('file', file)
+
+  const response = await api.post<TenantCompanySettings>('/company/settings/logo', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  })
+
+  return response.data
+}
+
+export async function deleteCompanyLogo(): Promise<TenantCompanySettings> {
+  const response = await api.delete<TenantCompanySettings>('/company/settings/logo')
+
+  return response.data
+}

@@ -22,6 +22,7 @@ using InventorySaaS.Application.Warehouses.Interfaces;
 using InventorySaaS.Infrastructure.Authentication;
 using InventorySaaS.Infrastructure.AuditLogs;
 using InventorySaaS.Infrastructure.Categories;
+using InventorySaaS.Infrastructure.Cloudinary;
 using InventorySaaS.Infrastructure.Dashboard;
 using InventorySaaS.Infrastructure.Email;
 using InventorySaaS.Infrastructure.Identity;
@@ -102,6 +103,7 @@ public static class DependencyInjection
             serviceProvider => serviceProvider.GetRequiredService<PlatformNotificationService>());
         services.AddScoped<IPlanLimitService, PlanLimitService>();
         services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
+        services.AddHttpClient<IImageStorageService, CloudinaryImageService>();
 
         // Authentication / audit helpers
         services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
@@ -110,6 +112,7 @@ public static class DependencyInjection
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuditLogWriter, AuditLogWriter>();
         services.Configure<AppUrlSettings>(configuration.GetSection(AppUrlSettings.SectionName));
+        services.Configure<CloudinarySettings>(configuration.GetSection(CloudinarySettings.SectionName));
         services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
 

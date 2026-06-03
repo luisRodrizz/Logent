@@ -1,5 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getTenantCompanySettings, updateTenantCompanySettings } from './company-settings.api'
+import {
+  deleteCompanyLogo,
+  getTenantCompanySettings,
+  updateTenantCompanySettings,
+  uploadCompanyLogo,
+} from './company-settings.api'
 import type { UpdateTenantCompanySettingsPayload } from './company-settings.types'
 
 export const tenantCompanySettingsQueryKeys = {
@@ -18,6 +23,28 @@ export function useUpdateTenantCompanySettings() {
 
   return useMutation({
     mutationFn: (payload: UpdateTenantCompanySettingsPayload) => updateTenantCompanySettings(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: tenantCompanySettingsQueryKeys.current })
+    },
+  })
+}
+
+export function useUploadCompanyLogo() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (file: File) => uploadCompanyLogo(file),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: tenantCompanySettingsQueryKeys.current })
+    },
+  })
+}
+
+export function useDeleteCompanyLogo() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: deleteCompanyLogo,
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: tenantCompanySettingsQueryKeys.current })
     },
