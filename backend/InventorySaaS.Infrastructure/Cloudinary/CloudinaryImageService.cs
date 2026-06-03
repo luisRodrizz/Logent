@@ -1,24 +1,22 @@
-using System.Globalization;
-using System.Net.Http.Headers;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using InventorySaaS.Application.Common.DTOs;
+using CloudinaryDotNet;
+using CloudinaryDotNet.Actions;
 using InventorySaaS.Application.Common.Exceptions;
 using InventorySaaS.Application.Common.Interfaces;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using StorageImageUploadResult = InventorySaaS.Application.Common.DTOs.ImageUploadResult;
 
 namespace InventorySaaS.Infrastructure.Cloudinary;
 
-public class CloudinaryImageService(HttpClient httpClient, IOptions<CloudinarySettings> options) : IImageStorageService
+public class CloudinaryImageService(
+    IOptions<CloudinarySettings> options,
+    ILogger<CloudinaryImageService> logger) : IImageStorageService
 {
     private const string CompanyLogoPublicId = "company-logo";
-    private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
 
     private readonly CloudinarySettings settings = options.Value;
 
-    public async Task<ImageUploadResult> UploadCompanyLogoAsync(
+    public async Task<StorageImageUploadResult> UploadCompanyLogoAsync(
         Guid companyId,
         Stream fileStream,
         string fileName,
@@ -27,39 +25,42 @@ public class CloudinaryImageService(HttpClient httpClient, IOptions<CloudinarySe
     {
         EnsureConfigured();
 
-        var folder = GetCompanyLogoFolder(companyId);
-        var timestamp = GetTimestamp();
-        var signatureParameters = new SortedDictionary<string, string>(StringComparer.Ordinal)
+        var publicId = GetCompanyLogoPublicId(companyId);
+        var cloudinary = CreateCloudinary();
+
+        logger.LogInformation(
+            "Cloudinary SDK upload prepared. CloudName: {CloudName}. ApiKeyConfigured: {ApiKeyConfigured}. ApiSecretConfigured: {ApiSecretConfigured}. PublicId: {PublicId}. ContentType: {ContentType}",
+            settings.CloudName,
+            !string.IsNullOrWhiteSpace(settings.ApiKey),
+            !string.IsNullOrWhiteSpace(settings.ApiSecret),
+            publicId,
+            contentType);
+
+        var uploadParams = new ImageUploadParams
         {
-            ["folder"] = folder,
-            ["overwrite"] = "true",
-            ["public_id"] = CompanyLogoPublicId,
-            ["timestamp"] = timestamp
+            File = new FileDescription(fileName, fileStream),
+            PublicId = publicId,
+            Overwrite = true,
+            UseFilename = false,
+            UniqueFilename = false
         };
 
-        using var content = new MultipartFormDataContent();
-        var fileContent = new StreamContent(fileStream);
-        fileContent.Headers.ContentType = new MediaTypeHeaderValue(contentType);
+        var uploadResult = await cloudinary.UploadAsync(uploadParams, cancellationToken);
 
-        content.Add(fileContent, "file", fileName);
-        AddParameters(content, signatureParameters);
-        content.Add(new StringContent(settings.ApiKey), "api_key");
-        content.Add(new StringContent(CreateSignature(signatureParameters)), "signature");
-
-        using var response = await httpClient.PostAsync(GetUploadUrl(), content, cancellationToken);
-        var body = await response.Content.ReadAsStringAsync(cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
+        if (uploadResult.Error is not null)
         {
+            logger.LogWarning(
+                "Cloudinary SDK upload failed. PublicId: {PublicId}. Error: {CloudinaryError}",
+                publicId,
+                uploadResult.Error.Message);
+
             throw new ApiException(
                 502,
                 "Could not upload company logo.",
-                "Cloudinary did not accept the image upload request.");
+                uploadResult.Error.Message);
         }
 
-        var result = JsonSerializer.Deserialize<CloudinaryUploadResponse>(body, JsonOptions);
-
-        if (string.IsNullOrWhiteSpace(result?.SecureUrl))
+        if (uploadResult.SecureUrl is null || string.IsNullOrWhiteSpace(uploadResult.SecureUrl.ToString()))
         {
             throw new ApiException(
                 502,
@@ -67,10 +68,15 @@ public class CloudinaryImageService(HttpClient httpClient, IOptions<CloudinarySe
                 "Cloudinary did not return a secure image URL.");
         }
 
-        return new ImageUploadResult
+        logger.LogInformation(
+            "Cloudinary SDK upload succeeded. PublicId: {PublicId}. ResultPublicId: {ResultPublicId}",
+            publicId,
+            uploadResult.PublicId);
+
+        return new StorageImageUploadResult
         {
-            PublicId = result.PublicId ?? GetCompanyLogoPublicId(companyId),
-            Url = result.SecureUrl
+            PublicId = uploadResult.PublicId ?? publicId,
+            Url = uploadResult.SecureUrl.ToString()
         };
     }
 
@@ -81,42 +87,26 @@ public class CloudinaryImageService(HttpClient httpClient, IOptions<CloudinarySe
             return;
         }
 
-        var timestamp = GetTimestamp();
-        var signatureParameters = new SortedDictionary<string, string>(StringComparer.Ordinal)
+        var publicId = GetCompanyLogoPublicId(companyId);
+        var cloudinary = CreateCloudinary();
+        var deleteParams = new DeletionParams(publicId)
         {
-            ["invalidate"] = "true",
-            ["public_id"] = GetCompanyLogoPublicId(companyId),
-            ["timestamp"] = timestamp
+            ResourceType = ResourceType.Image
         };
 
-        using var content = new MultipartFormDataContent();
-        AddParameters(content, signatureParameters);
-        content.Add(new StringContent(settings.ApiKey), "api_key");
-        content.Add(new StringContent(CreateSignature(signatureParameters)), "signature");
+        var deleteResult = await cloudinary.DestroyAsync(deleteParams);
 
-        using var response = await httpClient.PostAsync(GetDestroyUrl(), content, cancellationToken);
-
-        if (!response.IsSuccessStatusCode)
-        {
-            return;
-        }
+        logger.LogInformation(
+            "Cloudinary SDK delete completed. PublicId: {PublicId}. Result: {Result}",
+            publicId,
+            deleteResult.Result);
     }
 
-    private static void AddParameters(MultipartFormDataContent content, IReadOnlyDictionary<string, string> parameters)
+    private CloudinaryDotNet.Cloudinary CreateCloudinary()
     {
-        foreach (var parameter in parameters)
-        {
-            content.Add(new StringContent(parameter.Value), parameter.Key);
-        }
-    }
+        var account = new Account(settings.CloudName, settings.ApiKey, settings.ApiSecret);
 
-    private string CreateSignature(IReadOnlyDictionary<string, string> parameters)
-    {
-        var payload = string.Join("&", parameters.Select(parameter => $"{parameter.Key}={parameter.Value}"))
-            + settings.ApiSecret;
-        var hash = SHA1.HashData(Encoding.UTF8.GetBytes(payload));
-
-        return Convert.ToHexString(hash).ToLowerInvariant();
+        return new CloudinaryDotNet.Cloudinary(account);
     }
 
     private void EnsureConfigured()
@@ -128,41 +118,12 @@ public class CloudinaryImageService(HttpClient httpClient, IOptions<CloudinarySe
 
         throw new ApiException(
             500,
-            "Cloudinary is not configured.",
+            "Cloudinary configuration is missing.",
             "Configure Cloudinary:CloudName, Cloudinary:ApiKey and Cloudinary:ApiSecret.");
-    }
-
-    private static string GetCompanyLogoFolder(Guid companyId)
-    {
-        return $"logent/companies/{companyId}/logo";
     }
 
     private static string GetCompanyLogoPublicId(Guid companyId)
     {
-        return $"{GetCompanyLogoFolder(companyId)}/{CompanyLogoPublicId}";
-    }
-
-    private string GetUploadUrl()
-    {
-        return $"https://api.cloudinary.com/v1_1/{settings.CloudName}/image/upload";
-    }
-
-    private string GetDestroyUrl()
-    {
-        return $"https://api.cloudinary.com/v1_1/{settings.CloudName}/image/destroy";
-    }
-
-    private static string GetTimestamp()
-    {
-        return DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(CultureInfo.InvariantCulture);
-    }
-
-    private sealed class CloudinaryUploadResponse
-    {
-        [JsonPropertyName("public_id")]
-        public string? PublicId { get; set; }
-
-        [JsonPropertyName("secure_url")]
-        public string? SecureUrl { get; set; }
+        return $"logent/companies/{companyId}/logo/{CompanyLogoPublicId}";
     }
 }

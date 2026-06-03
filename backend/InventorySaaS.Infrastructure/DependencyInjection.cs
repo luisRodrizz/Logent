@@ -103,7 +103,7 @@ public static class DependencyInjection
             serviceProvider => serviceProvider.GetRequiredService<PlatformNotificationService>());
         services.AddScoped<IPlanLimitService, PlanLimitService>();
         services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
-        services.AddHttpClient<IImageStorageService, CloudinaryImageService>();
+        services.AddScoped<IImageStorageService, CloudinaryImageService>();
 
         // Authentication / audit helpers
         services.AddScoped<ICompanyRegistrationService, CompanyRegistrationService>();
