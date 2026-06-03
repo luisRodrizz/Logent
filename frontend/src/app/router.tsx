@@ -17,6 +17,11 @@ const CategoriesPage = lazy(() =>
 const ConfirmEmailPage = lazy(() =>
   import('../features/auth/ConfirmEmailPage').then((module) => ({ default: module.ConfirmEmailPage })),
 )
+const TenantCompanySettingsPage = lazy(() =>
+  import('../features/company-settings/TenantCompanySettingsPage').then((module) => ({
+    default: module.TenantCompanySettingsPage,
+  })),
+)
 const DashboardPage = lazy(() =>
   import('../features/dashboard/DashboardPage').then((module) => ({ default: module.DashboardPage })),
 )
@@ -198,6 +203,10 @@ export function AppRouter() {
             <Route path="/movements" element={protectedRoute(<MovementsPage />, routeRoles.movements)} />
             <Route path="/kardex" element={protectedRoute(<KardexPage />, routeRoles.kardex)} />
             <Route path="/reports" element={protectedRoute(<ReportsPage />, routeRoles.reports)} />
+            <Route
+              path="/settings/company"
+              element={protectedRoute(<TenantCompanySettingsPage />, routeRoles.companySettings)}
+            />
             <Route path="/plan" element={protectedRoute(<PlanPage />, routeRoles.plan)} />
             <Route path="/profile" element={lazyRoute(<ProfilePage />)} />
             <Route path="/admin/users" element={protectedRoute(<UsersPage />, routeRoles.users)} />

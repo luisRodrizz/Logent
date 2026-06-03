@@ -21,5 +21,6 @@ public enum AuditAction
     PlatformCompanyPlanChanged,
     PlanUpgradeRequested,
     PlanUpgradeApproved,
-    PlanUpgradeRejected
+    PlanUpgradeRejected,
+    CompanyProfileUpdated
 }

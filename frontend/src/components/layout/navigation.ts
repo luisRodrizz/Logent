@@ -2,6 +2,7 @@ import {
   ArrowRightLeft,
   BarChart3,
   Boxes,
+  Building2,
   ClipboardList,
   CreditCard,
   LayoutDashboard,
@@ -33,6 +34,7 @@ export const routeRoles = {
   auditLogs: ['Admin'],
   categories: ['Admin'],
   dashboard: ['Admin', 'Almacenero', 'Consulta'],
+  companySettings: ['Admin', 'Almacenero', 'Consulta'],
   kardex: ['Admin', 'Almacenero', 'Consulta'],
   movements: ['Admin', 'Almacenero'],
   plan: ['Admin', 'Almacenero', 'Consulta'],
@@ -150,6 +152,13 @@ export const navigationGroups: NavigationGroup[] = [
   {
     label: 'Cuenta',
     items: [
+      {
+        allowedRoles: routeRoles.companySettings,
+        description: 'Datos de la organización',
+        href: '/settings/company',
+        icon: Building2,
+        label: 'Empresa',
+      },
       {
         allowedRoles: routeRoles.plan,
         description: 'Capacidad y plan actual',

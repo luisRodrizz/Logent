@@ -26,11 +26,23 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Property(company => company.Email)
             .HasMaxLength(160);
 
+        builder.Property(company => company.CommercialName)
+            .HasMaxLength(150);
+
         builder.Property(company => company.Phone)
             .HasMaxLength(30);
 
         builder.Property(company => company.Address)
             .HasMaxLength(250);
+
+        builder.Property(company => company.ContactEmail)
+            .HasMaxLength(150);
+
+        builder.Property(company => company.Website)
+            .HasMaxLength(200);
+
+        builder.Property(company => company.LogoUrl)
+            .HasMaxLength(500);
 
         builder.Property(company => company.Plan)
             .IsRequired();
