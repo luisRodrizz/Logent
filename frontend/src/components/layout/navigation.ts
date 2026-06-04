@@ -37,6 +37,7 @@ export const routeRoles = {
   companySettings: ['Admin', 'Almacenero', 'Consulta'],
   kardex: ['Admin', 'Almacenero', 'Consulta'],
   movements: ['Admin', 'Almacenero'],
+  notifications: ['Admin', 'Almacenero', 'Consulta'],
   plan: ['Admin', 'Almacenero', 'Consulta'],
   products: ['Admin'],
   reports: ['Admin', 'Almacenero', 'Consulta'],

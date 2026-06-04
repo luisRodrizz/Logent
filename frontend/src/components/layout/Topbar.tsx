@@ -1,6 +1,7 @@
 import { LogOut, Menu, UserRound } from 'lucide-react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../../features/auth/useAuth'
+import { TenantNotificationsPopover } from '../../features/notifications/TenantNotificationsPopover'
 import { Badge } from '../ui/Badge'
 import { Button } from '../ui/Button'
 
@@ -14,6 +15,7 @@ const pageTitles = [
   { match: '/admin/users', subtitle: 'Cuentas y roles internos', title: 'Usuarios' },
   { match: '/settings/company', subtitle: 'Cuenta y organización', title: 'Empresa' },
   { match: '/plan', subtitle: 'Capacidad y plan actual', title: 'Plan y uso' },
+  { match: '/notifications', subtitle: 'Avisos de tu empresa', title: 'Notificaciones' },
   { match: '/profile', subtitle: 'Cuenta y seguridad', title: 'Mi perfil' },
   { match: '/audit-logs', subtitle: 'Administración', title: 'Auditoría' },
   { match: '/categories', subtitle: 'Datos maestros', title: 'Categorías' },
@@ -65,6 +67,7 @@ export function Topbar({ description, onMenuClick, title }: TopbarProps) {
         </div>
 
         <div className="flex shrink-0 items-center gap-3">
+          <TenantNotificationsPopover />
           <div className="hidden items-center gap-1.5 xl:flex">
             {user?.roles.map((role) => (
               <Badge className="bg-slate-50 text-slate-600 ring-slate-200" key={role} variant="muted">

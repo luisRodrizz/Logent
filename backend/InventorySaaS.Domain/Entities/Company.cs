@@ -56,4 +56,6 @@ public class Company : AuditableEntity
     public ICollection<PlatformNotification> PlatformNotifications { get; set; } = new List<PlatformNotification>();
 
     public ICollection<TenantUserInvitation> TenantUserInvitations { get; set; } = new List<TenantUserInvitation>();
+
+    public ICollection<TenantNotification> TenantNotifications { get; set; } = new List<TenantNotification>();
 }

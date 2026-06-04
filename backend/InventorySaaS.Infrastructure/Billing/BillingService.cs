@@ -3,6 +3,8 @@ using InventorySaaS.Application.Billing.DTOs;
 using InventorySaaS.Application.Billing.Interfaces;
 using InventorySaaS.Application.Common.Exceptions;
 using InventorySaaS.Application.Common.Interfaces;
+using InventorySaaS.Application.Notifications.DTOs;
+using InventorySaaS.Application.Notifications.Interfaces;
 using InventorySaaS.Domain.Entities;
 using InventorySaaS.Domain.Enums;
 using InventorySaaS.Infrastructure.Persistence;
@@ -18,6 +20,7 @@ public class BillingService(
     ApplicationDbContext context,
     ICurrentUserContext currentUserContext,
     IAuditLogWriter auditLogWriter,
+    ITenantNotificationWriter tenantNotificationWriter,
     IOptions<StripeSettings> stripeOptions,
     ILogger<BillingService> logger) : IBillingService
 {
@@ -203,37 +206,74 @@ public class BillingService(
             stripeEvent.Id,
             stripeEvent.Type);
 
+        if (await HasProcessedWebhookEventAsync(stripeEvent.Id, cancellationToken))
+        {
+            logger.LogInformation(
+                "Ignoring previously processed Stripe webhook EventId {EventId}, Type {EventType}.",
+                stripeEvent.Id,
+                stripeEvent.Type);
+            return;
+        }
+
         switch (stripeEvent.Type)
         {
             case "checkout.session.completed" when stripeEvent.Data.Object is Session session:
-                await HandleCheckoutCompletedAsync(session, cancellationToken);
+                await HandleCheckoutCompletedAsync(session, stripeEvent.Id, stripeEvent.Type, cancellationToken);
                 break;
             case "customer.subscription.created" when stripeEvent.Data.Object is Subscription createdSubscription:
-                await HandleSubscriptionUpdatedAsync(createdSubscription, cancellationToken);
+                await HandleSubscriptionUpdatedAsync(
+                    createdSubscription,
+                    stripeEvent.Id,
+                    stripeEvent.Type,
+                    cancellationToken);
                 break;
             case "customer.subscription.updated" when stripeEvent.Data.Object is Subscription updatedSubscription:
-                await HandleSubscriptionUpdatedAsync(updatedSubscription, cancellationToken);
+                await HandleSubscriptionUpdatedAsync(
+                    updatedSubscription,
+                    stripeEvent.Id,
+                    stripeEvent.Type,
+                    cancellationToken);
                 break;
             case "customer.subscription.deleted" when stripeEvent.Data.Object is Subscription deletedSubscription:
-                await HandleSubscriptionDeletedAsync(deletedSubscription, cancellationToken);
+                await HandleSubscriptionDeletedAsync(
+                    deletedSubscription,
+                    stripeEvent.Id,
+                    stripeEvent.Type,
+                    cancellationToken);
                 break;
             case "invoice.payment_succeeded" when stripeEvent.Data.Object is Invoice paidInvoice:
-                await HandleInvoiceStatusAsync(paidInvoice.CustomerId, "active", cancellationToken);
+                await HandleInvoiceStatusAsync(
+                    paidInvoice.CustomerId,
+                    "active",
+                    AuditAction.BillingPaymentSucceeded,
+                    stripeEvent.Id,
+                    stripeEvent.Type,
+                    cancellationToken);
                 break;
             case "invoice.payment_failed" when stripeEvent.Data.Object is Invoice failedInvoice:
-                await HandleInvoiceStatusAsync(failedInvoice.CustomerId, "past_due", cancellationToken);
+                await HandleInvoiceStatusAsync(
+                    failedInvoice.CustomerId,
+                    "past_due",
+                    AuditAction.BillingPaymentFailed,
+                    stripeEvent.Id,
+                    stripeEvent.Type,
+                    cancellationToken);
                 break;
         }
     }
 
-    private async Task HandleCheckoutCompletedAsync(Session session, CancellationToken cancellationToken)
+    private async Task HandleCheckoutCompletedAsync(
+        Session session,
+        string eventId,
+        string eventType,
+        CancellationToken cancellationToken)
     {
         var metadata = session.Metadata;
         var companyId = GetCompanyId(metadata);
         var requestedPlan = GetRequestedPaidPlan(metadata);
         var company = await context.Companies.FirstOrDefaultAsync(item => item.Id == companyId, cancellationToken)
             ?? throw new ApiException(404, "Company not found.", "The Stripe Checkout company does not exist.");
-        var previousPlan = company.Plan;
+        var previousState = CaptureBillingState(company);
 
         company.StripeCustomerId = session.CustomerId ?? company.StripeCustomerId;
         company.StripeSubscriptionId = session.SubscriptionId ?? company.StripeSubscriptionId;
@@ -247,25 +287,38 @@ public class BillingService(
             ApplySubscription(company, subscription, requestedPlan);
         }
 
-        await context.SaveChangesAsync(cancellationToken);
+        LogResolvedWebhook(eventType, eventId, company);
+
+        if (previousState != CaptureBillingState(company))
+        {
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
         await WriteAuditAsync(
             company,
             AuditAction.BillingCheckoutCompleted,
             $"Stripe checkout completed for {requestedPlan}.",
+            eventId,
             cancellationToken);
 
-        if (previousPlan != company.Plan)
+        await WriteStatusChangeAuditIfNeededAsync(company, previousState.Status, eventId, cancellationToken);
+
+        if (previousState.Plan != company.Plan)
         {
             await WriteAuditAsync(
                 company,
                 AuditAction.PlanChangedByStripe,
-                $"Plan changed by Stripe: {previousPlan} -> {company.Plan}.",
+                $"Plan changed by Stripe: {previousState.Plan} -> {company.Plan}.",
+                eventId,
                 cancellationToken);
+            await WritePlanChangedNotificationAsync(company, previousState.Plan, cancellationToken);
         }
     }
 
     private async Task HandleSubscriptionUpdatedAsync(
         Subscription subscription,
+        string eventId,
+        string eventType,
         CancellationToken cancellationToken)
     {
         var company = await FindCompanyForSubscriptionAsync(subscription, cancellationToken);
@@ -279,29 +332,67 @@ public class BillingService(
             return;
         }
 
-        var previousPlan = company.Plan;
+        var previousState = CaptureBillingState(company);
         var requestedPlan = GetSubscriptionPlan(subscription);
 
         ApplySubscription(company, subscription, requestedPlan);
-        await context.SaveChangesAsync(cancellationToken);
-        await WriteAuditAsync(
-            company,
-            AuditAction.BillingSubscriptionUpdated,
-            $"Stripe subscription updated with status {subscription.Status}.",
-            cancellationToken);
+        LogResolvedWebhook(eventType, eventId, company);
 
-        if (previousPlan != company.Plan)
+        if (previousState == CaptureBillingState(company))
+        {
+            logger.LogInformation(
+                "Stripe webhook caused no billing state changes for CompanyId {CompanyId}, EventId {EventId}.",
+                company.Id,
+                eventId);
+            return;
+        }
+
+        await context.SaveChangesAsync(cancellationToken);
+        await WriteStatusChangeAuditIfNeededAsync(company, previousState.Status, eventId, cancellationToken);
+
+        if (IsCancelledSubscription(company.StripeSubscriptionStatus)
+            && !IsCancelledSubscription(previousState.Status))
+        {
+            await WriteAuditAsync(
+                company,
+                AuditAction.BillingSubscriptionCancelled,
+                $"Stripe subscription cancelled. Previous plan: {previousState.Plan}.",
+                eventId,
+                cancellationToken);
+            await WriteTenantNotificationAsync(
+                company,
+                TenantNotificationType.BillingSubscriptionCancelled,
+                TenantNotificationSeverity.Warning,
+                "Suscripción cancelada",
+                "La suscripción Stripe fue cancelada. Revisa el plan actual y las opciones disponibles.",
+                cancellationToken);
+        }
+        else if (string.Equals(previousState.Status, company.StripeSubscriptionStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            await WriteAuditAsync(
+                company,
+                AuditAction.BillingSubscriptionUpdated,
+                $"Stripe subscription details updated with status {company.StripeSubscriptionStatus}.",
+                eventId,
+                cancellationToken);
+        }
+
+        if (previousState.Plan != company.Plan)
         {
             await WriteAuditAsync(
                 company,
                 AuditAction.PlanChangedByStripe,
-                $"Plan changed by Stripe: {previousPlan} -> {company.Plan}.",
+                $"Plan changed by Stripe: {previousState.Plan} -> {company.Plan}.",
+                eventId,
                 cancellationToken);
+            await WritePlanChangedNotificationAsync(company, previousState.Plan, cancellationToken);
         }
     }
 
     private async Task HandleSubscriptionDeletedAsync(
         Subscription subscription,
+        string eventId,
+        string eventType,
         CancellationToken cancellationToken)
     {
         var company = await FindCompanyForSubscriptionAsync(subscription, cancellationToken);
@@ -311,33 +402,56 @@ public class BillingService(
             return;
         }
 
-        var previousPlan = company.Plan;
-        company.StripeSubscriptionId = subscription.Id;
-        company.StripeSubscriptionStatus = "cancelled";
-        company.StripeCurrentPeriodEnd = GetCurrentPeriodEnd(subscription);
-        company.Plan = PlanType.Free;
-        company.UpdatedAt = DateTime.UtcNow;
+        var previousState = CaptureBillingState(company);
+        ApplySubscription(company, subscription, GetSubscriptionPlan(subscription), "cancelled");
+        LogResolvedWebhook(eventType, eventId, company);
+
+        if (previousState == CaptureBillingState(company))
+        {
+            logger.LogInformation(
+                "Stripe cancellation webhook caused no billing state changes for CompanyId {CompanyId}, EventId {EventId}.",
+                company.Id,
+                eventId);
+            return;
+        }
 
         await context.SaveChangesAsync(cancellationToken);
-        await WriteAuditAsync(
-            company,
-            AuditAction.BillingSubscriptionCancelled,
-            $"Stripe subscription cancelled. Previous plan: {previousPlan}.",
-            cancellationToken);
+        await WriteStatusChangeAuditIfNeededAsync(company, previousState.Status, eventId, cancellationToken);
+        if (!IsCancelledSubscription(previousState.Status))
+        {
+            await WriteAuditAsync(
+                company,
+                AuditAction.BillingSubscriptionCancelled,
+                $"Stripe subscription cancelled. Previous plan: {previousState.Plan}.",
+                eventId,
+                cancellationToken);
+            await WriteTenantNotificationAsync(
+                company,
+                TenantNotificationType.BillingSubscriptionCancelled,
+                TenantNotificationSeverity.Warning,
+                "Suscripción cancelada",
+                "La suscripción Stripe fue cancelada. Tu empresa puede contratar nuevamente cuando lo necesite.",
+                cancellationToken);
+        }
 
-        if (previousPlan != company.Plan)
+        if (previousState.Plan != company.Plan)
         {
             await WriteAuditAsync(
                 company,
                 AuditAction.PlanChangedByStripe,
-                $"Plan changed by Stripe: {previousPlan} -> {company.Plan}.",
+                $"Plan changed by Stripe: {previousState.Plan} -> {company.Plan}.",
+                eventId,
                 cancellationToken);
+            await WritePlanChangedNotificationAsync(company, previousState.Plan, cancellationToken);
         }
     }
 
     private async Task HandleInvoiceStatusAsync(
         string? customerId,
         string status,
+        AuditAction paymentAction,
+        string eventId,
+        string eventType,
         CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(customerId))
@@ -349,18 +463,50 @@ public class BillingService(
             item => item.StripeCustomerId == customerId,
             cancellationToken);
 
-        if (company is null || string.Equals(company.StripeSubscriptionStatus, status, StringComparison.OrdinalIgnoreCase))
+        if (company is null)
         {
+            logger.LogWarning(
+                "No company found for Stripe invoice webhook EventId {EventId}, Type {EventType}, CustomerId {CustomerId}.",
+                eventId,
+                eventType,
+                customerId);
             return;
         }
 
-        company.StripeSubscriptionStatus = status;
-        company.UpdatedAt = DateTime.UtcNow;
-        await context.SaveChangesAsync(cancellationToken);
+        var previousStatus = company.StripeSubscriptionStatus;
+        var normalizedStatus = NormalizeSubscriptionStatus(status);
+        LogResolvedWebhook(eventType, eventId, company);
+
+        if (!string.Equals(previousStatus, normalizedStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            company.StripeSubscriptionStatus = normalizedStatus;
+            company.UpdatedAt = DateTime.UtcNow;
+            await context.SaveChangesAsync(cancellationToken);
+        }
+
         await WriteAuditAsync(
             company,
-            AuditAction.BillingSubscriptionUpdated,
-            $"Stripe invoice updated subscription status to {status}.",
+            paymentAction,
+            paymentAction == AuditAction.BillingPaymentSucceeded
+                ? "Stripe payment succeeded."
+                : "Stripe payment failed.",
+            eventId,
+            cancellationToken);
+        await WriteStatusChangeAuditIfNeededAsync(company, previousStatus, eventId, cancellationToken);
+        await WriteTenantNotificationAsync(
+            company,
+            paymentAction == AuditAction.BillingPaymentSucceeded
+                ? TenantNotificationType.BillingPaymentSucceeded
+                : TenantNotificationType.BillingPaymentFailed,
+            paymentAction == AuditAction.BillingPaymentSucceeded
+                ? TenantNotificationSeverity.Success
+                : TenantNotificationSeverity.Danger,
+            paymentAction == AuditAction.BillingPaymentSucceeded
+                ? "Pago procesado correctamente"
+                : "No se pudo procesar el pago",
+            paymentAction == AuditAction.BillingPaymentSucceeded
+                ? "Stripe confirmó el pago de la suscripción de tu empresa."
+                : "Stripe reportó un pago fallido. Gestiona la facturación para evitar interrupciones.",
             cancellationToken);
     }
 
@@ -383,15 +529,26 @@ public class BillingService(
             cancellationToken);
     }
 
-    private static void ApplySubscription(Company company, Subscription subscription, PlanType? requestedPlan)
+    private static void ApplySubscription(
+        Company company,
+        Subscription subscription,
+        PlanType? requestedPlan,
+        string? forcedStatus = null)
     {
+        var normalizedStatus = NormalizeSubscriptionStatus(forcedStatus ?? subscription.Status);
         company.StripeCustomerId = subscription.CustomerId ?? company.StripeCustomerId;
         company.StripeSubscriptionId = subscription.Id;
-        company.StripeSubscriptionStatus = subscription.Status;
+        company.StripeSubscriptionStatus = normalizedStatus;
         company.StripeCurrentPeriodEnd = GetCurrentPeriodEnd(subscription);
         company.UpdatedAt = DateTime.UtcNow;
 
-        if (requestedPlan.HasValue && IsActiveSubscription(subscription.Status))
+        if (IsCancelledSubscription(normalizedStatus) && company.Plan is PlanType.Starter or PlanType.Pro)
+        {
+            company.Plan = PlanType.Free;
+        }
+        else if (requestedPlan.HasValue
+            && IsActiveSubscription(normalizedStatus)
+            && company.Plan != PlanType.Enterprise)
         {
             company.Plan = requestedPlan.Value;
         }
@@ -432,16 +589,89 @@ public class BillingService(
         Company company,
         AuditAction action,
         string description,
+        string eventId,
         CancellationToken cancellationToken)
     {
         return auditLogWriter.WriteAsync(
             null,
             action,
-            nameof(Company),
-            company.Id.ToString(),
+            "StripeBilling",
+            eventId,
             description,
             cancellationToken,
             company.Id);
+    }
+
+    private Task<bool> HasProcessedWebhookEventAsync(string eventId, CancellationToken cancellationToken)
+    {
+        return context.AuditLogs.AnyAsync(
+            auditLog => auditLog.EntityName == "StripeBilling" && auditLog.EntityId == eventId,
+            cancellationToken);
+    }
+
+    private async Task WriteStatusChangeAuditIfNeededAsync(
+        Company company,
+        string? previousStatus,
+        string eventId,
+        CancellationToken cancellationToken)
+    {
+        if (string.Equals(previousStatus, company.StripeSubscriptionStatus, StringComparison.OrdinalIgnoreCase))
+        {
+            return;
+        }
+
+        await WriteAuditAsync(
+            company,
+            AuditAction.BillingSubscriptionStatusChanged,
+            $"Stripe subscription status changed: {previousStatus ?? "none"} -> {company.StripeSubscriptionStatus ?? "none"}.",
+            eventId,
+            cancellationToken);
+    }
+
+    private void LogResolvedWebhook(string eventType, string eventId, Company company)
+    {
+        logger.LogInformation(
+            "Resolved Stripe webhook EventId {EventId}, Type {EventType}, CustomerId {CustomerId}, SubscriptionId {SubscriptionId}, CompanyId {CompanyId}.",
+            eventId,
+            eventType,
+            company.StripeCustomerId,
+            company.StripeSubscriptionId,
+            company.Id);
+    }
+
+    private Task WritePlanChangedNotificationAsync(
+        Company company,
+        PlanType previousPlan,
+        CancellationToken cancellationToken)
+    {
+        return WriteTenantNotificationAsync(
+            company,
+            TenantNotificationType.PlanUpdatedByStripe,
+            TenantNotificationSeverity.Success,
+            "Plan actualizado",
+            $"Stripe actualizó el plan de tu empresa: {previousPlan} -> {company.Plan}.",
+            cancellationToken);
+    }
+
+    private Task WriteTenantNotificationAsync(
+        Company company,
+        TenantNotificationType type,
+        TenantNotificationSeverity severity,
+        string title,
+        string message,
+        CancellationToken cancellationToken)
+    {
+        return tenantNotificationWriter.WriteAsync(
+            new CreateTenantNotificationRequest
+            {
+                CompanyId = company.Id,
+                Title = title,
+                Message = message,
+                Type = type,
+                Severity = severity,
+                ActionUrl = "/plan"
+            },
+            cancellationToken);
     }
 
     private StripeClient CreateStripeClient()
@@ -591,8 +821,43 @@ public class BillingService(
         return status is "active" or "trialing";
     }
 
+    private static bool IsCancelledSubscription(string? status)
+    {
+        return string.Equals(status, "cancelled", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "canceled", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static string? NormalizeSubscriptionStatus(string? status)
+    {
+        if (string.IsNullOrWhiteSpace(status))
+        {
+            return null;
+        }
+
+        return IsCancelledSubscription(status)
+            ? "cancelled"
+            : status.Trim().ToLowerInvariant();
+    }
+
+    private static BillingState CaptureBillingState(Company company)
+    {
+        return new BillingState(
+            company.StripeCustomerId,
+            company.StripeSubscriptionId,
+            company.StripeSubscriptionStatus,
+            company.StripeCurrentPeriodEnd,
+            company.Plan);
+    }
+
     private static bool IsTestKey(string? value, string prefix)
     {
         return !string.IsNullOrWhiteSpace(value) && value.StartsWith(prefix, StringComparison.Ordinal);
     }
+
+    private sealed record BillingState(
+        string? CustomerId,
+        string? SubscriptionId,
+        string? Status,
+        DateTime? CurrentPeriodEnd,
+        PlanType Plan);
 }

@@ -60,6 +60,68 @@ const subscriptionStatusLabels: Record<string, string> = {
   unpaid: 'Impaga',
 }
 
+type BillingStatusPresentation = {
+  badgeVariant: 'default' | 'success' | 'warning' | 'danger' | 'muted'
+  description: string
+  panelClassName: string
+  title: string
+}
+
+const billingStatusPresentations: Record<string, BillingStatusPresentation> = {
+  active: {
+    badgeVariant: 'success',
+    description: 'La suscripción está activa y el plan contratado se encuentra disponible.',
+    panelClassName: 'border-emerald-200 bg-emerald-50 text-emerald-700',
+    title: 'Suscripción activa',
+  },
+  cancelled: {
+    badgeVariant: 'danger',
+    description: 'La suscripción fue cancelada. Puedes contratar nuevamente Starter o Pro cuando lo necesites.',
+    panelClassName: 'border-red-200 bg-red-50 text-red-700',
+    title: 'Suscripción cancelada',
+  },
+  past_due: {
+    badgeVariant: 'warning',
+    description: 'Stripe no pudo completar el último cobro. Gestiona la facturación para regularizar el pago.',
+    panelClassName: 'border-amber-200 bg-amber-50 text-amber-700',
+    title: 'Pago pendiente',
+  },
+  trialing: {
+    badgeVariant: 'default',
+    description: 'La suscripción se encuentra en periodo de prueba y mantiene el plan contratado.',
+    panelClassName: 'border-blue-200 bg-blue-50 text-blue-700',
+    title: 'Periodo de prueba activo',
+  },
+  unpaid: {
+    badgeVariant: 'danger',
+    description: 'La suscripción registra pagos pendientes. Revisa el método de pago desde Stripe.',
+    panelClassName: 'border-red-200 bg-red-50 text-red-700',
+    title: 'Suscripción impaga',
+  },
+}
+
+billingStatusPresentations.canceled = billingStatusPresentations.cancelled
+
+const noSubscriptionPresentation: BillingStatusPresentation = {
+  badgeVariant: 'muted',
+  description: 'La empresa no tiene una suscripción Stripe activa. Puedes contratar Starter o Pro.',
+  panelClassName: 'border-slate-200 bg-slate-50 text-slate-600',
+  title: 'Sin suscripción',
+}
+
+function getBillingStatusPresentation(status?: string | null) {
+  if (!status) {
+    return noSubscriptionPresentation
+  }
+
+  return billingStatusPresentations[status] ?? {
+    badgeVariant: 'muted' as const,
+    description: 'Consulta el estado actual y gestiona la suscripción desde el portal de Stripe.',
+    panelClassName: 'border-slate-200 bg-slate-50 text-slate-600',
+    title: subscriptionStatusLabels[status] ?? status,
+  }
+}
+
 export function PlanPage() {
   const [selectedRequestedPlan, setSelectedRequestedPlan] = useState<PlanType | null>(null)
   const { user } = useAuth()
@@ -75,6 +137,11 @@ export function PlanPage() {
   const latestUpgradeRequest = latestUpgradeRequestQuery.data
   const hasPendingUpgradeRequest = latestUpgradeRequest?.status === 'Pending'
   const canManageBilling = user?.roles.includes('Admin') ?? false
+  const billingPresentation = getBillingStatusPresentation(billingStatusQuery.data?.subscriptionStatus)
+  const isCancelledSubscription = ['canceled', 'cancelled'].includes(
+    billingStatusQuery.data?.subscriptionStatus ?? '',
+  )
+  const hasPaymentIssue = ['past_due', 'unpaid'].includes(billingStatusQuery.data?.subscriptionStatus ?? '')
   const availablePlanDefinitions = currentPlan
     ? planDefinitions.filter((definition) => definition.plan === currentPlan || higherPlans.includes(definition.plan))
     : []
@@ -207,19 +274,39 @@ export function PlanPage() {
                 </CardDescription>
               </div>
             </div>
-            {canManageBilling && billingStatusQuery.data.canManageBilling ? (
-              <Button
-                disabled={portalSessionMutation.isPending}
-                onClick={() => void handleOpenBillingPortal()}
-                size="sm"
-                variant="secondary"
-              >
-                <ExternalLink className="h-4 w-4" aria-hidden="true" />
-                {portalSessionMutation.isPending ? 'Abriendo...' : 'Gestionar suscripción'}
-              </Button>
-            ) : null}
+            <div className="flex flex-col gap-2 sm:flex-row">
+              {canManageBilling && isCancelledSubscription && billingStatusQuery.data.plan === 'Free' ? (
+                <Button onClick={scrollToPlanComparison} size="sm">
+                  Contratar nuevamente
+                </Button>
+              ) : null}
+              {canManageBilling && billingStatusQuery.data.canManageBilling ? (
+                <Button
+                  disabled={portalSessionMutation.isPending}
+                  onClick={() => void handleOpenBillingPortal()}
+                  size="sm"
+                  variant="secondary"
+                >
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                  {portalSessionMutation.isPending
+                    ? 'Abriendo...'
+                    : hasPaymentIssue
+                      ? 'Gestionar facturación'
+                      : 'Gestionar suscripción'}
+                </Button>
+              ) : null}
+            </div>
           </CardHeader>
           <CardContent>
+            <div
+              className={`mb-5 flex items-start gap-3 rounded-lg border px-4 py-3 text-sm ${billingPresentation.panelClassName}`}
+            >
+              <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <div>
+                <p className="font-semibold">{billingPresentation.title}</p>
+                <p className="mt-1 leading-6">{billingPresentation.description}</p>
+              </div>
+            </div>
             <dl className="grid gap-4 sm:grid-cols-3">
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Plan registrado</dt>
@@ -228,7 +315,7 @@ export function PlanPage() {
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Estado Stripe</dt>
                 <dd className="mt-1">
-                  <Badge variant={billingStatusQuery.data.hasActiveSubscription ? 'success' : 'muted'}>
+                  <Badge variant={billingPresentation.badgeVariant}>
                     {billingStatusQuery.data.subscriptionStatus
                       ? subscriptionStatusLabels[billingStatusQuery.data.subscriptionStatus] ??
                         billingStatusQuery.data.subscriptionStatus

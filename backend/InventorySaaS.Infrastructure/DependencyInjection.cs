@@ -6,6 +6,7 @@ using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Dashboard.Interfaces;
 using InventorySaaS.Application.Kardex.Interfaces;
 using InventorySaaS.Application.Movements.Interfaces;
+using InventorySaaS.Application.Notifications.Interfaces;
 using InventorySaaS.Application.PlanUpgradeRequests.Interfaces;
 using InventorySaaS.Application.Platform.Activity.Interfaces;
 using InventorySaaS.Application.Platform.Analytics.Interfaces;
@@ -30,6 +31,7 @@ using InventorySaaS.Infrastructure.Email;
 using InventorySaaS.Infrastructure.Identity;
 using InventorySaaS.Infrastructure.Kardex;
 using InventorySaaS.Infrastructure.Movements;
+using InventorySaaS.Infrastructure.Notifications;
 using InventorySaaS.Infrastructure.PlanUpgradeRequests;
 using InventorySaaS.Infrastructure.Platform.Activity;
 using InventorySaaS.Infrastructure.Platform.Analytics;
@@ -94,6 +96,11 @@ public static class DependencyInjection
         services.AddScoped<IUserManagementService, UserManagementService>();
         services.AddScoped<ITenantUserInvitationService, TenantUserInvitationService>();
         services.AddScoped<IProfileService, ProfileService>();
+        services.AddScoped<TenantNotificationService>();
+        services.AddScoped<ITenantNotificationService>(
+            serviceProvider => serviceProvider.GetRequiredService<TenantNotificationService>());
+        services.AddScoped<ITenantNotificationWriter>(
+            serviceProvider => serviceProvider.GetRequiredService<TenantNotificationService>());
         services.AddScoped<ITenantCompanySettingsService, TenantCompanySettingsService>();
         services.AddScoped<IPlatformActivityService, PlatformActivityService>();
         services.AddScoped<IPlatformAnalyticsService, PlatformAnalyticsService>();

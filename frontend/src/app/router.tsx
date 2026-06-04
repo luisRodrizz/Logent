@@ -53,6 +53,11 @@ const MovementsPage = lazy(() =>
 const NotFoundPage = lazy(() =>
   import('../features/errors/NotFoundPage').then((module) => ({ default: module.NotFoundPage })),
 )
+const TenantNotificationsPage = lazy(() =>
+  import('../features/notifications/TenantNotificationsPage').then((module) => ({
+    default: module.TenantNotificationsPage,
+  })),
+)
 const ProductsPage = lazy(() =>
   import('../features/products/ProductsPage').then((module) => ({ default: module.ProductsPage })),
 )
@@ -252,6 +257,10 @@ export function AppRouter() {
               element={protectedRoute(<TenantCompanySettingsPage />, routeRoles.companySettings)}
             />
             <Route path="/plan" element={protectedRoute(<PlanPage />, routeRoles.plan)} />
+            <Route
+              path="/notifications"
+              element={protectedRoute(<TenantNotificationsPage />, routeRoles.notifications)}
+            />
             <Route path="/profile" element={lazyRoute(<ProfilePage />)} />
             <Route path="/admin/users" element={protectedRoute(<UsersPage />, routeRoles.users)} />
             <Route path="/audit-logs" element={protectedRoute(<AuditLogsPage />, routeRoles.auditLogs)} />

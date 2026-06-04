@@ -26,7 +26,10 @@ public enum AuditAction
     PlanUpgradeRejected,
     CompanyProfileUpdated,
     BillingCheckoutCompleted,
+    BillingPaymentFailed,
+    BillingPaymentSucceeded,
     BillingSubscriptionUpdated,
     BillingSubscriptionCancelled,
+    BillingSubscriptionStatusChanged,
     PlanChangedByStripe
 }

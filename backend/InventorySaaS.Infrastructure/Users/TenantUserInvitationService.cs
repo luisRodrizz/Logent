@@ -4,6 +4,8 @@ using System.Text;
 using InventorySaaS.Application.Auth.DTOs;
 using InventorySaaS.Application.Common.Exceptions;
 using InventorySaaS.Application.Common.Interfaces;
+using InventorySaaS.Application.Notifications.DTOs;
+using InventorySaaS.Application.Notifications.Interfaces;
 using InventorySaaS.Application.Users.DTOs;
 using InventorySaaS.Application.Users.Interfaces;
 using InventorySaaS.Domain.Entities;
@@ -25,6 +27,7 @@ public class TenantUserInvitationService(
     ICurrentUserContext currentUserContext,
     IEmailSender emailSender,
     IPlanLimitService planLimitService,
+    ITenantNotificationWriter tenantNotificationWriter,
     IOptions<AppUrlSettings> appUrlSettings) : ITenantUserInvitationService
 {
     private const int InvitationLifetimeHours = 72;
@@ -190,6 +193,18 @@ public class TenantUserInvitationService(
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
+
+        await tenantNotificationWriter.WriteAsync(
+            new CreateTenantNotificationRequest
+            {
+                CompanyId = invitation.CompanyId,
+                Title = "Invitación aceptada",
+                Message = $"{invitation.FirstName} {invitation.LastName} aceptó la invitación y ya forma parte de la empresa.",
+                Type = TenantNotificationType.InvitationAccepted,
+                Severity = TenantNotificationSeverity.Success,
+                ActionUrl = "/admin/users"
+            },
+            cancellationToken);
 
         return new MessageResponse
         {

@@ -1,5 +1,7 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Common.Exceptions;
+using InventorySaaS.Application.Notifications.DTOs;
+using InventorySaaS.Application.Notifications.Interfaces;
 using InventorySaaS.Application.Profile.DTOs;
 using InventorySaaS.Application.Profile.Interfaces;
 using InventorySaaS.Domain.Enums;
@@ -11,7 +13,8 @@ namespace InventorySaaS.Infrastructure.Profile;
 
 public class ProfileService(
     UserManager<ApplicationUser> userManager,
-    IAuditLogWriter auditLogWriter) : IProfileService
+    IAuditLogWriter auditLogWriter,
+    ITenantNotificationWriter tenantNotificationWriter) : IProfileService
 {
     public async Task<MyProfileResponse> GetProfileAsync(
         string userId,
@@ -76,6 +79,22 @@ public class ProfileService(
             $"User password changed: {user.Email}",
             cancellationToken,
             user.CompanyId);
+
+        if (user.CompanyId.HasValue)
+        {
+            await tenantNotificationWriter.WriteAsync(
+                new CreateTenantNotificationRequest
+                {
+                    CompanyId = user.CompanyId.Value,
+                    UserId = user.Id,
+                    Title = "Contraseña actualizada",
+                    Message = "La contraseña de tu cuenta fue cambiada correctamente.",
+                    Type = TenantNotificationType.PasswordChanged,
+                    Severity = TenantNotificationSeverity.Success,
+                    ActionUrl = "/profile"
+                },
+                cancellationToken);
+        }
     }
 
     private async Task<ApplicationUser> FindActiveUserAsync(string userId, CancellationToken cancellationToken)

@@ -576,6 +576,57 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.ToTable("Suppliers", (string)null);
                 });
 
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.TenantNotification", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("ActionUrl")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Message")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Severity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(160)
+                        .HasColumnType("nvarchar(160)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.Property<string>("UserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CompanyId");
+
+                    b.HasIndex("CompanyId", "UserId", "IsRead", "CreatedAt");
+
+                    b.ToTable("TenantNotifications", (string)null);
+                });
+
             modelBuilder.Entity("InventorySaaS.Domain.Entities.TenantUserInvitation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1080,6 +1131,17 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.TenantNotification", b =>
+                {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("TenantNotifications")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("InventorySaaS.Domain.Entities.TenantUserInvitation", b =>
                 {
                     b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
@@ -1186,6 +1248,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.Navigation("StockItems");
 
                     b.Navigation("Suppliers");
+
+                    b.Navigation("TenantNotifications");
 
                     b.Navigation("TenantUserInvitations");
 
