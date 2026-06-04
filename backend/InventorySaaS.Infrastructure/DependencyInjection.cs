@@ -1,5 +1,6 @@
 using InventorySaaS.Application.AuditLogs.Interfaces;
 using InventorySaaS.Application.Auth.Interfaces;
+using InventorySaaS.Application.Billing.Interfaces;
 using InventorySaaS.Application.Categories.Interfaces;
 using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Dashboard.Interfaces;
@@ -21,6 +22,7 @@ using InventorySaaS.Application.Users.Interfaces;
 using InventorySaaS.Application.Warehouses.Interfaces;
 using InventorySaaS.Infrastructure.Authentication;
 using InventorySaaS.Infrastructure.AuditLogs;
+using InventorySaaS.Infrastructure.Billing;
 using InventorySaaS.Infrastructure.Categories;
 using InventorySaaS.Infrastructure.Cloudinary;
 using InventorySaaS.Infrastructure.Dashboard;
@@ -104,6 +106,7 @@ public static class DependencyInjection
             serviceProvider => serviceProvider.GetRequiredService<PlatformNotificationService>());
         services.AddScoped<IPlanLimitService, PlanLimitService>();
         services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
+        services.AddScoped<IBillingService, BillingService>();
         services.AddScoped<IImageStorageService, CloudinaryImageService>();
 
         // Authentication / audit helpers
@@ -115,6 +118,7 @@ public static class DependencyInjection
         services.Configure<AppUrlSettings>(configuration.GetSection(AppUrlSettings.SectionName));
         services.Configure<CloudinarySettings>(configuration.GetSection(CloudinarySettings.SectionName));
         services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        services.Configure<StripeSettings>(configuration.GetSection(StripeSettings.SectionName));
         services.AddScoped<IEmailSender, SmtpEmailSender>();
 
         return services;

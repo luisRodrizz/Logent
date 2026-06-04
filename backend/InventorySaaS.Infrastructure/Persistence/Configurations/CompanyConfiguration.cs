@@ -47,6 +47,15 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.Property(company => company.Plan)
             .IsRequired();
 
+        builder.Property(company => company.StripeCustomerId)
+            .HasMaxLength(120);
+
+        builder.Property(company => company.StripeSubscriptionId)
+            .HasMaxLength(120);
+
+        builder.Property(company => company.StripeSubscriptionStatus)
+            .HasMaxLength(50);
+
         builder.Property(company => company.CreatedAt)
             .IsRequired();
 
@@ -61,5 +70,13 @@ public class CompanyConfiguration : IEntityTypeConfiguration<Company>
         builder.HasIndex(company => company.Ruc)
             .IsUnique()
             .HasFilter("[Ruc] IS NOT NULL");
+
+        builder.HasIndex(company => company.StripeCustomerId)
+            .IsUnique()
+            .HasFilter("[StripeCustomerId] IS NOT NULL");
+
+        builder.HasIndex(company => company.StripeSubscriptionId)
+            .IsUnique()
+            .HasFilter("[StripeSubscriptionId] IS NOT NULL");
     }
 }

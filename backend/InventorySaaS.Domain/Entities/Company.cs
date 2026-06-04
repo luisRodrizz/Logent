@@ -27,6 +27,14 @@ public class Company : AuditableEntity
 
     public PlanType Plan { get; set; } = PlanType.Free;
 
+    public string? StripeCustomerId { get; set; }
+
+    public string? StripeSubscriptionId { get; set; }
+
+    public string? StripeSubscriptionStatus { get; set; }
+
+    public DateTime? StripeCurrentPeriodEnd { get; set; }
+
     public ICollection<Category> Categories { get; set; } = new List<Category>();
 
     public ICollection<Supplier> Suppliers { get; set; } = new List<Supplier>();

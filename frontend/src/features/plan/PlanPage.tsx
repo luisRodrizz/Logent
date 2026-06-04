@@ -1,4 +1,4 @@
-import { Check, CircleAlert } from 'lucide-react'
+import { Check, CircleAlert, CreditCard, ExternalLink } from 'lucide-react'
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
@@ -9,6 +9,12 @@ import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatDateTime, formatNumber } from '../../lib/format'
+import { useAuth } from '../auth/useAuth'
+import {
+  useBillingStatus,
+  useCreateBillingPortalSession,
+  useCreateCheckoutSession,
+} from '../billing/billing.queries'
 import { getPlanResourceLimitStatus } from './plan-limit.helpers'
 import { getHigherPlans, planDefinitions, planResourceLabels, planResources } from './plan.constants'
 import { useCreatePlanUpgradeRequest, useMyLatestPlanUpgradeRequest, usePlanUsage } from './plan.queries'
@@ -42,15 +48,33 @@ const planRequestLabels: Record<PlanType, string> = {
   Starter: 'Solicitar Starter',
 }
 
+const subscriptionStatusLabels: Record<string, string> = {
+  active: 'Activa',
+  canceled: 'Cancelada',
+  cancelled: 'Cancelada',
+  incomplete: 'Incompleta',
+  incomplete_expired: 'Expirada',
+  past_due: 'Pago pendiente',
+  paused: 'Pausada',
+  trialing: 'En prueba',
+  unpaid: 'Impaga',
+}
+
 export function PlanPage() {
   const [selectedRequestedPlan, setSelectedRequestedPlan] = useState<PlanType | null>(null)
+  const { user } = useAuth()
+  const billingStatusQuery = useBillingStatus()
+  const checkoutSessionMutation = useCreateCheckoutSession()
+  const portalSessionMutation = useCreateBillingPortalSession()
   const createUpgradeRequestMutation = useCreatePlanUpgradeRequest()
   const latestUpgradeRequestQuery = useMyLatestPlanUpgradeRequest()
   const planUsageQuery = usePlanUsage()
   const currentPlan = planUsageQuery.data?.plan
   const higherPlans = currentPlan ? getHigherPlans(currentPlan) : []
+  const manualUpgradePlans = higherPlans.filter((plan) => plan === 'Enterprise')
   const latestUpgradeRequest = latestUpgradeRequestQuery.data
   const hasPendingUpgradeRequest = latestUpgradeRequest?.status === 'Pending'
+  const canManageBilling = user?.roles.includes('Admin') ?? false
   const availablePlanDefinitions = currentPlan
     ? planDefinitions.filter((definition) => definition.plan === currentPlan || higherPlans.includes(definition.plan))
     : []
@@ -84,6 +108,57 @@ export function PlanPage() {
     }
   }
 
+  async function handleStripeCheckout(requestedPlan: PlanType) {
+    if (!canManageBilling) {
+      toast.info('Solo un Admin de la empresa puede gestionar pagos y suscripciones.')
+      return
+    }
+
+    if (billingStatusQuery.data?.hasActiveSubscription) {
+      await handleOpenBillingPortal()
+      return
+    }
+
+    try {
+      const session = await checkoutSessionMutation.mutateAsync({ requestedPlan })
+      window.location.assign(session.sessionUrl)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo iniciar el pago con Stripe.'))
+    }
+  }
+
+  async function handleOpenBillingPortal() {
+    if (!canManageBilling) {
+      toast.info('Solo un Admin de la empresa puede gestionar la suscripción.')
+      return
+    }
+
+    try {
+      const session = await portalSessionMutation.mutateAsync()
+      window.location.assign(session.sessionUrl)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo abrir el portal de facturación.'))
+    }
+  }
+
+  function handlePlanAction(requestedPlan: PlanType) {
+    if (hasPendingUpgradeRequest) {
+      toast.info('Tu empresa ya tiene una solicitud pendiente de revisión.')
+      return
+    }
+
+    if (requestedPlan === 'Enterprise') {
+      openUpgradeRequestModal(requestedPlan)
+      return
+    }
+
+    void handleStripeCheckout(requestedPlan)
+  }
+
+  function scrollToPlanComparison() {
+    document.getElementById('plan-comparison')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -105,16 +180,72 @@ export function PlanPage() {
       ) : null}
 
       <PlanUsageCard
-        isUpgradeDisabled={hasPendingUpgradeRequest || higherPlans.length === 0}
-        onRequestUpgrade={() => openUpgradeRequestModal()}
+        isUpgradeDisabled={higherPlans.length === 0}
+        onRequestUpgrade={scrollToPlanComparison}
         upgradeLabel={
-          hasPendingUpgradeRequest
-            ? 'Solicitud pendiente'
-            : higherPlans.length === 0
-              ? 'Plan Enterprise activo'
-              : 'Solicitar actualización'
+          higherPlans.length === 0
+            ? 'Plan Enterprise activo'
+            : 'Ver opciones de plan'
         }
       />
+
+      {billingStatusQuery.isError ? (
+        <SectionError
+          text={getApiErrorMessage(billingStatusQuery.error, 'No se pudo cargar el estado de facturación.')}
+        />
+      ) : billingStatusQuery.data ? (
+        <Card className="border-slate-200">
+          <CardHeader className="gap-4 sm:flex sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-blue-100 bg-blue-50 text-primary">
+                <CreditCard className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div>
+                <CardTitle>Facturación Stripe</CardTitle>
+                <CardDescription>
+                  La activación y los cambios de plan se confirman mediante webhooks verificados.
+                </CardDescription>
+              </div>
+            </div>
+            {canManageBilling && billingStatusQuery.data.canManageBilling ? (
+              <Button
+                disabled={portalSessionMutation.isPending}
+                onClick={() => void handleOpenBillingPortal()}
+                size="sm"
+                variant="secondary"
+              >
+                <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                {portalSessionMutation.isPending ? 'Abriendo...' : 'Gestionar suscripción'}
+              </Button>
+            ) : null}
+          </CardHeader>
+          <CardContent>
+            <dl className="grid gap-4 sm:grid-cols-3">
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Plan registrado</dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">{billingStatusQuery.data.plan}</dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Estado Stripe</dt>
+                <dd className="mt-1">
+                  <Badge variant={billingStatusQuery.data.hasActiveSubscription ? 'success' : 'muted'}>
+                    {billingStatusQuery.data.subscriptionStatus
+                      ? subscriptionStatusLabels[billingStatusQuery.data.subscriptionStatus] ??
+                        billingStatusQuery.data.subscriptionStatus
+                      : 'Sin suscripción'}
+                  </Badge>
+                </dd>
+              </div>
+              <div>
+                <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Periodo actual</dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">
+                  {formatDateTime(billingStatusQuery.data.currentPeriodEnd, 'No disponible')}
+                </dd>
+              </div>
+            </dl>
+          </CardContent>
+        </Card>
+      ) : null}
 
       {latestUpgradeRequestQuery.isError ? (
         <SectionError
@@ -197,7 +328,7 @@ export function PlanPage() {
         </Card>
       ) : null}
 
-      <section className="space-y-4">
+      <section className="scroll-mt-24 space-y-4" id="plan-comparison">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-foreground">Comparación de planes</h2>
@@ -217,6 +348,10 @@ export function PlanPage() {
           {availablePlanDefinitions.map((definition) => {
             const isCurrentPlan = definition.plan === planUsageQuery.data?.plan
             const isHigherPlan = higherPlans.includes(definition.plan)
+            const isStripePlan = definition.plan === 'Starter' || definition.plan === 'Pro'
+            const requiresBillingAdmin = isStripePlan && !canManageBilling
+            const redirectsToPortal = isStripePlan && billingStatusQuery.data?.hasActiveSubscription
+            const isActionPending = checkoutSessionMutation.isPending || portalSessionMutation.isPending
 
             return (
               <Card
@@ -258,15 +393,29 @@ export function PlanPage() {
                   <div className="mt-auto pt-6">
                     <Button
                       className="w-full"
-                      disabled={isCurrentPlan || !isHigherPlan || hasPendingUpgradeRequest}
-                      onClick={() => openUpgradeRequestModal(definition.plan)}
+                      disabled={
+                        isCurrentPlan ||
+                        !isHigherPlan ||
+                        hasPendingUpgradeRequest ||
+                        requiresBillingAdmin ||
+                        isActionPending
+                      }
+                      onClick={() => handlePlanAction(definition.plan)}
                       variant={isCurrentPlan ? 'secondary' : 'primary'}
                     >
                       {isCurrentPlan
                         ? 'Plan actual'
                         : hasPendingUpgradeRequest
                           ? 'Solicitud pendiente'
-                          : planRequestLabels[definition.plan]}
+                          : requiresBillingAdmin
+                            ? 'Requiere Admin'
+                            : isActionPending && isStripePlan
+                              ? 'Conectando con Stripe...'
+                              : redirectsToPortal
+                                ? 'Gestionar en Stripe'
+                                : isStripePlan
+                                  ? `Pagar ${definition.plan} con Stripe`
+                                  : planRequestLabels[definition.plan]}
                     </Button>
                   </div>
                 </CardContent>
@@ -278,7 +427,7 @@ export function PlanPage() {
 
       {selectedRequestedPlan ? (
         <PlanUpgradeRequestModal
-          availablePlans={higherPlans}
+          availablePlans={manualUpgradePlans}
           initialPlan={selectedRequestedPlan}
           isSubmitting={createUpgradeRequestMutation.isPending}
           onClose={() => setSelectedRequestedPlan(null)}

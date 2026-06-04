@@ -11,6 +11,12 @@ import type { AuthRole } from '../types/auth'
 const AuditLogsPage = lazy(() =>
   import('../features/audit-logs/AuditLogsPage').then((module) => ({ default: module.AuditLogsPage })),
 )
+const BillingCancelPage = lazy(() =>
+  import('../features/billing/BillingCancelPage').then((module) => ({ default: module.BillingCancelPage })),
+)
+const BillingSuccessPage = lazy(() =>
+  import('../features/billing/BillingSuccessPage').then((module) => ({ default: module.BillingSuccessPage })),
+)
 const AcceptInvitationPage = lazy(() =>
   import('../features/users/AcceptInvitationPage').then((module) => ({ default: module.AcceptInvitationPage })),
 )
@@ -203,6 +209,22 @@ export function AppRouter() {
           element={
             <Suspense fallback={<FullPageFallback />}>
               <PricingPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/billing/success"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <BillingSuccessPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/billing/cancel"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <BillingCancelPage />
             </Suspense>
           }
         />

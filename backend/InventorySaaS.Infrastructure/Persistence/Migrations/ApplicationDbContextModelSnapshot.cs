@@ -151,6 +151,21 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                         .HasMaxLength(80)
                         .HasColumnType("nvarchar(80)");
 
+                    b.Property<DateTime?>("StripeCurrentPeriodEnd")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("StripeCustomerId")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("StripeSubscriptionId")
+                        .HasMaxLength(120)
+                        .HasColumnType("nvarchar(120)");
+
+                    b.Property<string>("StripeSubscriptionStatus")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -166,6 +181,14 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
 
                     b.HasIndex("Slug")
                         .IsUnique();
+
+                    b.HasIndex("StripeCustomerId")
+                        .IsUnique()
+                        .HasFilter("[StripeCustomerId] IS NOT NULL");
+
+                    b.HasIndex("StripeSubscriptionId")
+                        .IsUnique()
+                        .HasFilter("[StripeSubscriptionId] IS NOT NULL");
 
                     b.ToTable("Companies", (string)null);
                 });
