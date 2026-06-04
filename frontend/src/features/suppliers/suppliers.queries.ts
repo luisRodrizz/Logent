@@ -43,6 +43,7 @@ export function useUpdateSupplier() {
     mutationFn: ({ id, payload }: { id: string; payload: UpdateSupplierRequest }) => updateSupplier(id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: suppliersQueryKeys.all })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }

@@ -8,6 +8,10 @@ public interface IPlanLimitService
 
     Task EnsureCanCreateUserAsync(Guid companyId, CancellationToken cancellationToken = default);
 
+    Task EnsureCanCreateInvitationAsync(Guid companyId, CancellationToken cancellationToken = default);
+
+    Task EnsureCanAcceptInvitationAsync(Guid companyId, CancellationToken cancellationToken = default);
+
     Task EnsureCanCreateProductAsync(Guid companyId, CancellationToken cancellationToken = default);
 
     Task EnsureCanCreateWarehouseAsync(Guid companyId, CancellationToken cancellationToken = default);
@@ -15,4 +19,6 @@ public interface IPlanLimitService
     Task EnsureCanCreateSupplierAsync(Guid companyId, CancellationToken cancellationToken = default);
 
     Task EnsureCanCreateCategoryAsync(Guid companyId, CancellationToken cancellationToken = default);
+
+    Task EnsureCanCreateMovementAsync(Guid companyId, CancellationToken cancellationToken = default);
 }

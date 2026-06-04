@@ -1,7 +1,7 @@
 import { usePlanUsage } from './plan.queries'
 import type { PlanUsageResponse } from './plan.types'
 
-export type PlanResource = 'categories' | 'products' | 'suppliers' | 'users' | 'warehouses'
+export type PlanResource = 'categories' | 'monthlyMovements' | 'products' | 'suppliers' | 'users' | 'warehouses'
 
 export type PlanResourceLimitStatus = {
   current: number
@@ -16,8 +16,18 @@ export type PlanResourceLimitStatus = {
 
 export const enterpriseLimit = 2147483647
 
+export const planUsageResources: PlanResource[] = [
+  'users',
+  'products',
+  'warehouses',
+  'monthlyMovements',
+  'suppliers',
+  'categories',
+]
+
 const resourceLabels: Record<PlanResource, string> = {
   categories: 'categorías',
+  monthlyMovements: 'movimientos del mes',
   products: 'productos',
   suppliers: 'proveedores',
   users: 'usuarios',

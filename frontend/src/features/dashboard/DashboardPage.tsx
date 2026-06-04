@@ -21,6 +21,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { formatCurrency, formatDateTime, formatNumber } from '../../lib/format'
 import type { MovementType } from '../../types/dashboard'
 import { PlanUsageCard } from '../plan/PlanUsageCard'
+import { PlanUsageAlert } from '../plan/PlanUsageAlert'
 import {
   useDashboardSummary,
   useLowStockAlerts,
@@ -184,6 +185,8 @@ export function DashboardPage() {
       ) : null}
 
       {isEmptyTenant ? <TenantOnboardingCard /> : null}
+
+      <PlanUsageAlert />
 
       <PlanUsageCard />
 

@@ -68,6 +68,7 @@ public class TenantUserInvitationService(
         await EnsureEmailIsAvailableAsync(email);
         await ExpirePendingInvitationAsync(companyId, email, cancellationToken);
         await EnsureNoPendingInvitationAsync(companyId, email, cancellationToken);
+        await planLimitService.EnsureCanCreateInvitationAsync(companyId, cancellationToken);
 
         var company = await GetActiveCompanyAsync(companyId, cancellationToken);
         var token = CreateToken();
@@ -158,7 +159,7 @@ public class TenantUserInvitationService(
         var invitation = await FindValidInvitationByTokenAsync(request.Token, cancellationToken);
         await GetActiveCompanyAsync(invitation.CompanyId, cancellationToken);
         await EnsureEmailIsAvailableAsync(invitation.Email);
-        await planLimitService.EnsureCanCreateUserAsync(invitation.CompanyId, cancellationToken);
+        await planLimitService.EnsureCanAcceptInvitationAsync(invitation.CompanyId, cancellationToken);
 
         var role = await NormalizeAndValidateRoleAsync(invitation.Role);
         var user = new ApplicationUser

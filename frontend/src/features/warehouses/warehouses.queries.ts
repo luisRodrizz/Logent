@@ -43,6 +43,7 @@ export function useUpdateWarehouse() {
     mutationFn: ({ id, payload }: { id: string; payload: UpdateWarehouseRequest }) => updateWarehouse(id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: warehousesQueryKeys.all })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }

@@ -12,6 +12,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatDateTime, formatNumber } from '../../lib/format'
 import type { CreateMovementRequest, Movement, MovementType } from '../../types/movement'
+import { PlanLimitInlineNotice } from '../plan/PlanLimitInlineNotice'
+import { usePlanResourceLimit } from '../plan/plan-limit.helpers'
 import { MovementDetailsModal } from './MovementDetailsModal'
 import { MovementModal } from './MovementModal'
 import {
@@ -88,6 +90,7 @@ export function MovementsPage() {
   const warehousesQuery = useMovementWarehouseOptions()
   const stockAvailabilityQuery = useMovementStockAvailability()
   const createMovementMutation = useCreateMovement()
+  const movementLimit = usePlanResourceLimit('monthlyMovements')
 
   const movements = movementsQuery.data?.items ?? []
   const products = productsQuery.data?.items ?? []
@@ -95,6 +98,7 @@ export function MovementsPage() {
   const stockItems = stockAvailabilityQuery.data ?? []
   const isLoadingOptions = productsQuery.isLoading || warehousesQuery.isLoading || stockAvailabilityQuery.isLoading
   const isSearching = Boolean(search)
+  const isMovementCreationBlocked = movementLimit.status?.isAtLimit ?? false
   const visibleDetailsCount = movements.reduce((total, movement) => total + movement.details.length, 0)
   const visibleQuantity = movements.reduce(
     (total, movement) => total + movement.details.reduce((innerTotal, detail) => innerTotal + detail.quantity, 0),
@@ -113,6 +117,11 @@ export function MovementsPage() {
   }
 
   function handleOpenCreate() {
+    if (isMovementCreationBlocked) {
+      toast.error('Has alcanzado el límite mensual de movimientos de tu plan.')
+      return
+    }
+
     if (productsQuery.isError || warehousesQuery.isError) {
       toast.error('No se pudieron cargar productos o almacenes para crear el movimiento.')
       return
@@ -135,7 +144,11 @@ export function MovementsPage() {
     <div className="space-y-6">
       <PageHeader
         action={
-          <Button onClick={handleOpenCreate}>
+          <Button
+            disabled={isMovementCreationBlocked}
+            onClick={handleOpenCreate}
+            title={isMovementCreationBlocked ? 'Has alcanzado el límite mensual de movimientos.' : undefined}
+          >
             <Plus className="h-4 w-4" />
             Nuevo movimiento
           </Button>
@@ -144,6 +157,8 @@ export function MovementsPage() {
         eyebrow="Operación"
         title="Movimientos"
       />
+
+      <PlanLimitInlineNotice resource="monthlyMovements" />
 
       <Card>
         <CardContent className="grid gap-4 p-4 lg:grid-cols-[1fr_auto] lg:items-center">

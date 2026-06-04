@@ -14,7 +14,8 @@ namespace InventorySaaS.Infrastructure.Movements;
 public class MovementService(
     ApplicationDbContext context,
     IAuditLogWriter auditLogWriter,
-    ICurrentUserContext currentUserContext) : IMovementService
+    ICurrentUserContext currentUserContext,
+    IPlanLimitService planLimitService) : IMovementService
 {
     public async Task<PagedResponse<MovementResponse>> GetAllAsync(
         PagedRequest request,
@@ -64,6 +65,11 @@ public class MovementService(
         Guid? seedCompanyId = null)
     {
         var companyId = seedCompanyId ?? currentUserContext.RequireCompanyId();
+
+        if (!seedCompanyId.HasValue)
+        {
+            await planLimitService.EnsureCanCreateMovementAsync(companyId, cancellationToken);
+        }
 
         await ValidateWarehousesAsync(request, companyId, cancellationToken);
         await ValidateProductsAsync(request, companyId, cancellationToken);

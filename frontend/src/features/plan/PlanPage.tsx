@@ -15,10 +15,10 @@ import {
   useCreateBillingPortalSession,
   useCreateCheckoutSession,
 } from '../billing/billing.queries'
-import { getPlanResourceLimitStatus } from './plan-limit.helpers'
 import { getHigherPlans, planDefinitions, planResourceLabels, planResources } from './plan.constants'
 import { useCreatePlanUpgradeRequest, useMyLatestPlanUpgradeRequest, usePlanUsage } from './plan.queries'
 import { PlanUpgradeRequestModal } from './PlanUpgradeRequestModal'
+import { PlanUsageAlert } from './PlanUsageAlert'
 import { PlanUsageCard } from './PlanUsageCard'
 import type { CreatePlanUpgradeRequestPayload, PlanType, PlanUpgradeRequestStatus } from './plan.types'
 
@@ -145,11 +145,6 @@ export function PlanPage() {
   const availablePlanDefinitions = currentPlan
     ? planDefinitions.filter((definition) => definition.plan === currentPlan || higherPlans.includes(definition.plan))
     : []
-  const resourceStatuses = planUsageQuery.data
-    ? planResources.map((resource) => getPlanResourceLimitStatus(planUsageQuery.data, resource))
-    : []
-  const hasReachedLimit = resourceStatuses.some((status) => status.isAtLimit)
-  const isNearLimit = !hasReachedLimit && resourceStatuses.some((status) => status.isNearLimit)
 
   function openUpgradeRequestModal(requestedPlan?: PlanType) {
     if (hasPendingUpgradeRequest) {
@@ -234,17 +229,7 @@ export function PlanPage() {
         title="Plan y uso"
       />
 
-      {hasReachedLimit ? (
-        <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-          <p className="font-medium">Tu empresa alcanzó uno o más límites del plan actual.</p>
-        </div>
-      ) : isNearLimit ? (
-        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-700">
-          <CircleAlert className="mt-0.5 h-4 w-4 shrink-0" />
-          <p className="font-medium">Tu empresa está cerca de alcanzar algunos límites del plan.</p>
-        </div>
-      ) : null}
+      <PlanUsageAlert />
 
       <PlanUsageCard
         isUpgradeDisabled={higherPlans.length === 0}

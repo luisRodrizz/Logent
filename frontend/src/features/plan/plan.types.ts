@@ -4,6 +4,7 @@ export type PlanUpgradeRequestStatus = 'Pending' | 'Approved' | 'Rejected'
 
 export type PlanUsageMetrics = {
   categories: number
+  monthlyMovements: number
   products: number
   suppliers: number
   users: number

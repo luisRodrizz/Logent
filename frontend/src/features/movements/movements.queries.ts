@@ -3,6 +3,7 @@ import { getProducts } from '../products/products.api'
 import { stockQueryKeys } from '../stock/stock.queries'
 import { getStockItems } from '../stock/stock.api'
 import { getWarehouses } from '../warehouses/warehouses.api'
+import { planQueryKeys } from '../plan/plan.queries'
 import type { CreateMovementRequest, MovementFilters } from '../../types/movement'
 import { createMovement, getMovementById, getMovements } from './movements.api'
 
@@ -61,6 +62,7 @@ export function useCreateMovement() {
         queryClient.invalidateQueries({ queryKey: movementsQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: stockQueryKeys.all }),
         queryClient.invalidateQueries({ queryKey: ['dashboard'] }),
+        queryClient.invalidateQueries({ queryKey: planQueryKeys.all }),
       ])
     },
   })

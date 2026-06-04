@@ -1,7 +1,6 @@
 import { CircleGauge, CircleAlert } from 'lucide-react'
-import { toast } from 'sonner'
+import { Link } from 'react-router-dom'
 import { Badge } from '../../components/ui/Badge'
-import { Button } from '../../components/ui/Button'
 import { formatNumber } from '../../lib/format'
 import { usePlanResourceLimit, type PlanResource } from './plan-limit.helpers'
 
@@ -57,15 +56,13 @@ export function PlanLimitInlineNotice({ resource }: { resource: PlanResource }) 
         </div>
       </div>
 
-      {status.isAtLimit ? (
-        <Button
-          className="shrink-0"
-          onClick={() => toast.info('La actualización de plan se gestiona con el administrador de LOGENT.')}
-          size="sm"
-          variant="secondary"
+      {status.isAtLimit || status.isNearLimit ? (
+        <Link
+          className="inline-flex h-9 shrink-0 items-center justify-center rounded-lg border border-border bg-white px-3 text-sm font-semibold text-foreground transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#14B8A6] focus-visible:ring-offset-2"
+          to="/plan"
         >
-          Solicitar actualización
-        </Button>
+          {status.isAtLimit ? 'Mejorar plan' : 'Ver plan'}
+        </Link>
       ) : null}
     </div>
   )

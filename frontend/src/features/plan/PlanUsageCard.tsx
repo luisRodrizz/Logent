@@ -1,4 +1,4 @@
-import { Boxes, Tags, Truck, UsersRound, Warehouse } from 'lucide-react'
+import { ArrowLeftRight, Boxes, Tags, Truck, UsersRound, Warehouse } from 'lucide-react'
 import { toast } from 'sonner'
 import { LoadingState } from '../../components/common/LoadingState'
 import { SectionError } from '../../components/common/SectionError'
@@ -19,6 +19,7 @@ const metrics: Array<{
   { icon: UsersRound, key: 'users', label: 'Usuarios' },
   { icon: Boxes, key: 'products', label: 'Productos' },
   { icon: Warehouse, key: 'warehouses', label: 'Almacenes' },
+  { icon: ArrowLeftRight, key: 'monthlyMovements', label: 'Movimientos del mes' },
   { icon: Truck, key: 'suppliers', label: 'Proveedores' },
   { icon: Tags, key: 'categories', label: 'Categorías' },
 ]
@@ -95,7 +96,7 @@ export function PlanUsageCard({
         ) : planUsageQuery.isError ? (
           <SectionError text={getApiErrorMessage(planUsageQuery.error, 'No se pudo cargar el uso del plan.')} />
         ) : planUsageQuery.data ? (
-          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
             {metrics.map(({ icon: Icon, key, label }) => {
               const used = planUsageQuery.data.usage[key]
               const limit = planUsageQuery.data.limits[key]

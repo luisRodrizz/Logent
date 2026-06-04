@@ -22,4 +22,6 @@ public class PlanUsageMetrics
     public int Suppliers { get; set; }
 
     public int Categories { get; set; }
+
+    public int MonthlyMovements { get; set; }
 }

@@ -118,6 +118,7 @@ export function useCreateTenantUserInvitation() {
     mutationFn: (payload: CreateTenantUserInvitationPayload) => createTenantUserInvitation(payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: usersQueryKeys.invitations })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }
@@ -140,6 +141,7 @@ export function useCancelTenantUserInvitation() {
     mutationFn: (id: string) => cancelTenantUserInvitation(id),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: usersQueryKeys.invitations })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }

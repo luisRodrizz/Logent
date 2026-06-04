@@ -1,15 +1,17 @@
 import type { PlanResource } from './plan-limit.helpers'
 import type { PlanType } from './plan.types'
 
+export type PlanComparisonResource = Exclude<PlanResource, 'monthlyMovements'>
+
 export type PlanDefinition = {
   description: string
-  limits: Record<PlanResource, number | null>
+  limits: Record<PlanComparisonResource, number | null>
   plan: PlanType
 }
 
-export const planResources: PlanResource[] = ['users', 'products', 'warehouses', 'suppliers', 'categories']
+export const planResources: PlanComparisonResource[] = ['users', 'products', 'warehouses', 'suppliers', 'categories']
 
-export const planResourceLabels: Record<PlanResource, string> = {
+export const planResourceLabels: Record<PlanComparisonResource, string> = {
   categories: 'Categorías',
   products: 'Productos',
   suppliers: 'Proveedores',

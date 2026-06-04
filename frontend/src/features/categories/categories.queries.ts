@@ -43,6 +43,7 @@ export function useUpdateCategory() {
     mutationFn: ({ id, payload }: { id: string; payload: UpdateCategoryRequest }) => updateCategory(id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: categoriesQueryKeys.all })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }

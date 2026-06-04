@@ -61,6 +61,7 @@ export function useUpdateProduct() {
     mutationFn: ({ id, payload }: { id: string; payload: UpdateProductRequest }) => updateProduct(id, payload),
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: productsQueryKeys.all })
+      await queryClient.invalidateQueries({ queryKey: planQueryKeys.all })
     },
   })
 }
