@@ -57,6 +57,7 @@ public class UserManagementService(
         }
 
         var totalCount = await query.CountAsync(cancellationToken);
+        var activeAdminCount = await GetActiveAdminCountAsync(companyId);
         var users = await query
             .OrderBy(user => user.Email)
             .Skip((request.PageNumber - 1) * request.PageSize)
@@ -67,7 +68,7 @@ public class UserManagementService(
 
         foreach (var user in users)
         {
-            items.Add(await MapToListItemAsync(user));
+            items.Add(await MapToListItemAsync(user, activeAdminCount));
         }
 
         return items.ToPagedResponse(request, totalCount);
@@ -231,6 +232,11 @@ public class UserManagementService(
             return false;
         }
 
+        if (user.IsActive == request.IsActive)
+        {
+            return true;
+        }
+
         await EnsureCanChangeAdminAvailabilityAsync(user, companyId, request.IsActive);
 
         user.IsActive = request.IsActive;
@@ -242,7 +248,9 @@ public class UserManagementService(
             AuditAction.UserStatusChanged,
             "User",
             user.Id,
-            $"User status changed: {user.Email} active={request.IsActive}",
+            request.IsActive
+                ? $"User reactivated: {user.Email}"
+                : $"User deactivated: {user.Email}",
             cancellationToken,
             companyId);
 
@@ -295,9 +303,13 @@ public class UserManagementService(
         return user;
     }
 
-    private async Task<UserListItemResponse> MapToListItemAsync(ApplicationUser user)
+    private async Task<UserListItemResponse> MapToListItemAsync(ApplicationUser user, int activeAdminCount)
     {
         var role = await GetPrimaryRoleAsync(user);
+        var isLastActiveAdmin =
+            user.IsActive
+            && string.Equals(role, IdentitySeeder.AdminRole, StringComparison.Ordinal)
+            && activeAdminCount <= 1;
 
         return new UserListItemResponse
         {
@@ -306,7 +318,9 @@ public class UserManagementService(
             Email = user.Email ?? string.Empty,
             Role = role,
             IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
+            CreatedAt = user.CreatedAt,
+            CanChangeRole = !isLastActiveAdmin,
+            CanChangeStatus = !isLastActiveAdmin
         };
     }
 
@@ -420,8 +434,7 @@ public class UserManagementService(
 
     private async Task EnsureMoreThanOneActiveAdminAsync(Guid companyId)
     {
-        var adminUsers = await userManager.GetUsersInRoleAsync(IdentitySeeder.AdminRole);
-        var activeAdminCount = adminUsers.Count(user => user.CompanyId == companyId && user.IsActive);
+        var activeAdminCount = await GetActiveAdminCountAsync(companyId);
 
         if (activeAdminCount <= 1)
         {
@@ -430,6 +443,13 @@ public class UserManagementService(
                 "At least one active Admin user must remain available.",
                 "You cannot deactivate or remove the Admin role from the last active Admin user.");
         }
+    }
+
+    private async Task<int> GetActiveAdminCountAsync(Guid companyId)
+    {
+        var adminUsers = await userManager.GetUsersInRoleAsync(IdentitySeeder.AdminRole);
+
+        return adminUsers.Count(user => user.CompanyId == companyId && user.IsActive);
     }
 
     private static void EnsureIdentitySucceeded(IdentityResult result, string message)

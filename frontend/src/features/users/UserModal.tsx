@@ -70,7 +70,7 @@ export function UserModal({ isOpen, isSubmitting = false, mode, onClose, onSubmi
     const basePayload = {
       email: values.email.trim(),
       fullName: values.fullName.trim(),
-      isActive: values.isActive,
+      isActive: !isCreateMode && user?.canChangeStatus === false ? user.isActive : values.isActive,
     }
 
     if (isCreateMode) {
@@ -179,11 +179,17 @@ export function UserModal({ isOpen, isSubmitting = false, mode, onClose, onSubmi
             <label className="flex items-center gap-3 rounded-lg border border-border bg-slate-50 px-3 py-3 text-sm font-medium text-foreground">
               <input
                 className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                disabled={!isCreateMode && user?.canChangeStatus === false}
                 type="checkbox"
                 {...register('isActive')}
               />
               Usuario activo
             </label>
+            {!isCreateMode && user?.canChangeStatus === false ? (
+              <p className="text-xs font-medium text-amber-700">
+                Debe permanecer al menos un Admin activo en la empresa.
+              </p>
+            ) : null}
 
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <Button disabled={isSubmitting} onClick={onClose} variant="secondary">

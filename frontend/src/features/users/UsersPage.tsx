@@ -614,8 +614,13 @@ export function UsersPage() {
                           <Button
                             aria-label={`Cambiar rol de ${getDisplayName(user)}`}
                             className={`${actionButtonBaseClass} border-[#1017D8]/15 bg-[#1017D8]/5 text-primary hover:bg-[#1017D8]/10`}
+                            disabled={user.canChangeRole === false}
                             onClick={() => setUserForRole(user)}
-                            title="Cambiar rol"
+                            title={
+                              user.canChangeRole === false
+                                ? 'Debe permanecer al menos un Admin activo.'
+                                : 'Cambiar rol'
+                            }
                             variant="secondary"
                           >
                             <ShieldCheck className="h-4 w-4" />
@@ -636,8 +641,15 @@ export function UsersPage() {
                                 ? `${actionButtonBaseClass} border-red-200 bg-red-50 text-red-700 hover:bg-red-100`
                                 : `${actionButtonBaseClass} border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100`
                             }
+                            disabled={user.canChangeStatus === false}
                             onClick={() => setUserForStatus(user)}
-                            title={user.isActive ? 'Desactivar usuario' : 'Activar usuario'}
+                            title={
+                              user.canChangeStatus === false
+                                ? 'Debe permanecer al menos un Admin activo.'
+                                : user.isActive
+                                  ? 'Desactivar usuario'
+                                  : 'Activar usuario'
+                            }
                             variant="secondary"
                           >
                             {user.isActive ? (

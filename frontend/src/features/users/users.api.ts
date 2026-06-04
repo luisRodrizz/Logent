@@ -38,11 +38,11 @@ export async function updateUser(id: string, payload: UpdateUserPayload): Promis
 }
 
 export async function updateUserRole(id: string, payload: UpdateUserRolePayload): Promise<void> {
-  await api.put(`/users/${id}/role`, payload)
+  await api.patch(`/users/${id}/role`, payload)
 }
 
 export async function updateUserStatus(id: string, payload: UpdateUserStatusPayload): Promise<void> {
-  await api.put(`/users/${id}/status`, payload)
+  await api.patch(`/users/${id}/status`, payload)
 }
 
 export async function resetUserPassword(id: string, payload: ResetPasswordPayload): Promise<void> {

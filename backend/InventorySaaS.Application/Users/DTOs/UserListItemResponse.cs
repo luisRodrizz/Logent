@@ -13,4 +13,8 @@ public class UserListItemResponse
     public bool IsActive { get; set; }
 
     public DateTime CreatedAt { get; set; }
+
+    public bool CanChangeRole { get; set; }
+
+    public bool CanChangeStatus { get; set; }
 }

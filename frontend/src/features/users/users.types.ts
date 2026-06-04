@@ -4,6 +4,8 @@ import type { PaginatedResponse, PaginationParams } from '../../types/pagination
 export type UserRole = Extract<AuthRole, 'Admin' | 'Almacenero' | 'Consulta'>
 
 export type User = {
+  canChangeRole?: boolean
+  canChangeStatus?: boolean
   createdAt: string
   email: string
   fullName: string

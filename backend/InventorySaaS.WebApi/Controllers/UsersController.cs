@@ -1,6 +1,6 @@
-using System.Security.Claims;
 using FluentValidation;
 using InventorySaaS.Application.Common.DTOs;
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Users.DTOs;
 using InventorySaaS.Application.Users.Interfaces;
 using InventorySaaS.WebApi.Common;
@@ -20,7 +20,8 @@ public class UsersController(
     IValidator<AcceptTenantUserInvitationRequest> acceptInvitationValidator,
     IValidator<UpdateUserRequest> updateValidator,
     IValidator<UpdateUserRoleRequest> updateRoleValidator,
-    IValidator<ResetPasswordRequest> resetPasswordValidator) : ControllerBase
+    IValidator<ResetPasswordRequest> resetPasswordValidator,
+    ICurrentUserContext currentUserContext) : ControllerBase
 {
     [HttpGet("invitations")]
     public async Task<ActionResult<IReadOnlyCollection<TenantUserInvitationResponse>>> GetInvitations(
@@ -129,12 +130,7 @@ public class UsersController(
                 validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        var currentUserId = GetCurrentUserId();
-
-        if (currentUserId is null)
-        {
-            return UnauthorizedResponse();
-        }
+        var currentUserId = currentUserContext.RequireUserId();
 
         var user = await userManagementService.CreateAsync(request, currentUserId, cancellationToken);
 
@@ -156,12 +152,7 @@ public class UsersController(
                 validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        var currentUserId = GetCurrentUserId();
-
-        if (currentUserId is null)
-        {
-            return UnauthorizedResponse();
-        }
+        var currentUserId = currentUserContext.RequireUserId();
 
         var updated = await userManagementService.UpdateAsync(id, request, currentUserId, cancellationToken);
 
@@ -169,6 +160,7 @@ public class UsersController(
     }
 
     [HttpPut("{id}/role")]
+    [HttpPatch("{id}/role")]
     public async Task<IActionResult> UpdateRole(
         string id,
         UpdateUserRoleRequest request,
@@ -183,12 +175,7 @@ public class UsersController(
                 validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        var currentUserId = GetCurrentUserId();
-
-        if (currentUserId is null)
-        {
-            return UnauthorizedResponse();
-        }
+        var currentUserId = currentUserContext.RequireUserId();
 
         var updated = await userManagementService.UpdateRoleAsync(id, request, currentUserId, cancellationToken);
 
@@ -196,17 +183,13 @@ public class UsersController(
     }
 
     [HttpPut("{id}/status")]
+    [HttpPatch("{id}/status")]
     public async Task<IActionResult> UpdateStatus(
         string id,
         UpdateUserStatusRequest request,
         CancellationToken cancellationToken)
     {
-        var currentUserId = GetCurrentUserId();
-
-        if (currentUserId is null)
-        {
-            return UnauthorizedResponse();
-        }
+        var currentUserId = currentUserContext.RequireUserId();
 
         var updated = await userManagementService.UpdateStatusAsync(id, request, currentUserId, cancellationToken);
 
@@ -228,23 +211,11 @@ public class UsersController(
                 validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        var currentUserId = GetCurrentUserId();
-
-        if (currentUserId is null)
-        {
-            return UnauthorizedResponse();
-        }
+        var currentUserId = currentUserContext.RequireUserId();
 
         var updated = await userManagementService.ResetPasswordAsync(id, request, currentUserId, cancellationToken);
 
         return updated ? NoContent() : UserNotFound();
-    }
-
-    private string? GetCurrentUserId()
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        return string.IsNullOrWhiteSpace(userId) ? null : userId;
     }
 
     private ObjectResult UserNotFound()
@@ -256,12 +227,4 @@ public class UsersController(
             "No user was found with the provided id.");
     }
 
-    private ObjectResult UnauthorizedResponse()
-    {
-        return ApiErrorResponseFactory.Result(
-            HttpContext,
-            StatusCodes.Status401Unauthorized,
-            "Authentication is required.",
-            "You must provide a valid access token.");
-    }
 }
