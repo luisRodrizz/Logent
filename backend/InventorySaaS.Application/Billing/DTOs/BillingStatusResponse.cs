@@ -15,4 +15,10 @@ public class BillingStatusResponse
     public DateTime? CurrentPeriodEnd { get; set; }
 
     public bool CanManageBilling { get; set; }
+
+    public SubscriptionAccessLevel AccessLevel { get; set; }
+
+    public string AccessMessage { get; set; } = string.Empty;
+
+    public string AccessDetail { get; set; } = string.Empty;
 }

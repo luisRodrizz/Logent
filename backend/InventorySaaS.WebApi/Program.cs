@@ -67,6 +67,7 @@ try
     app.UseCors(CorsServiceExtensions.FrontendCorsPolicy);
     app.UseAuthentication();
     app.UseMiddleware<CompanyStatusMiddleware>();
+    app.UseMiddleware<SubscriptionAccessMiddleware>();
     app.UseAuthorization();
 
     app.MapControllers();

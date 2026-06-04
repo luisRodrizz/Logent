@@ -9,14 +9,16 @@ public class CompanyStatusMiddleware(RequestDelegate next)
 {
     private const string CompanyIdClaimType = "companyId";
 
-    private static readonly HashSet<string> PublicAuthPaths = new(StringComparer.OrdinalIgnoreCase)
+    private static readonly HashSet<string> ExemptPaths = new(StringComparer.OrdinalIgnoreCase)
     {
         "/api/auth/login",
         "/api/auth/register-company",
         "/api/auth/confirm-email",
+        "/api/auth/me",
         "/api/auth/resend-confirmation-email",
         "/api/auth/forgot-password",
-        "/api/auth/reset-password"
+        "/api/auth/reset-password",
+        "/api/profile"
     };
 
     public async Task InvokeAsync(HttpContext context, ApplicationDbContext dbContext)
@@ -68,7 +70,8 @@ public class CompanyStatusMiddleware(RequestDelegate next)
 
         var path = context.Request.Path.Value ?? string.Empty;
 
-        return !PublicAuthPaths.Contains(path)
+        return !ExemptPaths.Contains(path)
+            && !context.Request.Path.StartsWithSegments("/api/profile")
             && !context.Request.Path.StartsWithSegments("/api/platform")
             && !context.Request.Path.StartsWithSegments("/swagger");
     }

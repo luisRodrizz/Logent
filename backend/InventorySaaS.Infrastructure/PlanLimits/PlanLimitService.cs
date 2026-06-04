@@ -127,7 +127,7 @@ public class PlanLimitService(ApplicationDbContext context) : IPlanLimitService
         var company = await context.Companies
             .AsNoTracking()
             .Where(company => company.Id == companyId)
-            .Select(company => new { company.IsActive, company.Plan })
+            .Select(company => new { company.IsActive, company.Plan, company.StripeSubscriptionStatus })
             .FirstOrDefaultAsync(cancellationToken);
 
         if (company is null)
@@ -146,7 +146,17 @@ public class PlanLimitService(ApplicationDbContext context) : IPlanLimitService
                 "Contact the platform administrator to reactivate this company.");
         }
 
-        return new CompanyLimits(company.Plan, LimitsByPlan[company.Plan]);
+        var effectivePlan = IsCancelledSubscription(company.StripeSubscriptionStatus)
+            ? PlanType.Free
+            : company.Plan;
+
+        return new CompanyLimits(effectivePlan, LimitsByPlan[effectivePlan]);
+    }
+
+    private static bool IsCancelledSubscription(string? status)
+    {
+        return string.Equals(status, "cancelled", StringComparison.OrdinalIgnoreCase)
+            || string.Equals(status, "canceled", StringComparison.OrdinalIgnoreCase);
     }
 
     private static PlanUsageMetrics MapLimits(PlanLimits limits)

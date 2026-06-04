@@ -19,6 +19,7 @@ namespace InventorySaaS.Infrastructure.Billing;
 public class BillingService(
     ApplicationDbContext context,
     ICurrentUserContext currentUserContext,
+    ISubscriptionAccessService subscriptionAccessService,
     IAuditLogWriter auditLogWriter,
     ITenantNotificationWriter tenantNotificationWriter,
     ITenantEmailNotificationService tenantEmailNotificationService,
@@ -42,6 +43,7 @@ public class BillingService(
     public async Task<BillingStatusResponse> GetStatusAsync(CancellationToken cancellationToken = default)
     {
         var company = await GetCurrentCompanyAsync(cancellationToken);
+        var access = await subscriptionAccessService.GetAccessAsync(company.Id, cancellationToken);
 
         return new BillingStatusResponse
         {
@@ -50,7 +52,10 @@ public class BillingService(
             HasActiveSubscription = IsActiveSubscription(company.StripeSubscriptionStatus),
             SubscriptionStatus = company.StripeSubscriptionStatus,
             CurrentPeriodEnd = company.StripeCurrentPeriodEnd,
-            CanManageBilling = !string.IsNullOrWhiteSpace(company.StripeCustomerId)
+            CanManageBilling = !string.IsNullOrWhiteSpace(company.StripeCustomerId),
+            AccessLevel = access.Level,
+            AccessMessage = access.Message,
+            AccessDetail = access.Detail
         };
     }
 

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
+import { SubscriptionAccessBanner } from '../../features/billing/SubscriptionAccessBanner'
 import { MobileSidebar } from './MobileSidebar'
 import { Sidebar } from './Sidebar'
 import { Topbar } from './Topbar'
@@ -30,6 +31,7 @@ export function ProtectedLayout() {
         />
         <main className="px-4 py-5 sm:px-6 lg:px-8 xl:px-10">
           <div className="mx-auto w-full max-w-[1560px]">
+            <SubscriptionAccessBanner />
             <Outlet />
           </div>
         </main>

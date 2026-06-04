@@ -44,6 +44,7 @@ using InventorySaaS.Infrastructure.Products;
 using InventorySaaS.Infrastructure.Profile;
 using InventorySaaS.Infrastructure.Reports;
 using InventorySaaS.Infrastructure.StockItems;
+using InventorySaaS.Infrastructure.SubscriptionAccess;
 using InventorySaaS.Infrastructure.Suppliers;
 using InventorySaaS.Infrastructure.TenantCompanySettings;
 using InventorySaaS.Infrastructure.Users;
@@ -113,6 +114,7 @@ public static class DependencyInjection
         services.AddScoped<IPlatformNotificationWriter>(
             serviceProvider => serviceProvider.GetRequiredService<PlatformNotificationService>());
         services.AddScoped<IPlanLimitService, PlanLimitService>();
+        services.AddScoped<ISubscriptionAccessService, SubscriptionAccessService>();
         services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
         services.AddScoped<IBillingService, BillingService>();
         services.AddScoped<IImageStorageService, CloudinaryImageService>();
