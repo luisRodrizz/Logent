@@ -35,6 +35,13 @@ const requestStatusLabels: Record<PlanUpgradeRequestStatus, string> = {
   Rejected: 'Rechazada',
 }
 
+const planRequestLabels: Record<PlanType, string> = {
+  Enterprise: 'Consultar Enterprise',
+  Free: 'Plan actual',
+  Pro: 'Solicitar Pro',
+  Starter: 'Solicitar Starter',
+}
+
 export function PlanPage() {
   const [selectedRequestedPlan, setSelectedRequestedPlan] = useState<PlanType | null>(null)
   const createUpgradeRequestMutation = useCreatePlanUpgradeRequest()
@@ -44,6 +51,9 @@ export function PlanPage() {
   const higherPlans = currentPlan ? getHigherPlans(currentPlan) : []
   const latestUpgradeRequest = latestUpgradeRequestQuery.data
   const hasPendingUpgradeRequest = latestUpgradeRequest?.status === 'Pending'
+  const availablePlanDefinitions = currentPlan
+    ? planDefinitions.filter((definition) => definition.plan === currentPlan || higherPlans.includes(definition.plan))
+    : []
   const resourceStatuses = planUsageQuery.data
     ? planResources.map((resource) => getPlanResourceLimitStatus(planUsageQuery.data, resource))
     : []
@@ -94,7 +104,17 @@ export function PlanPage() {
         </div>
       ) : null}
 
-      <PlanUsageCard onRequestUpgrade={() => openUpgradeRequestModal()} />
+      <PlanUsageCard
+        isUpgradeDisabled={hasPendingUpgradeRequest || higherPlans.length === 0}
+        onRequestUpgrade={() => openUpgradeRequestModal()}
+        upgradeLabel={
+          hasPendingUpgradeRequest
+            ? 'Solicitud pendiente'
+            : higherPlans.length === 0
+              ? 'Plan Enterprise activo'
+              : 'Solicitar actualización'
+        }
+      />
 
       {latestUpgradeRequestQuery.isError ? (
         <SectionError
@@ -106,7 +126,15 @@ export function PlanPage() {
       ) : null}
 
       {latestUpgradeRequest ? (
-        <Card className={hasPendingUpgradeRequest ? 'border-amber-200' : undefined}>
+        <Card
+          className={
+            latestUpgradeRequest.status === 'Pending'
+              ? 'border-amber-200'
+              : latestUpgradeRequest.status === 'Rejected'
+                ? 'border-red-200'
+                : 'border-emerald-200'
+          }
+        >
           <CardHeader className="gap-3 sm:flex sm:flex-row sm:items-start sm:justify-between sm:space-y-0">
             <div>
               <CardTitle>Solicitud de actualización</CardTitle>
@@ -117,6 +145,21 @@ export function PlanPage() {
             </Badge>
           </CardHeader>
           <CardContent>
+            <p
+              className={
+                latestUpgradeRequest.status === 'Pending'
+                  ? 'mb-5 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-700'
+                  : latestUpgradeRequest.status === 'Rejected'
+                    ? 'mb-5 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm leading-6 text-red-700'
+                    : 'mb-5 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm leading-6 text-emerald-700'
+              }
+            >
+              {latestUpgradeRequest.status === 'Pending'
+                ? 'La solicitud está en revisión. No podrás enviar otra hasta recibir una respuesta.'
+                : latestUpgradeRequest.status === 'Rejected'
+                  ? 'La solicitud fue rechazada. Puedes revisar la nota de resolución y enviar una nueva solicitud.'
+                  : 'La solicitud fue aprobada. El uso y los límites superiores corresponden al plan activo de tu empresa.'}
+            </p>
             <dl className="grid gap-4 sm:grid-cols-3">
               <div>
                 <dt className="text-xs font-semibold uppercase tracking-wide text-muted">Cambio solicitado</dt>
@@ -143,6 +186,13 @@ export function PlanPage() {
                 </div>
               ) : null}
             </dl>
+            {latestUpgradeRequest.status === 'Rejected' && higherPlans.includes(latestUpgradeRequest.requestedPlan) ? (
+              <div className="mt-5 border-t border-border pt-5">
+                <Button onClick={() => openUpgradeRequestModal(latestUpgradeRequest.requestedPlan)} size="sm">
+                  Solicitar nuevamente
+                </Button>
+              </div>
+            ) : null}
           </CardContent>
         </Card>
       ) : null}
@@ -152,7 +202,7 @@ export function PlanPage() {
           <div>
             <h2 className="text-xl font-semibold tracking-tight text-foreground">Comparación de planes</h2>
             <p className="mt-1 text-sm leading-6 text-muted">
-              Revisa la capacidad disponible para cada etapa de tu operación.
+              Compara tu plan actual con las opciones superiores disponibles para tu empresa.
             </p>
           </div>
           <Link
@@ -164,7 +214,7 @@ export function PlanPage() {
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-          {planDefinitions.map((definition) => {
+          {availablePlanDefinitions.map((definition) => {
             const isCurrentPlan = definition.plan === planUsageQuery.data?.plan
             const isHigherPlan = higherPlans.includes(definition.plan)
 
@@ -214,11 +264,9 @@ export function PlanPage() {
                     >
                       {isCurrentPlan
                         ? 'Plan actual'
-                        : !isHigherPlan
-                          ? 'No disponible'
-                          : hasPendingUpgradeRequest
-                            ? 'Solicitud pendiente'
-                            : 'Solicitar actualización'}
+                        : hasPendingUpgradeRequest
+                          ? 'Solicitud pendiente'
+                          : planRequestLabels[definition.plan]}
                     </Button>
                   </div>
                 </CardContent>

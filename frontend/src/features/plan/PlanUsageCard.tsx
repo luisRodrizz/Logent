@@ -55,10 +55,16 @@ function getProgress(used: number, limit: number) {
 }
 
 type PlanUsageCardProps = {
+  isUpgradeDisabled?: boolean
   onRequestUpgrade?: () => void
+  upgradeLabel?: string
 }
 
-export function PlanUsageCard({ onRequestUpgrade }: PlanUsageCardProps) {
+export function PlanUsageCard({
+  isUpgradeDisabled = false,
+  onRequestUpgrade,
+  upgradeLabel = 'Solicitar actualización',
+}: PlanUsageCardProps) {
   const planUsageQuery = usePlanUsage()
 
   return (
@@ -75,11 +81,12 @@ export function PlanUsageCard({ onRequestUpgrade }: PlanUsageCardProps) {
         </div>
         <Button
           className="shrink-0"
+          disabled={isUpgradeDisabled}
           onClick={onRequestUpgrade ?? (() => toast.info('Revisa la página Plan para solicitar una actualización.'))}
           size="sm"
           variant="secondary"
         >
-          Solicitar actualización
+          {upgradeLabel}
         </Button>
       </CardHeader>
       <CardContent>

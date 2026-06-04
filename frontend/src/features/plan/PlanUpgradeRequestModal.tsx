@@ -1,8 +1,10 @@
-import { ArrowUpCircle, X } from 'lucide-react'
+import { ArrowUpCircle, Check, ShieldCheck, X } from 'lucide-react'
 import { useState } from 'react'
 import { ModalOverlay } from '../../components/common/ModalOverlay'
 import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
+import { formatNumber } from '../../lib/format'
+import { planDefinitions, planResourceLabels, planResources } from './plan.constants'
 import type { CreatePlanUpgradeRequestPayload, PlanType } from './plan.types'
 
 type PlanUpgradeRequestModalProps = {
@@ -22,6 +24,7 @@ export function PlanUpgradeRequestModal({
 }: PlanUpgradeRequestModalProps) {
   const [message, setMessage] = useState('')
   const [requestedPlan, setRequestedPlan] = useState<PlanType | ''>(initialPlan ?? availablePlans[0] ?? '')
+  const requestedPlanDefinition = planDefinitions.find((definition) => definition.plan === requestedPlan)
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -74,6 +77,35 @@ export function PlanUpgradeRequestModal({
               </select>
             </label>
 
+            {requestedPlanDefinition ? (
+              <div className="rounded-lg border border-border bg-slate-50/70 p-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">Resumen del plan {requestedPlanDefinition.plan}</p>
+                    <p className="mt-1 text-xs leading-5 text-muted">{requestedPlanDefinition.description}</p>
+                  </div>
+                  <ShieldCheck className="h-5 w-5 shrink-0 text-[#14B8A6]" aria-hidden="true" />
+                </div>
+                <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+                  {planResources.map((resource) => {
+                    const limit = requestedPlanDefinition.limits[resource]
+
+                    return (
+                      <li className="flex items-center justify-between gap-3 text-xs" key={resource}>
+                        <span className="flex min-w-0 items-center gap-2 text-muted">
+                          <Check className="h-3.5 w-3.5 shrink-0 text-[#147A08]" aria-hidden="true" />
+                          {planResourceLabels[resource]}
+                        </span>
+                        <strong className="shrink-0 text-foreground">
+                          {limit === null ? 'Capacidad extendida' : formatNumber(limit)}
+                        </strong>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ) : null}
+
             <label className="block space-y-2">
               <span className="text-sm font-semibold text-foreground">Mensaje opcional</span>
               <textarea
@@ -86,12 +118,21 @@ export function PlanUpgradeRequestModal({
               <span className="block text-right text-xs text-muted">{message.length}/500</span>
             </label>
 
+            <p className="rounded-lg border border-blue-100 bg-blue-50/60 px-4 py-3 text-xs leading-5 text-slate-600">
+              Esta solicitud será revisada por el equipo administrador de LOGENT. No se realizará ningún cobro ni
+              cambio automático de plan.
+            </p>
+
             <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <Button disabled={isSubmitting} onClick={onClose} variant="secondary">
                 Cancelar
               </Button>
               <Button disabled={!requestedPlan || isSubmitting} type="submit">
-                {isSubmitting ? 'Enviando...' : 'Enviar solicitud'}
+                {isSubmitting
+                  ? 'Enviando...'
+                  : requestedPlan === 'Enterprise'
+                    ? 'Enviar consulta Enterprise'
+                    : `Solicitar ${requestedPlan}`}
               </Button>
             </div>
           </form>
