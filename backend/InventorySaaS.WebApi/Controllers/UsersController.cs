@@ -6,6 +6,7 @@ using InventorySaaS.Application.Users.Interfaces;
 using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using AuthMessageResponse = InventorySaaS.Application.Auth.DTOs.MessageResponse;
 
 namespace InventorySaaS.WebApi.Controllers;
 
@@ -15,10 +16,87 @@ namespace InventorySaaS.WebApi.Controllers;
 public class UsersController(
     IUserManagementService userManagementService,
     IValidator<CreateUserRequest> createValidator,
+    IValidator<CreateTenantUserInvitationRequest> createInvitationValidator,
+    IValidator<AcceptTenantUserInvitationRequest> acceptInvitationValidator,
     IValidator<UpdateUserRequest> updateValidator,
     IValidator<UpdateUserRoleRequest> updateRoleValidator,
     IValidator<ResetPasswordRequest> resetPasswordValidator) : ControllerBase
 {
+    [HttpGet("invitations")]
+    public async Task<ActionResult<IReadOnlyCollection<TenantUserInvitationResponse>>> GetInvitations(
+        [FromServices] ITenantUserInvitationService invitationService,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await invitationService.GetAllAsync(cancellationToken));
+    }
+
+    [HttpPost("invitations")]
+    public async Task<ActionResult<TenantUserInvitationResponse>> CreateInvitation(
+        CreateTenantUserInvitationRequest request,
+        [FromServices] ITenantUserInvitationService invitationService,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await createInvitationValidator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            return ApiErrorResponseFactory.Validation(
+                HttpContext,
+                validationResult.Errors.Select(error => error.ErrorMessage));
+        }
+
+        var invitation = await invitationService.CreateAsync(request, cancellationToken);
+
+        return CreatedAtAction(nameof(GetInvitations), invitation);
+    }
+
+    [HttpPost("invitations/{id:guid}/resend")]
+    public async Task<ActionResult<TenantUserInvitationResponse>> ResendInvitation(
+        Guid id,
+        [FromServices] ITenantUserInvitationService invitationService,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await invitationService.ResendAsync(id, cancellationToken));
+    }
+
+    [HttpPost("invitations/{id:guid}/cancel")]
+    public async Task<ActionResult<TenantUserInvitationResponse>> CancelInvitation(
+        Guid id,
+        [FromServices] ITenantUserInvitationService invitationService,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await invitationService.CancelAsync(id, cancellationToken));
+    }
+
+    [AllowAnonymous]
+    [HttpGet("invitations/validate")]
+    public async Task<ActionResult<ValidateTenantUserInvitationResponse>> ValidateInvitation(
+        [FromQuery] string token,
+        [FromServices] ITenantUserInvitationService invitationService,
+        CancellationToken cancellationToken)
+    {
+        return Ok(await invitationService.ValidateAsync(token, cancellationToken));
+    }
+
+    [AllowAnonymous]
+    [HttpPost("invitations/accept")]
+    public async Task<ActionResult<AuthMessageResponse>> AcceptInvitation(
+        AcceptTenantUserInvitationRequest request,
+        [FromServices] ITenantUserInvitationService invitationService,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await acceptInvitationValidator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
+        {
+            return ApiErrorResponseFactory.Validation(
+                HttpContext,
+                validationResult.Errors.Select(error => error.ErrorMessage));
+        }
+
+        return Ok(await invitationService.AcceptAsync(request, cancellationToken));
+    }
+
     [HttpGet]
     public async Task<ActionResult<PagedResponse<UserListItemResponse>>> GetAll(
         [FromQuery] PagedRequest request,

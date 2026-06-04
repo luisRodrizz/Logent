@@ -1,8 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
+  acceptTenantUserInvitation,
+  cancelTenantUserInvitation,
+  createTenantUserInvitation,
   createUser,
+  getTenantUserInvitations,
   getUserById,
   getUsers,
+  resendTenantUserInvitation,
   resetUserPassword,
   updateUser,
   updateUserRole,
@@ -10,6 +15,8 @@ import {
 } from './users.api'
 import type {
   CreateUserPayload,
+  AcceptTenantUserInvitationPayload,
+  CreateTenantUserInvitationPayload,
   ResetPasswordPayload,
   UpdateUserPayload,
   UpdateUserRolePayload,
@@ -21,6 +28,7 @@ import { planQueryKeys } from '../plan/plan.queries'
 export const usersQueryKeys = {
   all: ['users'] as const,
   detail: (id: string) => ['users', id] as const,
+  invitations: ['users', 'invitations'] as const,
   list: (params: UserFilters) => ['users', params] as const,
 }
 
@@ -92,5 +100,52 @@ export function useResetUserPassword() {
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: usersQueryKeys.all })
     },
+  })
+}
+
+export function useTenantUserInvitations(enabled = true) {
+  return useQuery({
+    enabled,
+    queryFn: getTenantUserInvitations,
+    queryKey: usersQueryKeys.invitations,
+  })
+}
+
+export function useCreateTenantUserInvitation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: CreateTenantUserInvitationPayload) => createTenantUserInvitation(payload),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: usersQueryKeys.invitations })
+    },
+  })
+}
+
+export function useResendTenantUserInvitation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => resendTenantUserInvitation(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: usersQueryKeys.invitations })
+    },
+  })
+}
+
+export function useCancelTenantUserInvitation() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (id: string) => cancelTenantUserInvitation(id),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: usersQueryKeys.invitations })
+    },
+  })
+}
+
+export function useAcceptTenantUserInvitation() {
+  return useMutation({
+    mutationFn: (payload: AcceptTenantUserInvitationPayload) => acceptTenantUserInvitation(payload),
   })
 }

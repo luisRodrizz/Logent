@@ -553,6 +553,74 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.ToTable("Suppliers", (string)null);
                 });
 
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.TenantUserInvitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("AcceptedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CancelledByUserId")
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<Guid>("CompanyId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedByUserId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("nvarchar(256)");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FirstName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("LastName")
+                        .IsRequired()
+                        .HasMaxLength(80)
+                        .HasColumnType("nvarchar(80)");
+
+                    b.Property<string>("Role")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("nvarchar(40)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("nvarchar(64)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TokenHash")
+                        .IsUnique();
+
+                    b.HasIndex("CompanyId", "Email", "Status");
+
+                    b.ToTable("TenantUserInvitations", (string)null);
+                });
+
             modelBuilder.Entity("InventorySaaS.Domain.Entities.Warehouse", b =>
                 {
                     b.Property<Guid>("Id")
@@ -989,6 +1057,17 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.Navigation("Company");
                 });
 
+            modelBuilder.Entity("InventorySaaS.Domain.Entities.TenantUserInvitation", b =>
+                {
+                    b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
+                        .WithMany("TenantUserInvitations")
+                        .HasForeignKey("CompanyId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Company");
+                });
+
             modelBuilder.Entity("InventorySaaS.Domain.Entities.Warehouse", b =>
                 {
                     b.HasOne("InventorySaaS.Domain.Entities.Company", "Company")
@@ -1084,6 +1163,8 @@ namespace InventorySaaS.Infrastructure.Persistence.Migrations
                     b.Navigation("StockItems");
 
                     b.Navigation("Suppliers");
+
+                    b.Navigation("TenantUserInvitations");
 
                     b.Navigation("Warehouses");
                 });

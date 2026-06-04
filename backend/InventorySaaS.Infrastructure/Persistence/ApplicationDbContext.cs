@@ -32,6 +32,8 @@ public class ApplicationDbContext(DbContextOptions<ApplicationDbContext> options
 
     public DbSet<PlatformNotification> PlatformNotifications => Set<PlatformNotification>();
 
+    public DbSet<TenantUserInvitation> TenantUserInvitations => Set<TenantUserInvitation>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);

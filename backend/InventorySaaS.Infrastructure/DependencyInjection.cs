@@ -90,6 +90,7 @@ public static class DependencyInjection
         services.AddScoped<IDashboardService, DashboardService>();
         services.AddScoped<IAuditLogService, AuditLogService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
+        services.AddScoped<ITenantUserInvitationService, TenantUserInvitationService>();
         services.AddScoped<IProfileService, ProfileService>();
         services.AddScoped<ITenantCompanySettingsService, TenantCompanySettingsService>();
         services.AddScoped<IPlatformActivityService, PlatformActivityService>();

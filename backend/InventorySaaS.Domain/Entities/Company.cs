@@ -46,4 +46,6 @@ public class Company : AuditableEntity
     public ICollection<PlanUpgradeRequest> PlanUpgradeRequests { get; set; } = new List<PlanUpgradeRequest>();
 
     public ICollection<PlatformNotification> PlatformNotifications { get; set; } = new List<PlatformNotification>();
+
+    public ICollection<TenantUserInvitation> TenantUserInvitations { get; set; } = new List<TenantUserInvitation>();
 }

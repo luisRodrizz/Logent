@@ -11,6 +11,9 @@ import type { AuthRole } from '../types/auth'
 const AuditLogsPage = lazy(() =>
   import('../features/audit-logs/AuditLogsPage').then((module) => ({ default: module.AuditLogsPage })),
 )
+const AcceptInvitationPage = lazy(() =>
+  import('../features/users/AcceptInvitationPage').then((module) => ({ default: module.AcceptInvitationPage })),
+)
 const CategoriesPage = lazy(() =>
   import('../features/categories/CategoriesPage').then((module) => ({ default: module.CategoriesPage })),
 )
@@ -157,6 +160,14 @@ export function AppRouter() {
           element={
             <Suspense fallback={<FullPageFallback />}>
               <ConfirmEmailPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/accept-invitation"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <AcceptInvitationPage />
             </Suspense>
           }
         />

@@ -1,11 +1,14 @@
 import {
   Edit3,
   KeyRound,
+  MailPlus,
   Plus,
   Power,
   PowerOff,
+  RefreshCw,
   Search,
   ShieldCheck,
+  XCircle,
   UsersRound,
 } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -25,16 +28,29 @@ import { PlanLimitInlineNotice } from '../plan/PlanLimitInlineNotice'
 import { usePlanResourceLimit } from '../plan/plan-limit.helpers'
 import { ResetPasswordModal } from './ResetPasswordModal'
 import { RoleModal } from './RoleModal'
+import { InvitationModal } from './InvitationModal'
 import { UserModal } from './UserModal'
 import {
+  useCancelTenantUserInvitation,
   useCreateUser,
+  useCreateTenantUserInvitation,
   useResetUserPassword,
+  useResendTenantUserInvitation,
+  useTenantUserInvitations,
   useUpdateUser,
   useUpdateUserRole,
   useUpdateUserStatus,
   useUsers,
 } from './users.queries'
-import type { CreateUserPayload, UpdateUserPayload, User, UserRole } from './users.types'
+import type {
+  CreateTenantUserInvitationPayload,
+  CreateUserPayload,
+  TenantUserInvitation,
+  TenantUserInvitationStatus,
+  UpdateUserPayload,
+  User,
+  UserRole,
+} from './users.types'
 
 const pageSizeOptions = [10, 20, 50]
 
@@ -45,6 +61,20 @@ const roleBadgeVariants: Record<UserRole, 'default' | 'success' | 'muted'> = {
 }
 
 const actionButtonBaseClass = 'h-9 w-9 border p-0 shadow-none'
+
+const invitationStatusBadgeVariants: Record<TenantUserInvitationStatus, 'success' | 'warning' | 'danger' | 'muted'> = {
+  Accepted: 'success',
+  Cancelled: 'danger',
+  Expired: 'muted',
+  Pending: 'warning',
+}
+
+const invitationStatusLabels: Record<TenantUserInvitationStatus, string> = {
+  Accepted: 'Aceptada',
+  Cancelled: 'Cancelada',
+  Expired: 'Expirada',
+  Pending: 'Pendiente',
+}
 
 type UserModalState =
   | {
@@ -72,6 +102,7 @@ function isCreatePayload(payload: CreateUserPayload | UpdateUserPayload): payloa
 }
 
 export function UsersPage() {
+  const [activeView, setActiveView] = useState<'users' | 'invitations'>('users')
   const [pageNumber, setPageNumber] = useState(1)
   const [pageSize, setPageSize] = useState(10)
   const [searchInput, setSearchInput] = useState('')
@@ -80,6 +111,8 @@ export function UsersPage() {
   const [userForRole, setUserForRole] = useState<User | null>(null)
   const [userForReset, setUserForReset] = useState<User | null>(null)
   const [userForStatus, setUserForStatus] = useState<User | null>(null)
+  const [isInvitationModalOpen, setIsInvitationModalOpen] = useState(false)
+  const [invitationForCancel, setInvitationForCancel] = useState<TenantUserInvitation | null>(null)
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
@@ -104,6 +137,10 @@ export function UsersPage() {
   const updateUserRoleMutation = useUpdateUserRole()
   const updateUserStatusMutation = useUpdateUserStatus()
   const resetUserPasswordMutation = useResetUserPassword()
+  const invitationsQuery = useTenantUserInvitations()
+  const createInvitationMutation = useCreateTenantUserInvitation()
+  const resendInvitationMutation = useResendTenantUserInvitation()
+  const cancelInvitationMutation = useCancelTenantUserInvitation()
   const userLimit = usePlanResourceLimit('users')
 
   const users = useMemo(() => usersQuery.data?.items ?? [], [usersQuery.data?.items])
@@ -120,6 +157,8 @@ export function UsersPage() {
 
   const isFormSubmitting = createUserMutation.isPending || updateUserMutation.isPending
   const isSearching = Boolean(search)
+  const invitations = invitationsQuery.data ?? []
+  const pendingInvitations = invitations.filter((invitation) => invitation.status === 'Pending')
 
   async function handleSubmitUser(payload: CreateUserPayload | UpdateUserPayload) {
     try {
@@ -183,6 +222,39 @@ export function UsersPage() {
     }
   }
 
+  async function handleCreateInvitation(payload: CreateTenantUserInvitationPayload) {
+    try {
+      await createInvitationMutation.mutateAsync(payload)
+      toast.success('Invitación enviada correctamente.')
+      setIsInvitationModalOpen(false)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
+  }
+
+  async function handleResendInvitation(invitation: TenantUserInvitation) {
+    try {
+      await resendInvitationMutation.mutateAsync(invitation.id)
+      toast.success('Invitación reenviada correctamente.')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
+  }
+
+  async function handleCancelInvitation() {
+    if (!invitationForCancel) {
+      return
+    }
+
+    try {
+      await cancelInvitationMutation.mutateAsync(invitationForCancel.id)
+      toast.success('Invitación cancelada correctamente.')
+      setInvitationForCancel(null)
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
+  }
+
   function handleSearchChange(value: string) {
     setSearchInput(value)
     setPageNumber(1)
@@ -202,23 +274,192 @@ export function UsersPage() {
     setPageNumber(1)
   }
 
+  function handleOpenInvitationModal() {
+    if (isUserCreationBlocked) {
+      toast.error('Has alcanzado el límite de tu plan.')
+      return
+    }
+
+    setIsInvitationModalOpen(true)
+  }
+
+  if (activeView === 'invitations') {
+    return (
+      <div className="space-y-6">
+        <PageHeader
+          action={
+            <Button
+              disabled={isUserCreationBlocked}
+              onClick={handleOpenInvitationModal}
+              title={isUserCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+            >
+              <MailPlus className="h-4 w-4" />
+              Invitar usuario
+            </Button>
+          }
+          description="Invita colaboradores por correo y controla accesos pendientes."
+          eyebrow="Administración"
+          title="Usuarios"
+        />
+
+        <UsersViewTabs activeView={activeView} onChange={setActiveView} pendingCount={pendingInvitations.length} />
+
+        <PlanLimitInlineNotice resource="users" />
+
+        {invitationsQuery.isLoading ? (
+          <Card>
+            <CardContent>
+              <LoadingState text="Cargando invitaciones..." />
+            </CardContent>
+          </Card>
+        ) : invitationsQuery.isError ? (
+          <Card>
+            <CardContent className="px-6 py-10">
+              <SectionError text="No se pudieron cargar las invitaciones." />
+            </CardContent>
+          </Card>
+        ) : invitations.length === 0 ? (
+          <EmptyState
+            action={
+              <Button disabled={isUserCreationBlocked} onClick={handleOpenInvitationModal}>
+                <MailPlus className="h-4 w-4" />
+                Enviar primera invitación
+              </Button>
+            }
+            description="Invita usuarios para que configuren su propia contraseña y se unan a la empresa."
+            icon={<MailPlus className="h-6 w-6" />}
+            title="Sin invitaciones"
+          />
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Invitaciones de la empresa</CardTitle>
+              <CardDescription>
+                Los enlaces pendientes pueden reenviarse o cancelarse antes de su vencimiento.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <TableContainer>
+                <table className="w-full min-w-[980px] table-fixed divide-y divide-border">
+                  <colgroup>
+                    <col className="w-[24%]" />
+                    <col className="w-[24%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[15%]" />
+                    <col className="w-[9%]" />
+                  </colgroup>
+                  <thead className="bg-slate-50">
+                    <tr>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Invitado</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Email</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Rol</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Estado</th>
+                      <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Expira</th>
+                      <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border bg-white">
+                    {invitations.map((invitation) => (
+                      <tr className="transition-colors hover:bg-slate-50/80" key={invitation.id}>
+                        <td className="px-5 py-4">
+                          <p className="truncate text-sm font-semibold text-foreground">
+                            {invitation.firstName} {invitation.lastName}
+                          </p>
+                          <p className="mt-1 text-xs text-muted">Invitada {formatDate(invitation.createdAt)}</p>
+                        </td>
+                        <td className="px-5 py-4">
+                          <p className="truncate text-sm text-muted">{invitation.email}</p>
+                        </td>
+                        <td className="px-5 py-4">
+                          <Badge variant={roleBadgeVariants[invitation.role]}>{invitation.role}</Badge>
+                        </td>
+                        <td className="px-5 py-4">
+                          <Badge variant={invitationStatusBadgeVariants[invitation.status]}>
+                            {invitationStatusLabels[invitation.status]}
+                          </Badge>
+                        </td>
+                        <td className="whitespace-nowrap px-5 py-4 text-sm text-muted">
+                          {formatDate(invitation.expiresAt)}
+                        </td>
+                        <td className="px-5 py-4">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              aria-label={`Reenviar invitación a ${invitation.email}`}
+                              className={actionButtonBaseClass}
+                              disabled={invitation.status !== 'Pending' || resendInvitationMutation.isPending}
+                              onClick={() => void handleResendInvitation(invitation)}
+                              title="Reenviar invitación"
+                              variant="secondary"
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              aria-label={`Cancelar invitación de ${invitation.email}`}
+                              className={`${actionButtonBaseClass} border-red-200 bg-red-50 text-red-700 hover:bg-red-100`}
+                              disabled={invitation.status !== 'Pending'}
+                              onClick={() => setInvitationForCancel(invitation)}
+                              title="Cancelar invitación"
+                              variant="secondary"
+                            >
+                              <XCircle className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableContainer>
+            </CardContent>
+          </Card>
+        )}
+
+        <InvitationModal
+          isOpen={isInvitationModalOpen}
+          isSubmitting={createInvitationMutation.isPending}
+          onClose={() => setIsInvitationModalOpen(false)}
+          onSubmit={handleCreateInvitation}
+        />
+
+        <ConfirmDialog
+          confirmLabel="Cancelar invitación"
+          description="El enlace dejará de funcionar y el usuario no podrá aceptar esta invitación."
+          isConfirming={cancelInvitationMutation.isPending}
+          isOpen={Boolean(invitationForCancel)}
+          onCancel={() => setInvitationForCancel(null)}
+          onConfirm={handleCancelInvitation}
+          title="Cancelar invitación pendiente"
+        />
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader
         action={
-          <Button
-            disabled={isUserCreationBlocked}
-            onClick={handleOpenCreateModal}
-            title={isUserCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
-          >
-            <Plus className="h-4 w-4" />
-            Nuevo usuario
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button disabled={isUserCreationBlocked} onClick={handleOpenInvitationModal} variant="secondary">
+              <MailPlus className="h-4 w-4" />
+              Invitar usuario
+            </Button>
+            <Button
+              disabled={isUserCreationBlocked}
+              onClick={handleOpenCreateModal}
+              title={isUserCreationBlocked ? 'Has alcanzado el límite de tu plan.' : undefined}
+            >
+              <Plus className="h-4 w-4" />
+              Nuevo usuario
+            </Button>
+          </div>
         }
         description="Administra cuentas internas, roles y estado de acceso al sistema."
         eyebrow="Administracion"
         title="Usuarios"
       />
+
+      <UsersViewTabs activeView={activeView} onChange={setActiveView} pendingCount={pendingInvitations.length} />
 
       <PlanLimitInlineNotice resource="users" />
 
@@ -477,6 +718,51 @@ export function UsersPage() {
         onConfirm={handleConfirmStatusChange}
         title={userForStatus?.isActive ? 'Desactivar usuario' : 'Activar usuario'}
       />
+
+      <InvitationModal
+        isOpen={isInvitationModalOpen}
+        isSubmitting={createInvitationMutation.isPending}
+        onClose={() => setIsInvitationModalOpen(false)}
+        onSubmit={handleCreateInvitation}
+      />
+    </div>
+  )
+}
+
+function UsersViewTabs({
+  activeView,
+  onChange,
+  pendingCount,
+}: {
+  activeView: 'users' | 'invitations'
+  onChange: (view: 'users' | 'invitations') => void
+  pendingCount: number
+}) {
+  return (
+    <div className="flex w-fit items-center gap-1 rounded-lg border border-border bg-white p-1">
+      <button
+        className={
+          activeView === 'users'
+            ? 'rounded-md bg-slate-100 px-4 py-2 text-sm font-semibold text-foreground'
+            : 'rounded-md px-4 py-2 text-sm font-semibold text-muted hover:bg-slate-50 hover:text-foreground'
+        }
+        onClick={() => onChange('users')}
+        type="button"
+      >
+        Usuarios
+      </button>
+      <button
+        className={
+          activeView === 'invitations'
+            ? 'inline-flex items-center gap-2 rounded-md bg-slate-100 px-4 py-2 text-sm font-semibold text-foreground'
+            : 'inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold text-muted hover:bg-slate-50 hover:text-foreground'
+        }
+        onClick={() => onChange('invitations')}
+        type="button"
+      >
+        Invitaciones
+        {pendingCount > 0 ? <Badge variant="warning">{pendingCount}</Badge> : null}
+      </button>
     </div>
   )
 }
