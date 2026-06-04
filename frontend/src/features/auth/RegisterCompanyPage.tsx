@@ -1,13 +1,26 @@
 import { zodResolver } from '@hookform/resolvers/zod'
-import { ArrowLeft, Building2, CheckCircle2, LockKeyhole, Mail, MapPin, Phone, RefreshCw, UserRound } from 'lucide-react'
+import {
+  ArrowLeft,
+  BadgeCheck,
+  Building2,
+  CheckCircle2,
+  LockKeyhole,
+  Mail,
+  MapPin,
+  Phone,
+  RefreshCw,
+  UserRound,
+} from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import { toast } from 'sonner'
 
 import logentLogo from '../../assets/brand/logent-logo.png'
 import { LoadingState } from '../../components/common/LoadingState'
 import { getApiErrorMessage } from '../../lib/api-error'
+import { planDefinitions } from '../plan/plan.constants'
+import type { PlanType } from '../plan/plan.types'
 import { resendConfirmationEmail } from './auth.api'
 import { registerCompanySchema, type RegisterCompanyFormValues } from './register-company.schema'
 import { useAuth } from './useAuth'
@@ -15,13 +28,21 @@ import './RegisterCompanyPage.css'
 
 type RegistrationSuccess = {
   adminEmail: string
+  selectedPlan: PlanType
 }
 
 export function RegisterCompanyPage() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const { isAuthenticated, isLoading, registerCompany } = useAuth()
   const [isResending, setIsResending] = useState(false)
   const [registrationSuccess, setRegistrationSuccess] = useState<RegistrationSuccess | null>(null)
+  const requestedPlan = searchParams.get('plan')
+  const selectedPlanDefinition =
+    planDefinitions.find((definition) => definition.plan.toLowerCase() === requestedPlan?.toLowerCase()) ??
+    planDefinitions[0]
+  const selectedPlan = selectedPlanDefinition.plan
+  const requiresUpgradeRequest = selectedPlan !== 'Free'
 
   const {
     formState: { errors, isSubmitting },
@@ -53,6 +74,7 @@ export function RegisterCompanyPage() {
       const response = await registerCompany(values)
       setRegistrationSuccess({
         adminEmail: values.adminEmail,
+        selectedPlan,
       })
       toast.success(response.message)
     } catch (error) {
@@ -110,6 +132,15 @@ export function RegisterCompanyPage() {
             <strong>{registrationSuccess.adminEmail}</strong>
           </div>
 
+          {registrationSuccess.selectedPlan !== 'Free' ? (
+            <div className="logent-register-success-plan">
+              <strong>Plan de interés: {registrationSuccess.selectedPlan}</strong>
+              <span>
+                Después de confirmar tu correo e iniciar sesión, podrás solicitar la actualización desde Plan y uso.
+              </span>
+            </div>
+          ) : null}
+
           <div className="logent-register-success-actions">
             <Link to="/login">Ir al login</Link>
             <button disabled={isResending} onClick={handleResendConfirmation} type="button">
@@ -140,6 +171,26 @@ export function RegisterCompanyPage() {
           <h1>Crea el espacio de trabajo de tu empresa</h1>
           <p>Configura tu organización y el acceso del primer administrador para comenzar a operar en LOGENT.</p>
         </header>
+
+        <aside className="logent-register-plan" aria-label={`Plan seleccionado: ${selectedPlan}`}>
+          <div className="logent-register-plan-icon">
+            <BadgeCheck size={20} />
+          </div>
+          <div className="logent-register-plan-copy">
+            <span>Plan seleccionado</span>
+            <strong>{selectedPlan}</strong>
+            <p>{selectedPlanDefinition.description}</p>
+            {requiresUpgradeRequest ? (
+              <small>
+                Tu empresa se creará inicialmente en Free. Luego podrás solicitar la actualización del plan desde tu
+                panel.
+              </small>
+            ) : (
+              <small>Tu empresa comenzará con el plan Free y sus límites iniciales.</small>
+            )}
+          </div>
+          <Link to="/pricing">Cambiar plan</Link>
+        </aside>
 
         <form className="logent-register-card" onSubmit={handleSubmit(onSubmit)}>
           <section className="logent-register-section">

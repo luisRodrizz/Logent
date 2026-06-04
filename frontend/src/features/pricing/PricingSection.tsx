@@ -1,6 +1,5 @@
 import { Check } from 'lucide-react'
 import { Link } from 'react-router-dom'
-import { useAuth } from '../auth/useAuth'
 import { planDefinitions, planResourceLabels, planResources } from '../plan/plan.constants'
 import type { PlanType } from '../plan/plan.types'
 import './PricingSection.css'
@@ -46,15 +45,8 @@ const planCommercialDetails: Record<
 }
 
 export function PricingSection({ compact = false, id }: PricingSectionProps) {
-  const { isAuthenticated, user } = useAuth()
-  const isTenantSession = isAuthenticated && !user?.roles.includes('SuperAdmin')
-
   function getPlanTarget(plan: PlanType) {
-    if (plan === 'Free') {
-      return '/register-company'
-    }
-
-    return isTenantSession ? '/plan' : '/register-company'
+    return `/register-company?plan=${plan}`
   }
 
   return (
@@ -114,7 +106,7 @@ export function PricingSection({ compact = false, id }: PricingSectionProps) {
                 className={isRecommended ? 'logent-pricing-cta logent-pricing-cta-primary' : 'logent-pricing-cta'}
                 to={getPlanTarget(definition.plan)}
               >
-                {isTenantSession && definition.plan !== 'Free' ? 'Solicitar actualización' : commercial.cta}
+                {commercial.cta}
               </Link>
             </article>
           )

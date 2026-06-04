@@ -36,7 +36,7 @@ export function PricingPage() {
             <p>Empieza con una operación ordenada</p>
             <h2>Crea el espacio de trabajo de tu empresa en LOGENT.</h2>
           </div>
-          <Link to="/register-company">Empezar gratis</Link>
+          <Link to="/register-company?plan=Free">Empezar gratis</Link>
         </div>
       </section>
     </main>

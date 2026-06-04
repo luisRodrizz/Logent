@@ -86,6 +86,75 @@
   box-shadow: 0 18px 48px rgb(15 23 42 / 0.06);
 }
 
+.logent-register-plan {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 14px;
+  margin-bottom: 16px;
+  border: 1px solid #dbe4ee;
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 17px 18px;
+}
+
+.logent-register-plan-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border: 1px solid rgb(16 23 216 / 0.14);
+  border-radius: 8px;
+  background: rgb(16 23 216 / 0.05);
+  color: #1017d8;
+}
+
+.logent-register-plan-copy {
+  min-width: 0;
+}
+
+.logent-register-plan-copy > span {
+  display: block;
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.logent-register-plan-copy strong {
+  display: block;
+  margin-top: 3px;
+  color: #0f172a;
+  font-size: 17px;
+}
+
+.logent-register-plan-copy p,
+.logent-register-plan-copy small {
+  display: block;
+  margin: 5px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.logent-register-plan-copy small {
+  color: #475569;
+  font-weight: 650;
+}
+
+.logent-register-plan > a {
+  color: #1017d8;
+  font-size: 12px;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.logent-register-plan > a:hover {
+  text-decoration: underline;
+}
+
 .logent-register-section {
   padding: 26px;
 }
@@ -306,6 +375,28 @@
   font-size: 14px;
 }
 
+.logent-register-success-plan {
+  display: grid;
+  gap: 5px;
+  margin-top: 12px;
+  border: 1px solid #dbe4ee;
+  border-radius: 9px;
+  background: #f8fafc;
+  padding: 14px;
+  text-align: left;
+}
+
+.logent-register-success-plan strong {
+  color: #0f172a;
+  font-size: 13px;
+}
+
+.logent-register-success-plan span {
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.55;
+}
+
 .logent-register-success-actions {
   display: grid;
   gap: 10px;
@@ -399,6 +490,14 @@
 
   .logent-register-section {
     padding: 20px;
+  }
+
+  .logent-register-plan {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .logent-register-plan > a {
+    grid-column: 2;
   }
 
   .logent-register-grid {
