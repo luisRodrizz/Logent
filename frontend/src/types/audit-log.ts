@@ -10,6 +10,8 @@ export type AuditAction =
   | 'StockExit'
   | 'StockAdjustment'
   | 'StockTransfer'
+  | 'UserProfileUpdated'
+  | 'UserPasswordChanged'
 
 export type AuditLog = {
   action: AuditAction

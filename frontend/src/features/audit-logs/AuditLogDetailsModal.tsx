@@ -25,6 +25,8 @@ const actionLabels: Record<AuditAction, string> = {
   StockExit: 'Salida stock',
   StockTransfer: 'Transferencia stock',
   Update: 'Actualización',
+  UserPasswordChanged: 'Contraseña propia',
+  UserProfileUpdated: 'Perfil actualizado',
 }
 
 const actionBadgeVariants: Record<AuditAction, 'default' | 'success' | 'warning' | 'danger' | 'muted'> = {
@@ -37,6 +39,8 @@ const actionBadgeVariants: Record<AuditAction, 'default' | 'success' | 'warning'
   StockExit: 'danger',
   StockTransfer: 'default',
   Update: 'warning',
+  UserPasswordChanged: 'warning',
+  UserProfileUpdated: 'default',
 }
 
 function formatValue(value?: string | null): string {

@@ -1,4 +1,4 @@
-import { KeyRound, Mail, ShieldCheck, UserRound } from 'lucide-react'
+import { Building2, KeyRound, Mail, ShieldCheck, UserRound } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { LoadingState } from '../../components/common/LoadingState'
@@ -10,9 +10,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../..
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatDate } from '../../lib/format'
 import type { AuthRole } from '../../types/auth'
+import { useAuth } from '../auth/useAuth'
 import { ChangePasswordModal } from './ChangePasswordModal'
-import { useChangeProfilePassword, useProfile } from './profile.queries'
-import type { ChangePasswordPayload, Profile } from './profile.types'
+import { ProfileEditForm } from './ProfileEditForm'
+import { useChangeProfilePassword, useProfile, useUpdateProfile } from './profile.queries'
+import type { ChangePasswordPayload, Profile, UpdateProfilePayload } from './profile.types'
 
 const roleBadgeVariants: Record<AuthRole, 'default' | 'success' | 'muted'> = {
   SuperAdmin: 'default',
@@ -27,8 +29,20 @@ function getDisplayName(profile: Profile) {
 
 export function ProfilePage() {
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false)
+  const { refreshUser } = useAuth()
   const profileQuery = useProfile()
   const changePasswordMutation = useChangeProfilePassword()
+  const updateProfileMutation = useUpdateProfile()
+
+  async function handleUpdateProfile(payload: UpdateProfilePayload) {
+    try {
+      await updateProfileMutation.mutateAsync(payload)
+      await refreshUser()
+      toast.success('Perfil actualizado correctamente.')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error))
+    }
+  }
 
   async function handleChangePassword(payload: ChangePasswordPayload) {
     try {
@@ -93,7 +107,11 @@ export function ProfilePage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2">
-                    <Badge variant={roleBadgeVariants[profile.role]}>{profile.role}</Badge>
+                    {profile.roles.map((role) => (
+                      <Badge key={role} variant={roleBadgeVariants[role]}>
+                        {role}
+                      </Badge>
+                    ))}
                     <Badge variant={profile.isActive ? 'success' : 'danger'}>
                       {profile.isActive ? 'Activo' : 'Inactivo'}
                     </Badge>
@@ -118,13 +136,20 @@ export function ProfilePage() {
                   <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
                     <div className="flex items-center gap-2 text-xs font-medium text-muted">
                       <ShieldCheck className="h-4 w-4" />
-                      Rol
+                      Roles
                     </div>
-                    <p className="mt-2 text-sm font-semibold text-foreground">{profile.role}</p>
+                    <p className="mt-2 text-sm font-semibold text-foreground">
+                      {profile.roles.length > 0 ? profile.roles.join(', ') : 'Sin rol asignado'}
+                    </p>
                   </div>
                   <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
-                    <p className="text-xs font-medium text-muted">Creado</p>
-                    <p className="mt-2 text-sm font-semibold text-foreground">{formatDate(profile.createdAt)}</p>
+                    <div className="flex items-center gap-2 text-xs font-medium text-muted">
+                      <Building2 className="h-4 w-4" />
+                      Empresa
+                    </div>
+                    <p className="mt-2 truncate text-sm font-semibold text-foreground">
+                      {profile.companyName || 'Cuenta de plataforma'}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -142,9 +167,9 @@ export function ProfilePage() {
           </CardHeader>
           <CardContent>
             <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
-              <p className="text-sm font-medium text-foreground">La administracion del nombre y email se realiza desde Usuarios.</p>
+              <p className="text-sm font-medium text-foreground">Sesión autenticada y protegida.</p>
               <p className="mt-1 text-sm leading-6 text-muted">
-                Desde este perfil solo puedes cambiar tu propia contraseña.
+                Cuenta creada el {formatDate(profile.createdAt)}. Usa una contraseña segura y exclusiva para LOGENT.
               </p>
             </div>
 
@@ -155,6 +180,20 @@ export function ProfilePage() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Información personal</CardTitle>
+          <CardDescription>Actualiza el nombre visible de tu propia cuenta.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ProfileEditForm
+            isSubmitting={updateProfileMutation.isPending}
+            onSubmit={handleUpdateProfile}
+            profile={profile}
+          />
+        </CardContent>
+      </Card>
 
       <ChangePasswordModal
         isOpen={isPasswordModalOpen}

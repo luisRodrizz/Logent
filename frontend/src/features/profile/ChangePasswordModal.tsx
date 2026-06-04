@@ -62,6 +62,7 @@ export function ChangePasswordModal({
 
   async function handleValidSubmit(values: ChangePasswordFormValues) {
     await onSubmit({
+      confirmPassword: values.confirmPassword,
       currentPassword: values.currentPassword,
       newPassword: values.newPassword,
     })

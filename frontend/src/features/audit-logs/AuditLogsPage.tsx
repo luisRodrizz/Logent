@@ -29,6 +29,8 @@ const auditActions: AuditAction[] = [
   'StockExit',
   'StockAdjustment',
   'StockTransfer',
+  'UserProfileUpdated',
+  'UserPasswordChanged',
 ]
 
 const actionLabels: Record<AuditAction, string> = {
@@ -41,6 +43,8 @@ const actionLabels: Record<AuditAction, string> = {
   StockExit: 'Salida stock',
   StockTransfer: 'Transferencia stock',
   Update: 'Actualización',
+  UserPasswordChanged: 'Contraseña propia',
+  UserProfileUpdated: 'Perfil actualizado',
 }
 
 const actionBadgeVariants: Record<AuditAction, 'default' | 'success' | 'warning' | 'danger' | 'muted'> = {
@@ -53,6 +57,8 @@ const actionBadgeVariants: Record<AuditAction, 'default' | 'success' | 'warning'
   StockExit: 'danger',
   StockTransfer: 'default',
   Update: 'warning',
+  UserPasswordChanged: 'warning',
+  UserProfileUpdated: 'default',
 }
 
 const pageSizeOptions = [10, 20, 50]

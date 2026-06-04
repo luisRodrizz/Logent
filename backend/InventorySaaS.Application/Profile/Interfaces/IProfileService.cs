@@ -4,10 +4,15 @@ namespace InventorySaaS.Application.Profile.Interfaces;
 
 public interface IProfileService
 {
-    Task<ProfileResponse> GetProfileAsync(string userId, CancellationToken cancellationToken = default);
+    Task<MyProfileResponse> GetProfileAsync(string userId, CancellationToken cancellationToken = default);
+
+    Task<MyProfileResponse> UpdateProfileAsync(
+        string userId,
+        UpdateMyProfileRequest request,
+        CancellationToken cancellationToken = default);
 
     Task ChangePasswordAsync(
         string userId,
-        ChangePasswordRequest request,
+        ChangeMyPasswordRequest request,
         CancellationToken cancellationToken = default);
 }

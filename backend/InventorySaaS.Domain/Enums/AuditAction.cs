@@ -17,6 +17,8 @@ public enum AuditAction
     UserStatusChanged,
     UserPasswordReset,
     ProfilePasswordChanged,
+    UserProfileUpdated,
+    UserPasswordChanged,
     PlatformCompanyStatusChanged,
     PlatformCompanyPlanChanged,
     PlanUpgradeRequested,

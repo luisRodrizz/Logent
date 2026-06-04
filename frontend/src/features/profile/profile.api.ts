@@ -1,5 +1,5 @@
 import { api } from '../../lib/api'
-import type { ChangePasswordPayload, Profile } from './profile.types'
+import type { ChangePasswordPayload, Profile, UpdateProfilePayload } from './profile.types'
 
 export async function getProfile(): Promise<Profile> {
   const response = await api.get<Profile>('/profile')
@@ -8,5 +8,11 @@ export async function getProfile(): Promise<Profile> {
 }
 
 export async function changeProfilePassword(payload: ChangePasswordPayload): Promise<void> {
-  await api.put('/profile/password', payload)
+  await api.post('/profile/change-password', payload)
+}
+
+export async function updateProfile(payload: UpdateProfilePayload): Promise<Profile> {
+  const response = await api.put<Profile>('/profile', payload)
+
+  return response.data
 }

@@ -14,6 +14,8 @@ export const platformActivityActions = [
   'UserStatusChanged',
   'UserPasswordReset',
   'ProfilePasswordChanged',
+  'UserProfileUpdated',
+  'UserPasswordChanged',
   'PlatformCompanyStatusChanged',
   'PlatformCompanyPlanChanged',
   'PlanUpgradeRequested',

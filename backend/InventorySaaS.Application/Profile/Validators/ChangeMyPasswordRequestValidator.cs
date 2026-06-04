@@ -3,9 +3,9 @@ using InventorySaaS.Application.Profile.DTOs;
 
 namespace InventorySaaS.Application.Profile.Validators;
 
-public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRequest>
+public class ChangeMyPasswordRequestValidator : AbstractValidator<ChangeMyPasswordRequest>
 {
-    public ChangePasswordRequestValidator()
+    public ChangeMyPasswordRequestValidator()
     {
         RuleFor(request => request.CurrentPassword)
             .NotEmpty()
@@ -15,5 +15,10 @@ public class ChangePasswordRequestValidator : AbstractValidator<ChangePasswordRe
             .NotEmpty()
             .MinimumLength(6)
             .MaximumLength(100);
+
+        RuleFor(request => request.ConfirmPassword)
+            .NotEmpty()
+            .Equal(request => request.NewPassword)
+            .WithMessage("Password confirmation does not match.");
     }
 }

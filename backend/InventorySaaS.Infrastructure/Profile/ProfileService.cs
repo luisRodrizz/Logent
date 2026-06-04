@@ -13,27 +13,42 @@ public class ProfileService(
     UserManager<ApplicationUser> userManager,
     IAuditLogWriter auditLogWriter) : IProfileService
 {
-    public async Task<ProfileResponse> GetProfileAsync(
+    public async Task<MyProfileResponse> GetProfileAsync(
         string userId,
         CancellationToken cancellationToken = default)
     {
         var user = await FindActiveUserAsync(userId, cancellationToken);
-        var roles = await userManager.GetRolesAsync(user);
 
-        return new ProfileResponse
-        {
-            Id = user.Id,
-            FullName = $"{user.FirstName} {user.LastName}".Trim(),
-            Email = user.Email ?? string.Empty,
-            Role = roles.FirstOrDefault() ?? string.Empty,
-            IsActive = user.IsActive,
-            CreatedAt = user.CreatedAt
-        };
+        return await MapToResponseAsync(user);
+    }
+
+    public async Task<MyProfileResponse> UpdateProfileAsync(
+        string userId,
+        UpdateMyProfileRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var user = await FindActiveUserAsync(userId, cancellationToken);
+        user.FirstName = request.FirstName.Trim();
+        user.LastName = request.LastName.Trim();
+
+        var result = await userManager.UpdateAsync(user);
+        EnsureIdentitySucceeded(result, "Could not update profile.");
+
+        await auditLogWriter.WriteAsync(
+            user.Id,
+            AuditAction.UserProfileUpdated,
+            "User",
+            user.Id,
+            $"User profile updated: {user.Email}",
+            cancellationToken,
+            user.CompanyId);
+
+        return await MapToResponseAsync(user);
     }
 
     public async Task ChangePasswordAsync(
         string userId,
-        ChangePasswordRequest request,
+        ChangeMyPasswordRequest request,
         CancellationToken cancellationToken = default)
     {
         var user = await FindActiveUserAsync(userId, cancellationToken);
@@ -55,16 +70,19 @@ public class ProfileService(
 
         await auditLogWriter.WriteAsync(
             user.Id,
-            AuditAction.ProfilePasswordChanged,
+            AuditAction.UserPasswordChanged,
             "User",
             user.Id,
-            $"Profile password changed: {user.Email}",
-            cancellationToken);
+            $"User password changed: {user.Email}",
+            cancellationToken,
+            user.CompanyId);
     }
 
     private async Task<ApplicationUser> FindActiveUserAsync(string userId, CancellationToken cancellationToken)
     {
-        var user = await userManager.Users.FirstOrDefaultAsync(item => item.Id == userId, cancellationToken);
+        var user = await userManager.Users
+            .Include(item => item.Company)
+            .FirstOrDefaultAsync(item => item.Id == userId, cancellationToken);
 
         if (user is null)
         {
@@ -83,5 +101,40 @@ public class ProfileService(
         }
 
         return user;
+    }
+
+    private async Task<MyProfileResponse> MapToResponseAsync(ApplicationUser user)
+    {
+        var roles = await userManager.GetRolesAsync(user);
+
+        return new MyProfileResponse
+        {
+            Id = user.Id,
+            Email = user.Email ?? string.Empty,
+            FirstName = user.FirstName,
+            LastName = user.LastName,
+            FullName = $"{user.FirstName} {user.LastName}".Trim(),
+            Roles = roles,
+            CompanyId = user.CompanyId,
+            CompanyName = user.Company?.CommercialName ?? user.Company?.Name,
+            IsActive = user.IsActive,
+            CreatedAt = user.CreatedAt
+        };
+    }
+
+    private static void EnsureIdentitySucceeded(IdentityResult result, string message)
+    {
+        if (result.Succeeded)
+        {
+            return;
+        }
+
+        var errors = result.Errors.Select(error => error.Description).ToArray();
+
+        throw new ApiException(
+            400,
+            message,
+            string.Join("; ", errors),
+            errors);
     }
 }

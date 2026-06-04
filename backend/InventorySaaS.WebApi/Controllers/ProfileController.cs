@@ -1,5 +1,5 @@
-using System.Security.Claims;
 using FluentValidation;
+using InventorySaaS.Application.Common.Interfaces;
 using InventorySaaS.Application.Profile.DTOs;
 using InventorySaaS.Application.Profile.Interfaces;
 using InventorySaaS.WebApi.Common;
@@ -13,26 +13,44 @@ namespace InventorySaaS.WebApi.Controllers;
 [Route("api/profile")]
 public class ProfileController(
     IProfileService profileService,
-    IValidator<ChangePasswordRequest> changePasswordValidator) : ControllerBase
+    IValidator<UpdateMyProfileRequest> updateProfileValidator,
+    IValidator<ChangeMyPasswordRequest> changePasswordValidator,
+    ICurrentUserContext currentUserContext) : ControllerBase
 {
     [HttpGet]
-    public async Task<ActionResult<ProfileResponse>> GetProfile(CancellationToken cancellationToken)
+    public async Task<ActionResult<MyProfileResponse>> GetProfile(CancellationToken cancellationToken)
     {
-        var userId = GetCurrentUserId();
+        var profile = await profileService.GetProfileAsync(currentUserContext.RequireUserId(), cancellationToken);
 
-        if (userId is null)
+        return Ok(profile);
+    }
+
+    [HttpPut]
+    public async Task<ActionResult<MyProfileResponse>> UpdateProfile(
+        UpdateMyProfileRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validationResult = await updateProfileValidator.ValidateAsync(request, cancellationToken);
+
+        if (!validationResult.IsValid)
         {
-            return UnauthorizedResponse();
+            return ApiErrorResponseFactory.Validation(
+                HttpContext,
+                validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        var profile = await profileService.GetProfileAsync(userId, cancellationToken);
+        var profile = await profileService.UpdateProfileAsync(
+            currentUserContext.RequireUserId(),
+            request,
+            cancellationToken);
 
         return Ok(profile);
     }
 
     [HttpPut("password")]
+    [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword(
-        ChangePasswordRequest request,
+        ChangeMyPasswordRequest request,
         CancellationToken cancellationToken)
     {
         var validationResult = await changePasswordValidator.ValidateAsync(request, cancellationToken);
@@ -44,31 +62,8 @@ public class ProfileController(
                 validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
-        var userId = GetCurrentUserId();
-
-        if (userId is null)
-        {
-            return UnauthorizedResponse();
-        }
-
-        await profileService.ChangePasswordAsync(userId, request, cancellationToken);
+        await profileService.ChangePasswordAsync(currentUserContext.RequireUserId(), request, cancellationToken);
 
         return NoContent();
-    }
-
-    private string? GetCurrentUserId()
-    {
-        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
-        return string.IsNullOrWhiteSpace(userId) ? null : userId;
-    }
-
-    private ObjectResult UnauthorizedResponse()
-    {
-        return ApiErrorResponseFactory.Result(
-            HttpContext,
-            StatusCodes.Status401Unauthorized,
-            "Authentication is required.",
-            "You must provide a valid access token.");
     }
 }

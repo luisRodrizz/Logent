@@ -1,8 +1,10 @@
 namespace InventorySaaS.Application.Profile.DTOs;
 
-public class ChangePasswordRequest
+public class ChangeMyPasswordRequest
 {
     public string CurrentPassword { get; set; } = string.Empty;
 
     public string NewPassword { get; set; } = string.Empty;
+
+    public string ConfirmPassword { get; set; } = string.Empty;
 }

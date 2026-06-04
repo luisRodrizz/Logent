@@ -31,6 +31,8 @@ const actionLabels: Record<PlatformActivityAction, string> = {
   PlatformCompanyPlanChanged: 'Plan actualizado',
   PlatformCompanyStatusChanged: 'Estado de empresa',
   ProfilePasswordChanged: 'Contraseña propia',
+  UserPasswordChanged: 'Contraseña propia',
+  UserProfileUpdated: 'Perfil actualizado',
   StockAdjustment: 'Ajuste de stock',
   StockEntry: 'Entrada de stock',
   StockExit: 'Salida de stock',
