@@ -18,6 +18,7 @@ import { Link } from 'react-router-dom'
 
 import logentLogo from '../../assets/brand/logent-logo.png'
 import deviceMockup from '../../assets/landing/logent-device-mockup.png'
+import { PricingSection } from '../pricing/PricingSection'
 import './LandingPage.css'
 
 const features = [
@@ -179,6 +180,7 @@ export function LandingPage() {
                 {item.label}
               </a>
             ))}
+            <Link to="/pricing">Planes</Link>
           </nav>
 
           <Link className="logent-landing-button" to="/login">
@@ -335,6 +337,21 @@ export function LandingPage() {
         </div>
       </motion.section>
 
+      <motion.div
+        className="logent-landing-section"
+        initial="hidden"
+        variants={sectionReveal}
+        viewport={{
+          once: true,
+          amount: 0.15,
+        }}
+        whileInView="visible"
+      >
+        <div className="logent-landing-container">
+          <PricingSection compact id="planes" />
+        </div>
+      </motion.div>
+
       <motion.section
         className="logent-landing-section"
         id="roles"
@@ -471,6 +488,7 @@ export function LandingPage() {
               <strong>Producto</strong>
               <a href="#funciones">Funciones</a>
               <a href="#modulos">Módulos</a>
+              <Link to="/pricing">Planes</Link>
               <a href="#demo">Demo</a>
             </div>
 

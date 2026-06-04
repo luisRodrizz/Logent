@@ -1,0 +1,236 @@
+.logent-pricing {
+  width: 100%;
+}
+
+.logent-pricing-heading {
+  max-width: 680px;
+  margin-bottom: 32px;
+}
+
+.logent-pricing-heading > p {
+  margin: 0 0 10px;
+  color: #1017d8;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.logent-pricing-heading h2 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.logent-pricing-heading span {
+  display: block;
+  margin-top: 12px;
+  color: #64748b;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+.logent-pricing-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.logent-pricing-card {
+  display: flex;
+  min-width: 0;
+  min-height: 100%;
+  flex-direction: column;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 24px;
+}
+
+.logent-pricing-card-featured {
+  border-color: rgb(16 23 216 / 0.38);
+  box-shadow: inset 0 3px 0 #1017d8;
+}
+
+.logent-pricing-card-head {
+  display: flex;
+  min-height: 108px;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.logent-pricing-card-head h3 {
+  margin: 0;
+  color: #0f172a;
+  font-size: 20px;
+  font-weight: 750;
+}
+
+.logent-pricing-card-head p {
+  margin: 9px 0 0;
+  color: #64748b;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.logent-pricing-badge {
+  flex: 0 0 auto;
+  border: 1px solid rgb(40 224 0 / 0.26);
+  border-radius: 999px;
+  background: rgb(40 224 0 / 0.08);
+  color: #147a08;
+  padding: 4px 8px;
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.logent-pricing-price {
+  display: flex;
+  min-height: 72px;
+  flex-direction: column;
+  justify-content: center;
+  border-top: 1px solid #e2e8f0;
+  border-bottom: 1px solid #e2e8f0;
+  margin: 18px 0;
+  padding: 14px 0;
+}
+
+.logent-pricing-price strong {
+  color: #0f172a;
+  font-size: 25px;
+  font-weight: 750;
+}
+
+.logent-pricing-price span {
+  margin-top: 3px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.logent-pricing-limits,
+.logent-pricing-benefits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.logent-pricing-limits {
+  display: grid;
+  gap: 10px;
+}
+
+.logent-pricing-limits li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #64748b;
+  font-size: 12px;
+}
+
+.logent-pricing-limits strong {
+  color: #0f172a;
+  font-size: 12px;
+  text-align: right;
+}
+
+.logent-pricing-benefits {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.logent-pricing-benefits li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  color: #475569;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.logent-pricing-benefits svg {
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  margin-top: 2px;
+  color: #147a08;
+}
+
+.logent-pricing-cta {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  margin-top: auto;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: #ffffff;
+  color: #0f172a;
+  padding: 0 14px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    background-color 180ms ease,
+    border-color 180ms ease,
+    color 180ms ease;
+}
+
+.logent-pricing-limits + .logent-pricing-cta,
+.logent-pricing-benefits + .logent-pricing-cta {
+  margin-top: 24px;
+}
+
+.logent-pricing-cta:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.logent-pricing-cta-primary {
+  border-color: #1017d8;
+  background: #1017d8;
+  color: #ffffff;
+}
+
+.logent-pricing-cta-primary:hover {
+  border-color: #0b119e;
+  background: #0b119e;
+}
+
+.logent-pricing-note {
+  margin: 20px 0 0;
+  color: #64748b;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.logent-pricing-compact .logent-pricing-card-head {
+  min-height: 116px;
+}
+
+@media (max-width: 1180px) {
+  .logent-pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .logent-pricing-heading h2 {
+    font-size: 25px;
+  }
+
+  .logent-pricing-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .logent-pricing-card-head {
+    min-height: auto;
+  }
+}

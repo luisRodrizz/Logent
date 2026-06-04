@@ -86,6 +86,9 @@ const PlatformLayout = lazy(() =>
   import('../features/platform/PlatformLayout').then((module) => ({ default: module.PlatformLayout })),
 )
 const PlanPage = lazy(() => import('../features/plan/PlanPage').then((module) => ({ default: module.PlanPage })))
+const PricingPage = lazy(() =>
+  import('../features/pricing/PricingPage').then((module) => ({ default: module.PricingPage })),
+)
 const ProfilePage = lazy(() =>
   import('../features/profile/ProfilePage').then((module) => ({ default: module.ProfilePage })),
 )
@@ -192,6 +195,14 @@ export function AppRouter() {
           element={
             <Suspense fallback={<FullPageFallback />}>
               <RegisterCompanyPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/pricing"
+          element={
+            <Suspense fallback={<FullPageFallback />}>
+              <PricingPage />
             </Suspense>
           }
         />

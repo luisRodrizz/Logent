@@ -1,5 +1,6 @@
 import { Check, CircleAlert } from 'lucide-react'
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { toast } from 'sonner'
 import { PageHeader } from '../../components/common/PageHeader'
 import { SectionError } from '../../components/common/SectionError'
@@ -147,11 +148,19 @@ export function PlanPage() {
       ) : null}
 
       <section className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight text-foreground">Comparación de planes</h2>
-          <p className="mt-1 text-sm leading-6 text-muted">
-            Revisa la capacidad disponible para cada etapa de tu operación.
-          </p>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-xl font-semibold tracking-tight text-foreground">Comparación de planes</h2>
+            <p className="mt-1 text-sm leading-6 text-muted">
+              Revisa la capacidad disponible para cada etapa de tu operación.
+            </p>
+          </div>
+          <Link
+            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-200 bg-white px-3 text-sm font-semibold text-slate-700 transition-colors hover:border-slate-300 hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+            to="/pricing"
+          >
+            Comparar planes públicos
+          </Link>
         </div>
 
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

@@ -1,0 +1,126 @@
+.logent-pricing-page {
+  min-height: 100dvh;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.logent-pricing-page-container {
+  width: min(100% - 64px, 1440px);
+  margin: 0 auto;
+}
+
+.logent-pricing-page-header {
+  border-bottom: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.logent-pricing-page-nav {
+  min-height: 84px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.logent-pricing-page-nav img {
+  display: block;
+  width: auto;
+  height: 48px;
+  object-fit: contain;
+}
+
+.logent-pricing-page-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logent-pricing-page-back,
+.logent-pricing-page-login,
+.logent-pricing-page-cta a {
+  display: inline-flex;
+  min-height: 40px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 6px;
+  padding: 0 18px;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.logent-pricing-page-back {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #334155;
+}
+
+.logent-pricing-page-back svg {
+  width: 15px;
+  height: 15px;
+}
+
+.logent-pricing-page-login,
+.logent-pricing-page-cta a {
+  border: 1px solid #1017d8;
+  background: #1017d8;
+  color: #ffffff;
+}
+
+.logent-pricing-page-content {
+  padding: 72px 0 80px;
+}
+
+.logent-pricing-page-cta {
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+  padding: 40px 0;
+}
+
+.logent-pricing-page-cta .logent-pricing-page-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.logent-pricing-page-cta p {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.logent-pricing-page-cta h2 {
+  margin: 7px 0 0;
+  color: #0f172a;
+  font-size: 22px;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .logent-pricing-page-container {
+    width: min(100% - 32px, 1440px);
+  }
+
+  .logent-pricing-page-nav {
+    min-height: 72px;
+  }
+
+  .logent-pricing-page-nav img {
+    height: 34px;
+  }
+
+  .logent-pricing-page-back {
+    display: none;
+  }
+
+  .logent-pricing-page-content {
+    padding: 44px 0 52px;
+  }
+
+  .logent-pricing-page-cta .logent-pricing-page-container {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

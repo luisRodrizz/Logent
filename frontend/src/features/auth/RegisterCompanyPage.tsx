@@ -117,6 +117,10 @@ export function RegisterCompanyPage() {
               {isResending ? 'Reenviando...' : 'Reenviar correo de confirmación'}
             </button>
           </div>
+
+          <Link className="logent-register-success-pricing" to="/pricing">
+            Comparar planes de LOGENT
+          </Link>
         </section>
       </main>
     )
@@ -246,6 +250,8 @@ export function RegisterCompanyPage() {
           <footer className="logent-register-actions">
             <p>
               ¿Ya tienes una cuenta? <Link to="/login">Inicia sesión</Link>
+              {' · '}
+              <Link to="/pricing">Comparar planes</Link>
             </p>
 
             <button disabled={isSubmitting} type="submit">

@@ -357,6 +357,19 @@
   opacity: 0.64;
 }
 
+.logent-register-success-pricing {
+  display: inline-flex;
+  margin-top: 18px;
+  color: #1017d8;
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.logent-register-success-pricing:hover {
+  text-decoration: underline;
+}
+
 .logent-register-spin {
   animation: logent-register-spin 900ms linear infinite;
 }

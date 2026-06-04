@@ -219,6 +219,8 @@ export function LoginPage() {
 
           <p className="logent-login-register">
             ¿Tu empresa aún no usa LOGENT? <Link to="/register-company">Regístrala aquí</Link>
+            {' · '}
+            <Link to="/pricing">Comparar planes</Link>
           </p>
 
           <div className="logent-login-demo">
