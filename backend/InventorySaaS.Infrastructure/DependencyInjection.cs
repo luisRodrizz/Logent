@@ -101,6 +101,7 @@ public static class DependencyInjection
             serviceProvider => serviceProvider.GetRequiredService<TenantNotificationService>());
         services.AddScoped<ITenantNotificationWriter>(
             serviceProvider => serviceProvider.GetRequiredService<TenantNotificationService>());
+        services.AddScoped<ITenantEmailNotificationService, TenantEmailNotificationService>();
         services.AddScoped<ITenantCompanySettingsService, TenantCompanySettingsService>();
         services.AddScoped<IPlatformActivityService, PlatformActivityService>();
         services.AddScoped<IPlatformAnalyticsService, PlatformAnalyticsService>();

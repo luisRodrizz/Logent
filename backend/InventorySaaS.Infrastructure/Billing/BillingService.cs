@@ -21,6 +21,7 @@ public class BillingService(
     ICurrentUserContext currentUserContext,
     IAuditLogWriter auditLogWriter,
     ITenantNotificationWriter tenantNotificationWriter,
+    ITenantEmailNotificationService tenantEmailNotificationService,
     IOptions<StripeSettings> stripeOptions,
     ILogger<BillingService> logger) : IBillingService
 {
@@ -366,6 +367,11 @@ public class BillingService(
                 "Suscripción cancelada",
                 "La suscripción Stripe fue cancelada. Revisa el plan actual y las opciones disponibles.",
                 cancellationToken);
+            await tenantEmailNotificationService.SendBillingSubscriptionCancelledAsync(
+                company.Id,
+                GetCompanyEmail(company),
+                GetCompanyName(company),
+                cancellationToken);
         }
         else if (string.Equals(previousState.Status, company.StripeSubscriptionStatus, StringComparison.OrdinalIgnoreCase))
         {
@@ -431,6 +437,11 @@ public class BillingService(
                 TenantNotificationSeverity.Warning,
                 "Suscripción cancelada",
                 "La suscripción Stripe fue cancelada. Tu empresa puede contratar nuevamente cuando lo necesite.",
+                cancellationToken);
+            await tenantEmailNotificationService.SendBillingSubscriptionCancelledAsync(
+                company.Id,
+                GetCompanyEmail(company),
+                GetCompanyName(company),
                 cancellationToken);
         }
 
@@ -508,6 +519,22 @@ public class BillingService(
                 ? "Stripe confirmó el pago de la suscripción de tu empresa."
                 : "Stripe reportó un pago fallido. Gestiona la facturación para evitar interrupciones.",
             cancellationToken);
+        if (paymentAction == AuditAction.BillingPaymentSucceeded)
+        {
+            await tenantEmailNotificationService.SendBillingPaymentSucceededAsync(
+                company.Id,
+                GetCompanyEmail(company),
+                GetCompanyName(company),
+                cancellationToken);
+        }
+        else
+        {
+            await tenantEmailNotificationService.SendBillingPaymentFailedAsync(
+                company.Id,
+                GetCompanyEmail(company),
+                GetCompanyName(company),
+                cancellationToken);
+        }
     }
 
     private async Task<Company?> FindCompanyForSubscriptionAsync(
@@ -639,17 +666,24 @@ public class BillingService(
             company.Id);
     }
 
-    private Task WritePlanChangedNotificationAsync(
+    private async Task WritePlanChangedNotificationAsync(
         Company company,
         PlanType previousPlan,
         CancellationToken cancellationToken)
     {
-        return WriteTenantNotificationAsync(
+        await WriteTenantNotificationAsync(
             company,
             TenantNotificationType.PlanUpdatedByStripe,
             TenantNotificationSeverity.Success,
             "Plan actualizado",
             $"Stripe actualizó el plan de tu empresa: {previousPlan} -> {company.Plan}.",
+            cancellationToken);
+        await tenantEmailNotificationService.SendPlanChangedByStripeAsync(
+            company.Id,
+            GetCompanyEmail(company),
+            GetCompanyName(company),
+            previousPlan,
+            company.Plan,
             cancellationToken);
     }
 
@@ -847,6 +881,16 @@ public class BillingService(
             company.StripeSubscriptionStatus,
             company.StripeCurrentPeriodEnd,
             company.Plan);
+    }
+
+    private static string? GetCompanyEmail(Company company)
+    {
+        return company.ContactEmail ?? company.Email;
+    }
+
+    private static string GetCompanyName(Company company)
+    {
+        return company.CommercialName ?? company.Name;
     }
 
     private static bool IsTestKey(string? value, string prefix)

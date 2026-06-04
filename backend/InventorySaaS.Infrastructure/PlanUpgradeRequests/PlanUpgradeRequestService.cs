@@ -19,7 +19,8 @@ public class PlanUpgradeRequestService(
     ApplicationDbContext context,
     IAuditLogWriter auditLogWriter,
     IPlatformNotificationWriter platformNotificationWriter,
-    ITenantNotificationWriter tenantNotificationWriter) : IPlanUpgradeRequestService
+    ITenantNotificationWriter tenantNotificationWriter,
+    ITenantEmailNotificationService tenantEmailNotificationService) : IPlanUpgradeRequestService
 {
     public async Task<PlanUpgradeRequestResponse> CreateTenantRequestAsync(
         Guid companyId,
@@ -320,6 +321,14 @@ public class PlanUpgradeRequestService(
                     : TenantNotificationSeverity.Warning,
                 ActionUrl = "/plan"
             },
+            cancellationToken);
+
+        await tenantEmailNotificationService.SendUpgradeRequestResolvedAsync(
+            upgradeRequest.CompanyId,
+            upgradeRequest.Company.ContactEmail ?? upgradeRequest.Company.Email,
+            upgradeRequest.Company.CommercialName ?? upgradeRequest.Company.Name,
+            upgradeRequest.RequestedPlan,
+            resolution == PlanUpgradeRequestStatus.Approved,
             cancellationToken);
 
         return true;

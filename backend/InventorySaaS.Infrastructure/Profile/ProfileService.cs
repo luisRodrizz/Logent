@@ -14,7 +14,8 @@ namespace InventorySaaS.Infrastructure.Profile;
 public class ProfileService(
     UserManager<ApplicationUser> userManager,
     IAuditLogWriter auditLogWriter,
-    ITenantNotificationWriter tenantNotificationWriter) : IProfileService
+    ITenantNotificationWriter tenantNotificationWriter,
+    ITenantEmailNotificationService tenantEmailNotificationService) : IProfileService
 {
     public async Task<MyProfileResponse> GetProfileAsync(
         string userId,
@@ -93,6 +94,11 @@ public class ProfileService(
                     Severity = TenantNotificationSeverity.Success,
                     ActionUrl = "/profile"
                 },
+                cancellationToken);
+            await tenantEmailNotificationService.SendPasswordChangedAsync(
+                user.CompanyId.Value,
+                user.Email,
+                $"{user.FirstName} {user.LastName}".Trim(),
                 cancellationToken);
         }
     }
