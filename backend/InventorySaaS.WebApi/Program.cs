@@ -53,6 +53,7 @@ try
     builder.Services.AddCorsPolicy(builder.Configuration, builder.Environment);
     builder.Services.AddSecurityRateLimiting();
     builder.Services.AddSwaggerDocumentation();
+    builder.Services.AddHealthChecks();
 
     var app = builder.Build();
 
@@ -73,6 +74,7 @@ try
     app.UseMiddleware<SubscriptionAccessMiddleware>();
     app.UseAuthorization();
 
+    app.MapHealthChecks("/health").AllowAnonymous();
     app.MapControllers();
 
     using (var scope = app.Services.CreateScope())

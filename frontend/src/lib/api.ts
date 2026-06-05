@@ -2,7 +2,7 @@ import axios, { AxiosError } from 'axios'
 import { clearAccessToken, getAccessToken } from './auth'
 
 export const api = axios.create({
-  baseURL: 'http://localhost:5088/api',
+  baseURL: import.meta.env.VITE_API_URL ?? 'http://localhost:5088/api',
   headers: {
     'Content-Type': 'application/json',
   },
