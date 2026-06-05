@@ -50,12 +50,14 @@ try
     builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
     builder.Services.AddInfrastructure(builder.Configuration);
     builder.Services.AddJwtAuthentication(builder.Configuration);
-    builder.Services.AddCorsPolicy();
+    builder.Services.AddCorsPolicy(builder.Configuration, builder.Environment);
+    builder.Services.AddSecurityRateLimiting();
     builder.Services.AddSwaggerDocumentation();
 
     var app = builder.Build();
 
     app.UseMiddleware<ExceptionHandlingMiddleware>();
+    app.UseMiddleware<SecurityHeadersMiddleware>();
 
     if (app.Environment.IsDevelopment())
     {
@@ -65,6 +67,7 @@ try
 
     app.UseHttpsRedirection();
     app.UseCors(CorsServiceExtensions.FrontendCorsPolicy);
+    app.UseRateLimiter();
     app.UseAuthentication();
     app.UseMiddleware<CompanyStatusMiddleware>();
     app.UseMiddleware<SubscriptionAccessMiddleware>();

@@ -12,6 +12,10 @@ function isApiErrorResponse(value: unknown): value is ApiErrorResponse {
 
 export function getApiErrorMessage(error: unknown, fallback = 'No se pudo completar la operacion.'): string {
   if (error instanceof AxiosError) {
+    if (error.response?.status === 429) {
+      return 'Demasiados intentos. Intenta nuevamente en unos minutos.'
+    }
+
     const data = error.response?.data
 
     if (typeof data === 'string') {

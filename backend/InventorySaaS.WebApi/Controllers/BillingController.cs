@@ -3,6 +3,7 @@ using InventorySaaS.Application.Billing.Interfaces;
 using InventorySaaS.Infrastructure.Identity;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 
 namespace InventorySaaS.WebApi.Controllers;
 
@@ -48,6 +49,7 @@ public class BillingController(IBillingService billingService) : ControllerBase
     }
 
     [AllowAnonymous]
+    [DisableRateLimiting]
     [HttpPost("webhook")]
     public async Task<IActionResult> Webhook(CancellationToken cancellationToken)
     {

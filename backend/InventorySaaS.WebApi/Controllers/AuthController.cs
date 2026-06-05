@@ -26,7 +26,8 @@ public class AuthController(
     IValidator<RegisterCompanyRequest> registerCompanyValidator,
     IValidator<ResendConfirmationEmailRequest> resendConfirmationEmailValidator,
     IValidator<ForgotPasswordRequest> forgotPasswordValidator,
-    IValidator<ResetPasswordRequest> resetPasswordValidator) : ControllerBase
+    IValidator<ResetPasswordRequest> resetPasswordValidator,
+    ILogger<AuthController> logger) : ControllerBase
 {
     private static readonly HashSet<string> AllowedRoles = new(StringComparer.Ordinal)
     {
@@ -49,6 +50,8 @@ public class AuthController(
                 HttpContext,
                 validationResult.Errors.Select(error => error.ErrorMessage));
         }
+
+        logger.LogInformation("Company registration requested for admin email {Email}.", request.AdminEmail);
 
         return Ok(await companyRegistrationService.RegisterAsync(request, cancellationToken));
     }
@@ -77,6 +80,8 @@ public class AuthController(
             return ApiErrorResponseFactory.Validation(HttpContext, errors);
         }
 
+        logger.LogInformation("Email confirmation requested for user {UserId}.", userId);
+
         return Ok(await emailConfirmationService.ConfirmEmailAsync(userId!, token!, cancellationToken));
     }
 
@@ -94,6 +99,8 @@ public class AuthController(
                 HttpContext,
                 validationResult.Errors.Select(error => error.ErrorMessage));
         }
+
+        logger.LogInformation("Email confirmation resend requested for {Email}.", request.Email);
 
         return Ok(await emailConfirmationService.ResendConfirmationEmailAsync(request.Email, cancellationToken));
     }
@@ -113,6 +120,8 @@ public class AuthController(
                 validationResult.Errors.Select(error => error.ErrorMessage));
         }
 
+        logger.LogInformation("Password recovery requested for {Email}.", request.Email);
+
         return Ok(await passwordRecoveryService.ForgotPasswordAsync(request, cancellationToken));
     }
 
@@ -130,6 +139,8 @@ public class AuthController(
                 HttpContext,
                 validationResult.Errors.Select(error => error.ErrorMessage));
         }
+
+        logger.LogInformation("Password reset submitted for {Email}.", request.Email);
 
         return Ok(await passwordRecoveryService.ResetPasswordAsync(request, cancellationToken));
     }
@@ -202,6 +213,8 @@ public class AuthController(
 
         if (user is null)
         {
+            logger.LogWarning("Failed login attempt for unknown email {Email}.", request.Email);
+
             return ApiErrorResponseFactory.Result(
                 HttpContext,
                 StatusCodes.Status401Unauthorized,
@@ -211,6 +224,8 @@ public class AuthController(
 
         if (!user.IsActive)
         {
+            logger.LogWarning("Failed login attempt for inactive user {UserId}.", user.Id);
+
             return ApiErrorResponseFactory.Result(
                 HttpContext,
                 StatusCodes.Status401Unauthorized,
@@ -218,10 +233,28 @@ public class AuthController(
                 "Contact an administrator to reactivate this account.");
         }
 
-        var signInResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: false);
+        if (!user.LockoutEnabled)
+        {
+            await userManager.SetLockoutEnabledAsync(user, true);
+        }
+
+        var signInResult = await signInManager.CheckPasswordSignInAsync(user, request.Password, lockoutOnFailure: true);
+
+        if (signInResult.IsLockedOut)
+        {
+            logger.LogWarning("Login blocked by lockout for user {UserId}.", user.Id);
+
+            return ApiErrorResponseFactory.Result(
+                HttpContext,
+                StatusCodes.Status429TooManyRequests,
+                "Too many attempts.",
+                "Wait a few minutes before trying again.");
+        }
 
         if (!signInResult.Succeeded)
         {
+            logger.LogWarning("Failed login attempt for user {UserId}.", user.Id);
+
             return ApiErrorResponseFactory.Result(
                 HttpContext,
                 StatusCodes.Status401Unauthorized,
@@ -231,6 +264,8 @@ public class AuthController(
 
         if (!user.EmailConfirmed)
         {
+            logger.LogWarning("Login blocked because email is not confirmed for user {UserId}.", user.Id);
+
             return ApiErrorResponseFactory.Result(
                 HttpContext,
                 StatusCodes.Status401Unauthorized,
@@ -247,6 +282,8 @@ public class AuthController(
 
             if (!companyIsActive)
             {
+                logger.LogWarning("Login blocked because company is suspended for user {UserId}.", user.Id);
+
                 return ApiErrorResponseFactory.Result(
                     HttpContext,
                     StatusCodes.Status403Forbidden,
@@ -254,6 +291,8 @@ public class AuthController(
                     "Contacta al administrador de LOGENT.");
             }
         }
+
+        logger.LogInformation("Login succeeded for user {UserId}.", user.Id);
 
         return Ok(await CreateAuthResponseAsync(user));
     }
