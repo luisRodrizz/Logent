@@ -4,6 +4,8 @@ LOGENT se mantiene en esta etapa como un proyecto de portafolio/demo. Este docum
 
 No usar claves reales ni activar cobros reales en esta etapa.
 
+Para el paso a paso de despliegue demo en Vercel, Render y Azure SQL, revisar [deployment-demo.md](deployment-demo.md).
+
 ## Modo actual
 
 - Modo objetivo: `Portfolio/Demo`.

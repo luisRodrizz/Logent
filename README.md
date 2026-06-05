@@ -1,82 +1,99 @@
 # LOGENT / InventorySaaS
 
-Sistema web de gestión de inventarios con control de stock, movimientos, Kardex, reportes, auditoría y administración interna de usuarios.
+![.NET](https://img.shields.io/badge/.NET-10-512BD4?style=flat-square&logo=dotnet&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=0F172A)
+![SQL Server](https://img.shields.io/badge/SQL%20Server-Azure%20SQL-0078D4?style=flat-square&logo=microsoftazure&logoColor=white)
+![Render](https://img.shields.io/badge/Backend-Render-46E3B7?style=flat-square&logo=render&logoColor=0F172A)
+![Vercel](https://img.shields.io/badge/Frontend-Vercel-000000?style=flat-square&logo=vercel&logoColor=white)
+![Stripe Test](https://img.shields.io/badge/Stripe-Test%20Mode-635BFF?style=flat-square&logo=stripe&logoColor=white)
 
-LOGENT es la identidad visual del producto. InventorySaaS es el nombre técnico del repositorio y del proyecto.
+LOGENT es una plataforma SaaS multiempresa para gestión de inventario. Permite administrar empresas, usuarios, roles, productos, almacenes, stock, movimientos, Kardex, reportes, auditoría, notificaciones, configuración de empresa y planes de suscripción en modo demo.
 
-![Landing pública](docs/screenshots/01-landing.png)
+InventorySaaS es el nombre técnico del repositorio/proyecto. LOGENT es la marca visible del producto.
 
-## Problema Que Resuelve
+## Demo Online
 
-LOGENT centraliza la operación de inventario en una plataforma clara para administrar productos, proveedores, almacenes, stock por ubicación, movimientos y trazabilidad operativa.
+- Frontend demo: [https://logent.vercel.app](https://logent.vercel.app)
+- Backend demo: [https://logent-api.onrender.com](https://logent-api.onrender.com)
+- Healthcheck: [https://logent-api.onrender.com/health](https://logent-api.onrender.com/health)
 
-El sistema evita la edición manual del stock y mantiene el historial mediante movimientos controlados, Kardex automático, reportes de solo lectura y auditoría administrativa.
+## Aviso Demo/Portafolio
 
-## Características Principales
+LOGENT es un proyecto profesional de portafolio/demo. No es un sistema comercial en producción real.
 
-- Landing pública de presentación.
-- Login privado con autenticación JWT.
-- Dashboard operativo.
-- Gestión de categorías.
-- Gestión de proveedores.
-- Gestión de almacenes.
-- Gestión de productos.
-- Stock por producto y almacén.
-- Movimientos de entrada, salida y transferencia.
-- Kardex automático.
-- Reportes operativos.
-- Auditoría de acciones.
-- Gestión interna de usuarios y roles.
-- Perfil del usuario autenticado.
-- Páginas 403 y 404.
-- Seed demo profesional para ambiente local.
+- Stripe está configurado en modo test.
+- No se usan cobros reales.
+- No se publican contraseñas, claves, cadenas de conexión ni secretos.
+- Las credenciales de acceso demo están disponibles bajo solicitud.
+- La pantalla de login puede incluir acceso demo para evaluación rápida.
 
-## Reglas De Negocio
+## Capturas
 
-- El stock no se edita manualmente.
-- El stock cambia únicamente mediante movimientos.
-- Una entrada aumenta stock en el almacén destino.
-- Una salida disminuye stock y valida existencia suficiente.
-- Una transferencia mueve stock entre almacenes.
-- El Kardex se genera automáticamente desde movimientos.
-- Los reportes son de solo lectura.
-- La auditoría es de solo lectura.
-- Los usuarios se crean internamente por un usuario Admin.
+### Landing y Login
 
-## Flujo De Acceso
+![Landing pública](docs/screenshots/landing.png)
 
-```text
-/              Landing pública
-/login         Acceso privado
-/dashboard     Panel principal
-/admin/users   Gestión de usuarios, solo Admin
-/profile       Perfil del usuario autenticado
-/unauthorized  Acceso no autorizado
-*              Página no encontrada
-```
+![Login](docs/screenshots/login.png)
 
-## Registro Público
+### Dashboard
 
-LOGENT no utiliza registro público abierto. Los usuarios son gestionados por un administrador, quien crea las cuentas internas y asigna roles según el nivel de acceso operativo.
+![Dashboard](docs/screenshots/dashboard.png)
 
-## Roles
+### Inventario
 
-- **Admin:** acceso completo, gestión de usuarios, auditoría, datos maestros, operación y reportes.
-- **Almacenero:** operación diaria, consulta de stock, registro de movimientos y revisión de Kardex según permisos configurados.
-- **Consulta:** acceso de lectura para supervisión, stock, Kardex y reportes según permisos configurados.
+![Categorías](docs/screenshots/categorias.png)
+
+![Proveedores](docs/screenshots/proveedores.png)
+
+![Almacenes](docs/screenshots/almacenes.png)
+
+![Productos](docs/screenshots/productos.png)
+
+### Operación
+
+![Stock](docs/screenshots/stock.png)
+
+![Movimientos](docs/screenshots/movimientos.png)
+
+![Kardex](docs/screenshots/kardex.png)
+
+### Análisis
+
+![Reportes](docs/screenshots/reportes.png)
+
+### Administración
+
+![Usuarios](docs/screenshots/usuarios.png)
+
+![Auditoría](docs/screenshots/auditoria.png)
+
+### Cuenta y Empresa
+
+![Configuración de empresa](docs/screenshots/empresa.png)
+
+![Plan y uso](docs/screenshots/planuso.png)
+
+![Notificaciones](docs/screenshots/notificaciones.png)
+
+![Perfil](docs/screenshots/perfil.png)
+
+### Estados
+
+![Página no encontrada](docs/screenshots/not-found.png)
 
 ## Stack Técnico
 
 ### Backend
 
-- ASP.NET Core Web API
+- ASP.NET Core Web API .NET 10
 - Entity Framework Core
-- SQL Server
+- SQL Server / Azure SQL
 - ASP.NET Core Identity
-- JWT
+- JWT Bearer
 - Clean Architecture
 - FluentValidation
-- Auditoría interna
+- Serilog
+- Rate limiting, CORS y security headers
 
 ### Frontend
 
@@ -93,9 +110,18 @@ LOGENT no utiliza registro público abierto. Los usuarios son gestionados por un
 - Lucide React
 - Sonner
 
-## Arquitectura
+### Integraciones
 
-El backend está separado por capas siguiendo Clean Architecture. La solución diferencia dominio, aplicación, infraestructura y API HTTP.
+- Stripe en modo test
+- Cloudinary para logos de empresa
+- SMTP/Brevo o SMTP demo controlado
+- Azure SQL
+- Render
+- Vercel
+
+## Arquitectura General
+
+El backend sigue Clean Architecture y separa dominio, casos de uso, infraestructura y API HTTP.
 
 ```text
 backend/
@@ -105,138 +131,129 @@ backend/
 └── InventorySaaS.WebApi
 ```
 
-El frontend está organizado por features, con componentes compartidos, clientes API, tipos y páginas por módulo.
+El frontend está organizado por features y componentes compartidos.
 
 ```text
 frontend/
 └── src/
     ├── app
+    ├── assets
     ├── components
     ├── features
     ├── lib
     └── types
 ```
 
-La comunicación se realiza mediante API REST. La autenticación usa JWT, con rutas protegidas y control de acceso por roles.
+La aplicación usa API REST, autenticación JWT, control de acceso por roles, aislamiento por tenant y reglas de inventario aplicadas desde backend.
 
-## Módulos Principales
+Más detalle en [docs/architecture.md](docs/architecture.md).
 
-- **Dashboard:** resumen operativo de inventario, alertas y actividad reciente.
-- **Categorías:** administración de clasificaciones de productos.
-- **Proveedores:** administración de proveedores y datos comerciales.
-- **Almacenes:** administración de ubicaciones de inventario.
-- **Productos:** catálogo maestro con precios, stock mínimo, categoría y proveedor.
-- **Stock:** consulta de existencias por producto y almacén.
-- **Movimientos:** registro de entradas, salidas y transferencias.
-- **Kardex:** historial automático y solo lectura de movimientos.
-- **Reportes:** vistas operativas de stock, stock bajo, movimientos y Kardex.
-- **Auditoría:** trazabilidad administrativa de acciones relevantes.
-- **Usuarios:** administración interna de cuentas, roles y estado de acceso.
-- **Perfil:** consulta de cuenta y cambio de contraseña del usuario autenticado.
+## Módulos Implementados
 
-## Capturas
+- Landing pública LOGENT.
+- Registro de empresa con confirmación de email.
+- Login privado.
+- Recuperación y cambio de contraseña.
+- Dashboard tenant.
+- Gestión de categorías.
+- Gestión de proveedores.
+- Gestión de almacenes.
+- Gestión de productos.
+- Consulta de stock por producto y almacén.
+- Movimientos de entrada, salida y transferencia.
+- Kardex automático.
+- Reportes operativos.
+- Auditoría tenant filtrable y exportable.
+- Gestión de usuarios tenant.
+- Invitaciones por correo.
+- Configuración de empresa y logo.
+- Planes, uso y límites.
+- Stripe Checkout test y Customer Portal test.
+- Notificaciones internas tenant.
+- Emails transaccionales para eventos críticos.
+- Dashboard y módulos SuperAdmin de plataforma.
+- Páginas 403 y 404.
 
-### Landing pública
+## Flujo SaaS Multiempresa
 
-![Landing pública](docs/screenshots/01-landing.png)
+1. Una empresa se registra desde el flujo público.
+2. El primer usuario queda asociado a la empresa como Admin.
+3. El correo debe confirmarse antes de iniciar sesión.
+4. Cada usuario pertenece a una empresa mediante `CompanyId`.
+5. Las consultas y operaciones se filtran por tenant.
+6. El Admin tenant gestiona usuarios e invitaciones de su empresa.
+7. Los datos de inventario, auditoría, reportes, notificaciones y configuración quedan aislados por empresa.
+8. SuperAdmin opera la plataforma desde módulos separados.
 
-### Login
+## Seguridad
 
-![Login](docs/screenshots/02-login.png)
+- Autenticación con JWT.
+- Roles: SuperAdmin, Admin, Almacenero y Consulta.
+- Aislamiento por tenant/empresa.
+- Confirmación de correo.
+- Recuperación de contraseña.
+- Cambio de contraseña autenticado.
+- Rate limiting en endpoints sensibles.
+- CORS configurado por ambiente.
+- Security headers.
+- Validaciones con FluentValidation.
+- Respuestas de error estandarizadas.
+- Auditoría de acciones relevantes.
+- Bloqueo de empresa suspendida.
+- Enforcement de suscripción y límites por plan.
+- No se exponen hashes de contraseña, tokens, secretos ni claves de proveedor.
 
-### Dashboard
+## Reglas De Inventario
 
-![Dashboard](docs/screenshots/03-dashboard.png)
+- El stock no se edita manualmente.
+- El stock cambia mediante movimientos.
+- Una entrada aumenta stock.
+- Una salida reduce stock y valida disponibilidad.
+- Una transferencia descuenta del almacén origen y suma al almacén destino.
+- Kardex, reportes y auditoría son de solo lectura.
 
-### Productos
+## Acceso Demo
 
-![Productos](docs/screenshots/04-products.png)
+Credenciales disponibles bajo solicitud.
 
-### Stock
+La pantalla de login puede incluir un acceso demo para evaluación rápida. El entorno demo no debe usarse con datos reales.
 
-![Stock](docs/screenshots/05-stock.png)
+Guía breve: [docs/demo-guide.md](docs/demo-guide.md).
 
-### Movimientos
+## Instalación Local
 
-![Movimientos](docs/screenshots/06-movements.png)
+### Requisitos
 
-### Kardex
-
-![Kardex](docs/screenshots/07-kardex.png)
-
-### Reportes
-
-![Reportes](docs/screenshots/08-reports.png)
-
-### Usuarios y roles
-
-![Usuarios y roles](docs/screenshots/09-users.png)
-
-### Perfil
-
-![Perfil](docs/screenshots/10-profile.png)
-
-### Auditoría
-
-![Auditoría](docs/screenshots/11-auditoria.png)
-
-### Categorías
-
-![Categorías](docs/screenshots/12-categorias.png)
-
-### Proveedores
-
-![Proveedores](docs/screenshots/13-proveedores.png)
-
-### Página no encontrada
-
-![Página no encontrada](docs/screenshots/14-not-found.png)
-
-## Credenciales Demo
-
-```text
-Email: admin@inventorysaas.com
-Password: Admin123
-```
-
-Credenciales solo para ambiente local/demo.
-
-## Requisitos Previos
-
-- .NET SDK
+- .NET SDK 10
 - Node.js
 - npm
 - SQL Server o SQL Server Express
 - Git
-
-## Instalación Y Ejecución
+- Opcional: MailPit, Stripe CLI y cuenta Cloudinary de prueba
 
 ### Backend
-
-Desde la raíz del proyecto:
 
 ```bash
 cd backend
 dotnet restore
 dotnet build
+dotnet ef database update --project InventorySaaS.Infrastructure --startup-project InventorySaaS.WebApi
 dotnet run --project InventorySaaS.WebApi/InventorySaaS.WebApi.csproj --launch-profile http --urls http://localhost:5088
 ```
 
-La API queda disponible en:
+API local:
 
 ```text
 http://localhost:5088
 ```
 
-Swagger queda disponible en:
+Healthcheck local:
 
 ```text
-http://localhost:5088/swagger
+http://localhost:5088/health
 ```
 
 ### Frontend
-
-Desde la raíz del proyecto:
 
 ```bash
 cd frontend
@@ -244,87 +261,77 @@ npm install
 npm run dev
 ```
 
-El frontend queda disponible en:
+Frontend local:
 
 ```text
 http://localhost:5173
 ```
 
-## Seed Demo Profesional
+## Variables De Entorno
 
-El sistema incluye un `DemoDataSeeder` para ambiente local/demo.
-
-- Se ejecuta automáticamente en Development.
-- Es idempotente.
-- Evita duplicar datos demo.
-- Crea categorías, proveedores, almacenes, productos y movimientos demo.
-- El stock se genera mediante la lógica de movimientos.
-- El Kardex se genera automáticamente desde los movimientos.
-
-## Endpoints Principales
-
-### Auth y perfil
+Configurar mediante User Secrets, variables de entorno del proveedor o archivos `.env` locales no versionados. No incluir valores reales en el repositorio.
 
 ```text
-POST /api/auth/login
-GET  /api/auth/me
-GET  /api/profile
-PUT  /api/profile/password
+ConnectionStrings__DefaultConnection
+Jwt__Key
+Jwt__Issuer
+Jwt__Audience
+Cors__AllowedOrigins__0
+AppUrls__FrontendBaseUrl
+Stripe__PublishableKey
+Stripe__SecretKey
+Stripe__WebhookSecret
+Stripe__StarterPriceId
+Stripe__ProPriceId
+Cloudinary__CloudName
+Cloudinary__ApiKey
+Cloudinary__ApiSecret
+EmailSettings__Host
+EmailSettings__Port
+EmailSettings__UserName
+EmailSettings__Password
+EmailSettings__FromEmail
+EmailSettings__FromName
+EmailSettings__EnableSsl
 ```
 
-### Dashboard
+Frontend:
 
 ```text
-GET /api/dashboard/summary
-GET /api/dashboard/stock-overview
-GET /api/dashboard/recent-movements
-GET /api/dashboard/low-stock-alerts
+VITE_API_URL
 ```
 
-### Catálogos
+## Despliegue Demo
 
-```text
-/api/categories
-/api/suppliers
-/api/warehouses
-/api/products
-```
+Arquitectura demo actual:
 
-### Operación
+- Frontend: Vercel.
+- Backend: Render.
+- Base de datos: Azure SQL.
+- Stripe: test mode.
+- Cloudinary: cuenta/carpeta de prueba.
+- Email: SMTP demo/controlado.
 
-```text
-/api/stock-items
-/api/movements
-/api/kardex
-```
+Documentación de despliegue: [docs/deployment-demo.md](docs/deployment-demo.md).
 
-### Reportes
+## Roadmap
 
-```text
-GET /api/reports/stock-summary
-GET /api/reports/low-stock
-GET /api/reports/movements-summary
-GET /api/reports/kardex-summary
-```
-
-### Administración
-
-```text
-/api/users
-/api/audit-logs
-```
+- Clientes.
+- Ventas/POS.
+- Comprobantes internos.
+- Promociones y descuentos.
+- Más analítica operativa y de plataforma.
+- Mejoras de monitoreo para demo pública.
 
 ## Estado Del Proyecto
 
-Proyecto funcional para portafolio. Incluye backend, frontend, autenticación, roles, reglas de stock, Kardex, reportes, auditoría, gestión de usuarios y una UI responsive con identidad LOGENT.
-
-Pendiente opcional:
-
-- Deploy.
-- Documentación Swagger ampliada.
-- Exportación de reportes si se decide implementar en el futuro.
+- QA final funcional completado.
+- Demo seed funcional cargado.
+- Sistema desplegado como demo online.
+- README de portafolio actualizado.
 
 ## Autor
 
-Luis Ángel Rodríguez Guevara  
-Proyecto de portafolio full-stack.
+Desarrollado por Luis Ángel Rodríguez Guevara.
+
+Proyecto full-stack avanzado para portafolio profesional.
