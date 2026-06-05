@@ -10,6 +10,15 @@ export async function getAuditLogs(params: AuditLogFilters): Promise<PaginatedRe
   return response.data
 }
 
+export async function exportAuditLogsCsv(params: AuditLogFilters): Promise<Blob> {
+  const response = await api.get<Blob>('/audit-logs/export', {
+    params,
+    responseType: 'blob',
+  })
+
+  return response.data
+}
+
 export async function getAuditLogById(id: string): Promise<AuditLog> {
   const response = await api.get<AuditLog>(`/audit-logs/${id}`)
 

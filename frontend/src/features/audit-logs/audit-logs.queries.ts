@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery } from '@tanstack/react-query'
 import type { AuditAction, AuditLogFilters } from '../../types/audit-log'
 import {
   getAuditLogById,
@@ -6,6 +6,7 @@ import {
   getAuditLogsByAction,
   getAuditLogsByEntity,
   getAuditLogsByUser,
+  exportAuditLogsCsv,
 } from './audit-logs.api'
 
 export function useAuditLogs(params: AuditLogFilters, enabled = true) {
@@ -45,5 +46,11 @@ export function useAuditLogsByAction(action: AuditAction | '', enabled = Boolean
     enabled,
     queryFn: () => getAuditLogsByAction(action as AuditAction),
     queryKey: ['audit-logs', 'by-action', action],
+  })
+}
+
+export function useExportAuditLogsCsv() {
+  return useMutation({
+    mutationFn: (params: AuditLogFilters) => exportAuditLogsCsv(params),
   })
 }

@@ -16,31 +16,69 @@ type AuditLogDetailsModalProps = {
 }
 
 const actionLabels: Record<AuditAction, string> = {
+  BillingCheckoutCompleted: 'Checkout completado',
+  BillingPaymentFailed: 'Pago fallido',
+  BillingPaymentSucceeded: 'Pago exitoso',
+  BillingSubscriptionCancelled: 'Suscripción cancelada',
+  BillingSubscriptionStatusChanged: 'Estado de suscripción',
+  BillingSubscriptionUpdated: 'Suscripción actualizada',
+  CompanyProfileUpdated: 'Empresa actualizada',
   Create: 'Creación',
   Delete: 'Eliminación',
   Login: 'Inicio de sesión',
   Logout: 'Cierre de sesión',
+  PlanChangedByStripe: 'Plan actualizado por Stripe',
+  PlanUpgradeApproved: 'Upgrade aprobado',
+  PlanUpgradeRejected: 'Upgrade rechazado',
+  PlanUpgradeRequested: 'Upgrade solicitado',
+  PlatformCompanyPlanChanged: 'Plan de empresa',
+  PlatformCompanyStatusChanged: 'Estado de empresa',
+  ProfilePasswordChanged: 'Contraseña de perfil',
   StockAdjustment: 'Ajuste stock',
   StockEntry: 'Entrada stock',
   StockExit: 'Salida stock',
   StockTransfer: 'Transferencia stock',
   Update: 'Actualización',
+  UserCreated: 'Usuario creado',
   UserPasswordChanged: 'Contraseña propia',
+  UserPasswordReset: 'Contraseña restablecida',
   UserProfileUpdated: 'Perfil actualizado',
+  UserRoleChanged: 'Rol actualizado',
+  UserStatusChanged: 'Estado de usuario',
+  UserUpdated: 'Usuario actualizado',
 }
 
 const actionBadgeVariants: Record<AuditAction, 'default' | 'success' | 'warning' | 'danger' | 'muted'> = {
+  BillingCheckoutCompleted: 'success',
+  BillingPaymentFailed: 'danger',
+  BillingPaymentSucceeded: 'success',
+  BillingSubscriptionCancelled: 'danger',
+  BillingSubscriptionStatusChanged: 'warning',
+  BillingSubscriptionUpdated: 'default',
+  CompanyProfileUpdated: 'default',
   Create: 'success',
   Delete: 'danger',
   Login: 'default',
   Logout: 'muted',
+  PlanChangedByStripe: 'default',
+  PlanUpgradeApproved: 'success',
+  PlanUpgradeRejected: 'danger',
+  PlanUpgradeRequested: 'warning',
+  PlatformCompanyPlanChanged: 'default',
+  PlatformCompanyStatusChanged: 'warning',
+  ProfilePasswordChanged: 'warning',
   StockAdjustment: 'warning',
   StockEntry: 'success',
   StockExit: 'danger',
   StockTransfer: 'default',
   Update: 'warning',
+  UserCreated: 'success',
   UserPasswordChanged: 'warning',
+  UserPasswordReset: 'warning',
   UserProfileUpdated: 'default',
+  UserRoleChanged: 'warning',
+  UserStatusChanged: 'warning',
+  UserUpdated: 'default',
 }
 
 function formatValue(value?: string | null): string {
@@ -116,7 +154,7 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
                 </div>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-[1fr_1.2fr]">
+              <div className="grid gap-4 md:grid-cols-3">
                 <div className="rounded-lg border border-border bg-white p-4">
                   <p className="text-xs font-semibold uppercase text-muted">ID de entidad</p>
                   <p className="mt-2 break-all font-mono text-xs font-semibold leading-5 text-foreground">
@@ -127,6 +165,12 @@ export function AuditLogDetailsModal({ logId, onClose }: AuditLogDetailsModalPro
                   <p className="text-xs font-semibold uppercase text-muted">ID de usuario</p>
                   <p className="mt-2 break-all font-mono text-xs font-semibold leading-5 text-foreground">
                     {formatValue(auditLog.userId)}
+                  </p>
+                </div>
+                <div className="rounded-lg border border-border bg-white p-4">
+                  <p className="text-xs font-semibold uppercase text-muted">IP</p>
+                  <p className="mt-2 break-all font-mono text-xs font-semibold leading-5 text-foreground">
+                    {formatValue(auditLog.ipAddress)}
                   </p>
                 </div>
               </div>

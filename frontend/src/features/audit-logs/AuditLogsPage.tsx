@@ -1,5 +1,16 @@
-import { Eye, FilterX, PencilLine, PlusCircle, Search, ShieldCheck, Trash2, UserRound } from 'lucide-react'
+import {
+  CalendarDays,
+  Database,
+  Download,
+  Eye,
+  FilterX,
+  Search,
+  ShieldCheck,
+  UserRound,
+} from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useEffect, useMemo, useState } from 'react'
+import { toast } from 'sonner'
 import { EmptyState } from '../../components/common/EmptyState'
 import { LoadingState } from '../../components/common/LoadingState'
 import { PageHeader } from '../../components/common/PageHeader'
@@ -10,14 +21,9 @@ import { Button } from '../../components/ui/Button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/Card'
 import { getApiErrorMessage } from '../../lib/api-error'
 import { formatDateTime, formatNumber } from '../../lib/format'
-import type { AuditAction, AuditLog, AuditLogSpecificFilter } from '../../types/audit-log'
+import type { AuditAction, AuditLog, AuditLogFilters } from '../../types/audit-log'
 import { AuditLogDetailsModal } from './AuditLogDetailsModal'
-import {
-  useAuditLogs,
-  useAuditLogsByAction,
-  useAuditLogsByEntity,
-  useAuditLogsByUser,
-} from './audit-logs.queries'
+import { useAuditLogs, useExportAuditLogsCsv } from './audit-logs.queries'
 
 const auditActions: AuditAction[] = [
   'Create',
@@ -29,39 +35,123 @@ const auditActions: AuditAction[] = [
   'StockExit',
   'StockAdjustment',
   'StockTransfer',
+  'UserCreated',
+  'UserUpdated',
+  'UserRoleChanged',
+  'UserStatusChanged',
+  'UserPasswordReset',
+  'ProfilePasswordChanged',
   'UserProfileUpdated',
   'UserPasswordChanged',
+  'PlanUpgradeRequested',
+  'PlanUpgradeApproved',
+  'PlanUpgradeRejected',
+  'CompanyProfileUpdated',
+  'BillingCheckoutCompleted',
+  'BillingPaymentFailed',
+  'BillingPaymentSucceeded',
+  'BillingSubscriptionUpdated',
+  'BillingSubscriptionCancelled',
+  'BillingSubscriptionStatusChanged',
+  'PlanChangedByStripe',
 ]
 
 const actionLabels: Record<AuditAction, string> = {
+  BillingCheckoutCompleted: 'Checkout completado',
+  BillingPaymentFailed: 'Pago fallido',
+  BillingPaymentSucceeded: 'Pago exitoso',
+  BillingSubscriptionCancelled: 'Suscripción cancelada',
+  BillingSubscriptionStatusChanged: 'Estado de suscripción',
+  BillingSubscriptionUpdated: 'Suscripción actualizada',
+  CompanyProfileUpdated: 'Empresa actualizada',
   Create: 'Creación',
   Delete: 'Eliminación',
   Login: 'Inicio de sesión',
   Logout: 'Cierre de sesión',
+  PlanChangedByStripe: 'Plan actualizado por Stripe',
+  PlanUpgradeApproved: 'Upgrade aprobado',
+  PlanUpgradeRejected: 'Upgrade rechazado',
+  PlanUpgradeRequested: 'Upgrade solicitado',
+  PlatformCompanyPlanChanged: 'Plan de empresa',
+  PlatformCompanyStatusChanged: 'Estado de empresa',
+  ProfilePasswordChanged: 'Contraseña de perfil',
   StockAdjustment: 'Ajuste stock',
   StockEntry: 'Entrada stock',
   StockExit: 'Salida stock',
   StockTransfer: 'Transferencia stock',
   Update: 'Actualización',
-  UserPasswordChanged: 'Contraseña propia',
+  UserCreated: 'Usuario creado',
+  UserPasswordChanged: 'Contraseña cambiada',
+  UserPasswordReset: 'Contraseña restablecida',
   UserProfileUpdated: 'Perfil actualizado',
+  UserRoleChanged: 'Rol actualizado',
+  UserStatusChanged: 'Estado de usuario',
+  UserUpdated: 'Usuario actualizado',
 }
 
 const actionBadgeVariants: Record<AuditAction, 'default' | 'success' | 'warning' | 'danger' | 'muted'> = {
+  BillingCheckoutCompleted: 'success',
+  BillingPaymentFailed: 'danger',
+  BillingPaymentSucceeded: 'success',
+  BillingSubscriptionCancelled: 'danger',
+  BillingSubscriptionStatusChanged: 'warning',
+  BillingSubscriptionUpdated: 'default',
+  CompanyProfileUpdated: 'default',
   Create: 'success',
   Delete: 'danger',
   Login: 'default',
   Logout: 'muted',
+  PlanChangedByStripe: 'default',
+  PlanUpgradeApproved: 'success',
+  PlanUpgradeRejected: 'danger',
+  PlanUpgradeRequested: 'warning',
+  PlatformCompanyPlanChanged: 'default',
+  PlatformCompanyStatusChanged: 'warning',
+  ProfilePasswordChanged: 'warning',
   StockAdjustment: 'warning',
   StockEntry: 'success',
   StockExit: 'danger',
   StockTransfer: 'default',
   Update: 'warning',
+  UserCreated: 'success',
   UserPasswordChanged: 'warning',
+  UserPasswordReset: 'warning',
   UserProfileUpdated: 'default',
+  UserRoleChanged: 'warning',
+  UserStatusChanged: 'warning',
+  UserUpdated: 'default',
 }
 
-const pageSizeOptions = [10, 20, 50]
+const pageSizeOptions = [10, 20, 50, 100]
+
+function formatValue(value?: string | null, fallback = 'No registrado') {
+  return value && value.trim().length > 0 ? value : fallback
+}
+
+function SummaryCard({
+  description,
+  icon,
+  title,
+  value,
+}: {
+  description: string
+  icon: ReactNode
+  title: string
+  value: string
+}) {
+  return (
+    <div className="rounded-lg border border-border bg-white px-4 py-3 shadow-[0_1px_2px_rgb(15_23_42/0.03)]">
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="text-sm font-medium text-muted">{title}</p>
+          <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{value}</p>
+          <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
+        </div>
+        <div className="rounded-lg border border-[#28E000]/20 bg-[#28E000]/5 p-2 text-[#147A08]">{icon}</div>
+      </div>
+    </div>
+  )
+}
 
 function AuditLogsErrorState({ error }: { error: unknown }) {
   return (
@@ -73,29 +163,15 @@ function AuditLogsErrorState({ error }: { error: unknown }) {
   )
 }
 
-function SummaryCard({
-  description,
-  icon,
-  title,
-  value,
-}: {
-  description: string
-  icon: React.ReactNode
-  title: string
-  value: string
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-slate-50 px-4 py-3">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-sm font-medium text-muted">{title}</p>
-          <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{value}</p>
-          <p className="mt-1 text-xs leading-5 text-muted">{description}</p>
-        </div>
-        <div className="text-slate-400">{icon}</div>
-      </div>
-    </div>
-  )
+function downloadBlob(blob: Blob, fileName: string) {
+  const url = window.URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  document.body.appendChild(link)
+  link.click()
+  link.remove()
+  window.URL.revokeObjectURL(url)
 }
 
 export function AuditLogsPage() {
@@ -103,73 +179,72 @@ export function AuditLogsPage() {
   const [pageSize, setPageSize] = useState(10)
   const [searchInput, setSearchInput] = useState('')
   const [search, setSearch] = useState('')
-  const [filterType, setFilterType] = useState<AuditLogSpecificFilter | ''>('')
-  const [filterValue, setFilterValue] = useState('')
   const [actionFilter, setActionFilter] = useState<AuditAction | ''>('')
+  const [userIdFilter, setUserIdFilter] = useState('')
+  const [entityNameFilter, setEntityNameFilter] = useState('')
+  const [entityIdFilter, setEntityIdFilter] = useState('')
+  const [fromDateFilter, setFromDateFilter] = useState('')
+  const [toDateFilter, setToDateFilter] = useState('')
   const [selectedLogId, setSelectedLogId] = useState<string | null>(null)
 
   useEffect(() => {
     const timeoutId = window.setTimeout(() => {
       setSearch(searchInput.trim())
+      setPageNumber(1)
     }, 350)
 
     return () => window.clearTimeout(timeoutId)
   }, [searchInput])
 
-  const specificFilterValue = filterType === 'action' ? actionFilter : filterValue.trim()
-  const hasSpecificFilter = Boolean(filterType && specificFilterValue)
-
-  const filters = useMemo(
+  const filters = useMemo<AuditLogFilters>(
     () => ({
+      action: actionFilter || undefined,
+      entityId: entityIdFilter.trim() || undefined,
+      entityName: entityNameFilter.trim() || undefined,
+      fromDate: fromDateFilter || undefined,
       pageNumber,
       pageSize,
       search: search || undefined,
+      toDate: toDateFilter || undefined,
+      userId: userIdFilter.trim() || undefined,
     }),
-    [pageNumber, pageSize, search],
+    [
+      actionFilter,
+      entityIdFilter,
+      entityNameFilter,
+      fromDateFilter,
+      pageNumber,
+      pageSize,
+      search,
+      toDateFilter,
+      userIdFilter,
+    ],
   )
 
-  const generalQuery = useAuditLogs(filters, !hasSpecificFilter)
-  const byUserQuery = useAuditLogsByUser(specificFilterValue, filterType === 'user' && hasSpecificFilter)
-  const byEntityQuery = useAuditLogsByEntity(specificFilterValue, filterType === 'entity' && hasSpecificFilter)
-  const byActionQuery = useAuditLogsByAction(actionFilter, filterType === 'action' && hasSpecificFilter)
+  const auditLogsQuery = useAuditLogs(filters)
+  const exportCsvMutation = useExportAuditLogsCsv()
+  const auditLogs = useMemo(() => auditLogsQuery.data?.items ?? [], [auditLogsQuery.data?.items])
 
-  const activeQuery = filterType === 'user'
-    ? byUserQuery
-    : filterType === 'entity'
-      ? byEntityQuery
-      : filterType === 'action'
-        ? byActionQuery
-        : generalQuery
-
-  const auditLogs: AuditLog[] = useMemo(() => {
-    if (filterType === 'user') {
-      return byUserQuery.data ?? []
-    }
-
-    if (filterType === 'entity') {
-      return byEntityQuery.data ?? []
-    }
-
-    if (filterType === 'action') {
-      return byActionQuery.data ?? []
-    }
-
-    return generalQuery.data?.items ?? []
-  }, [byActionQuery.data, byEntityQuery.data, byUserQuery.data, filterType, generalQuery.data?.items])
+  const hasFilters = Boolean(
+    search
+      || actionFilter
+      || userIdFilter.trim()
+      || entityNameFilter.trim()
+      || entityIdFilter.trim()
+      || fromDateFilter
+      || toDateFilter,
+  )
 
   const summary = useMemo(() => {
     const entities = new Set(auditLogs.map((log) => log.entityName)).size
+    const users = new Set(auditLogs.map((log) => log.userId).filter(Boolean)).size
+    const actions = new Set(auditLogs.map((log) => log.action)).size
 
-    return {
-      creates: auditLogs.filter((log) => log.action === 'Create').length,
-      deletes: auditLogs.filter((log) => log.action === 'Delete').length,
-      entities,
-      updates: auditLogs.filter((log) => log.action === 'Update').length,
-    }
+    return { actions, entities, users }
   }, [auditLogs])
 
-  function handleSearchChange(value: string) {
-    setSearchInput(value)
+  function handleFilterChange(update: () => void) {
+    update()
     setPageNumber(1)
   }
 
@@ -178,32 +253,43 @@ export function AuditLogsPage() {
     setPageNumber(1)
   }
 
-  function handleFilterTypeChange(value: string) {
-    setFilterType(value as AuditLogSpecificFilter | '')
-    setFilterValue('')
-    setActionFilter('')
-    setPageNumber(1)
-  }
-
   function clearFilters() {
-    setFilterType('')
-    setFilterValue('')
     setActionFilter('')
+    setEntityIdFilter('')
+    setEntityNameFilter('')
+    setFromDateFilter('')
     setSearchInput('')
     setSearch('')
+    setToDateFilter('')
+    setUserIdFilter('')
     setPageNumber(1)
   }
 
-  const emptyTitle = hasSpecificFilter || search ? 'Sin resultados' : 'Sin logs de auditoría'
-  const emptyDescription =
-    hasSpecificFilter || search
-      ? 'No se encontraron logs para la búsqueda o filtro seleccionado.'
-      : 'Aún no hay operaciones auditadas para mostrar.'
+  async function handleExportCsv() {
+    try {
+      const blob = await exportCsvMutation.mutateAsync(filters)
+      downloadBlob(blob, `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`)
+      toast.success('Archivo CSV generado correctamente.')
+    } catch (error) {
+      toast.error(getApiErrorMessage(error, 'No se pudo exportar la auditoría.'))
+    }
+  }
+
+  const emptyTitle = hasFilters ? 'Sin resultados' : 'Sin logs de auditoría'
+  const emptyDescription = hasFilters
+    ? 'No se encontraron logs para los filtros seleccionados.'
+    : 'Aún no hay operaciones auditadas para mostrar.'
 
   return (
     <div className="space-y-6">
       <PageHeader
-        description="Trazabilidad administrativa de operaciones, accesos y cambios registrados por el sistema."
+        action={
+          <Button disabled={exportCsvMutation.isPending} onClick={handleExportCsv} variant="secondary">
+            <Download className="h-4 w-4" />
+            {exportCsvMutation.isPending ? 'Exportando...' : 'Exportar CSV'}
+          </Button>
+        }
+        description="Trazabilidad filtrable de operaciones, accesos y cambios registrados para tu empresa."
         eyebrow="Administración"
         title="Auditoría"
       />
@@ -212,15 +298,16 @@ export function AuditLogsPage() {
         <CardContent className="space-y-4 p-4">
           <div className="flex flex-col gap-3 border-b border-border pb-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
-              <p className="text-sm font-semibold text-foreground">Consulta de auditoría</p>
+              <p className="text-sm font-semibold text-foreground">Centro de auditoría tenant</p>
               <p className="mt-1 max-w-3xl text-sm leading-6 text-muted">
-                Los logs se generan automáticamente desde backend y se mantienen como evidencia de solo lectura.
+                Filtra eventos por acción, usuario, entidad, fechas o texto libre. La exportación respeta los mismos
+                filtros y no incluye valores sensibles.
               </p>
             </div>
-            <Badge variant="muted">Solo Admin</Badge>
+            <Badge variant="muted">Solo lectura</Badge>
           </div>
 
-          <div className="grid gap-3 xl:grid-cols-[1.2fr_0.75fr_1fr_auto] xl:items-end">
+          <div className="grid gap-3 xl:grid-cols-[1.4fr_0.8fr_0.9fr_0.9fr]">
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground" htmlFor="audit-search">
                 Búsqueda general
@@ -228,10 +315,9 @@ export function AuditLogsPage() {
               <div className="relative">
                 <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
                 <input
-                  className="h-10 w-full rounded-lg border border-border bg-white pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
-                  disabled={Boolean(filterType)}
+                  className="h-10 w-full rounded-lg border border-border bg-white pl-10 pr-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
                   id="audit-search"
-                  onChange={(event) => handleSearchChange(event.target.value)}
+                  onChange={(event) => setSearchInput(event.target.value)}
                   placeholder="Usuario, entidad, ID o descripción"
                   type="search"
                   value={searchInput}
@@ -240,64 +326,92 @@ export function AuditLogsPage() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground" htmlFor="audit-filter-type">
-                Filtro específico
+              <label className="text-sm font-semibold text-foreground" htmlFor="audit-action">
+                Acción
               </label>
               <select
                 className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-blue-100"
-                id="audit-filter-type"
-                onChange={(event) => handleFilterTypeChange(event.target.value)}
-                value={filterType}
+                id="audit-action"
+                onChange={(event) => handleFilterChange(() => setActionFilter(event.target.value as AuditAction | ''))}
+                value={actionFilter}
               >
-                <option value="">Sin filtro</option>
-                <option value="entity">Entidad</option>
-                <option value="action">Acción</option>
-                <option value="user">ID de usuario</option>
+                <option value="">Todas</option>
+                {auditActions.map((action) => (
+                  <option key={action} value={action}>
+                    {actionLabels[action]}
+                  </option>
+                ))}
               </select>
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-foreground" htmlFor="audit-filter-value">
-                Valor
+              <label className="text-sm font-semibold text-foreground" htmlFor="audit-user">
+                Usuario
               </label>
-              {filterType === 'action' ? (
-                <select
-                  className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-blue-100"
-                  id="audit-filter-value"
-                  onChange={(event) => setActionFilter(event.target.value as AuditAction | '')}
-                  value={actionFilter}
-                >
-                  <option value="">Seleccionar acción</option>
-                  {auditActions.map((action) => (
-                    <option key={action} value={action}>
-                      {actionLabels[action]}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
-                  disabled={!filterType}
-                  id="audit-filter-value"
-                  onChange={(event) => setFilterValue(event.target.value)}
-                  placeholder={
-                    filterType === 'entity'
-                      ? 'Ej. Product'
-                      : filterType === 'user'
-                        ? 'ID de usuario exacto'
-                        : 'Selecciona un filtro'
-                  }
-                  value={filterValue}
-                />
-              )}
+              <input
+                className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
+                id="audit-user"
+                onChange={(event) => handleFilterChange(() => setUserIdFilter(event.target.value))}
+                placeholder="ID de usuario"
+                value={userIdFilter}
+              />
             </div>
 
-            <Button
-              className="w-full xl:w-auto"
-              disabled={!filterType && !searchInput}
-              onClick={clearFilters}
-              variant="secondary"
-            >
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground" htmlFor="audit-entity">
+                Entidad / módulo
+              </label>
+              <input
+                className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
+                id="audit-entity"
+                onChange={(event) => handleFilterChange(() => setEntityNameFilter(event.target.value))}
+                placeholder="Ej. Product, Billing"
+                value={entityNameFilter}
+              />
+            </div>
+          </div>
+
+          <div className="grid gap-3 lg:grid-cols-[1fr_0.8fr_0.8fr_auto] lg:items-end">
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground" htmlFor="audit-entity-id">
+                ID de entidad
+              </label>
+              <input
+                className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors placeholder:text-slate-400 focus:border-primary focus:ring-2 focus:ring-blue-100"
+                id="audit-entity-id"
+                onChange={(event) => handleFilterChange(() => setEntityIdFilter(event.target.value))}
+                placeholder="ID exacto o parcial"
+                value={entityIdFilter}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground" htmlFor="audit-from-date">
+                Desde
+              </label>
+              <input
+                className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-blue-100"
+                id="audit-from-date"
+                onChange={(event) => handleFilterChange(() => setFromDateFilter(event.target.value))}
+                type="date"
+                value={fromDateFilter}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-foreground" htmlFor="audit-to-date">
+                Hasta
+              </label>
+              <input
+                className="h-10 w-full rounded-lg border border-border bg-white px-3 text-sm text-foreground outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-blue-100"
+                id="audit-to-date"
+                onChange={(event) => handleFilterChange(() => setToDateFilter(event.target.value))}
+                type="date"
+                value={toDateFilter}
+              />
+            </div>
+
+            <Button className="w-full lg:w-auto" disabled={!hasFilters} onClick={clearFilters} variant="secondary">
               <FilterX className="h-4 w-4" />
               Limpiar filtros
             </Button>
@@ -307,39 +421,39 @@ export function AuditLogsPage() {
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
         <SummaryCard
-          description="Resultado mostrado"
+          description="Según filtros aplicados"
           icon={<ShieldCheck className="h-4 w-4" />}
-          title="Logs visibles"
-          value={formatNumber(auditLogs.length)}
+          title="Registros encontrados"
+          value={formatNumber(auditLogsQuery.data?.totalCount ?? 0)}
         />
         <SummaryCard
-          description="Operaciones de creación"
-          icon={<PlusCircle className="h-4 w-4" />}
-          title="Creaciones"
-          value={formatNumber(summary.creates)}
+          description="En la página actual"
+          icon={<UserRound className="h-4 w-4" />}
+          title="Usuarios visibles"
+          value={formatNumber(summary.users)}
         />
         <SummaryCard
-          description="Operaciones de actualización"
-          icon={<PencilLine className="h-4 w-4" />}
-          title="Actualizaciones"
-          value={formatNumber(summary.updates)}
+          description="Módulos afectados"
+          icon={<Database className="h-4 w-4" />}
+          title="Entidades visibles"
+          value={formatNumber(summary.entities)}
         />
         <SummaryCard
-          description="Operaciones de eliminación"
-          icon={<Trash2 className="h-4 w-4" />}
-          title="Eliminaciones"
-          value={formatNumber(summary.deletes)}
+          description="Tipos de eventos"
+          icon={<CalendarDays className="h-4 w-4" />}
+          title="Acciones visibles"
+          value={formatNumber(summary.actions)}
         />
       </div>
 
-      {activeQuery.isLoading ? (
+      {auditLogsQuery.isLoading ? (
         <Card>
           <CardContent>
             <LoadingState text="Cargando logs de auditoría..." />
           </CardContent>
         </Card>
-      ) : activeQuery.isError ? (
-        <AuditLogsErrorState error={activeQuery.error} />
+      ) : auditLogsQuery.isError ? (
+        <AuditLogsErrorState error={auditLogsQuery.error} />
       ) : auditLogs.length === 0 ? (
         <EmptyState description={emptyDescription} icon={<ShieldCheck className="h-6 w-6" />} title={emptyTitle} />
       ) : (
@@ -347,37 +461,45 @@ export function AuditLogsPage() {
           <CardHeader>
             <CardTitle>Registro de auditoría</CardTitle>
             <CardDescription>
-              {hasSpecificFilter
-                ? `${formatNumber(auditLogs.length)} registros del filtro específico.`
-                : `${formatNumber(generalQuery.data?.totalCount ?? auditLogs.length)} registros encontrados.`}
+              {formatNumber(auditLogsQuery.data?.totalCount ?? auditLogs.length)} registros encontrados.
             </CardDescription>
           </CardHeader>
           <CardContent className="p-0">
             <TableContainer>
-              <table className="w-full min-w-[1120px] table-fixed divide-y divide-border">
+              <table className="w-full min-w-[1180px] table-fixed divide-y divide-border">
                 <colgroup>
-                  <col className="w-[13%]" />
-                  <col className="w-[12%]" />
-                  <col className="w-[24%]" />
-                  <col className="w-[19%]" />
-                  <col className="w-[22%]" />
-                  <col className="w-[10%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[17%]" />
+                  <col className="w-[14%]" />
+                  <col className="w-[18%]" />
+                  <col className="w-[23%]" />
+                  <col className="w-[8%]" />
+                  <col className="w-[6%]" />
                 </colgroup>
                 <thead className="bg-slate-50">
                   <tr>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Fecha</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Usuario</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Acción</th>
                     <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Entidad</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">ID de entidad</th>
-                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Usuario</th>
-                    <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Acciones</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">Descripción</th>
+                    <th className="px-5 py-3 text-left text-xs font-semibold uppercase text-muted">IP</th>
+                    <th className="px-5 py-3 text-right text-xs font-semibold uppercase text-muted">Detalle</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border bg-white">
-                  {auditLogs.map((log) => (
+                  {auditLogs.map((log: AuditLog) => (
                     <tr className="transition-colors hover:bg-slate-50/80" key={log.id}>
                       <td className="whitespace-nowrap px-5 py-4 text-sm text-muted">
                         {formatDateTime(log.createdAt)}
+                      </td>
+                      <td className="px-5 py-4">
+                        <div className="flex min-w-0 items-center gap-2">
+                          <UserRound className="h-4 w-4 shrink-0 text-muted" />
+                          <span className="block truncate font-mono text-xs text-muted">
+                            {formatValue(log.userId)}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-5 py-4">
                         <Badge variant={actionBadgeVariants[log.action]}>{actionLabels[log.action]}</Badge>
@@ -385,28 +507,22 @@ export function AuditLogsPage() {
                       <td className="px-5 py-4">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-foreground">{log.entityName}</p>
-                          <p className="mt-1 line-clamp-2 text-xs leading-5 text-muted">
-                            {log.description ?? 'Sin descripción'}
-                          </p>
+                          <p className="mt-1 truncate font-mono text-xs text-muted">{formatValue(log.entityId)}</p>
                         </div>
-                      </td>
-                      <td className="px-5 py-4 text-sm text-muted">
-                        <span className="block truncate font-mono text-xs">{log.entityId ?? 'No registrado'}</span>
                       </td>
                       <td className="px-5 py-4">
-                        <div className="flex min-w-0 items-center gap-2">
-                          <UserRound className="h-4 w-4 shrink-0 text-muted" />
-                          <span className="block truncate font-mono text-xs text-muted">
-                            {log.userId ?? 'No registrado'}
-                          </span>
-                        </div>
+                        <p className="line-clamp-2 text-sm leading-5 text-muted">
+                          {formatValue(log.description, 'Sin descripción')}
+                        </p>
                       </td>
+                      <td className="px-5 py-4 text-sm text-muted">{formatValue(log.ipAddress)}</td>
                       <td className="px-5 py-4">
                         <div className="flex justify-end">
                           <Button
                             aria-label="Ver detalle de auditoría"
                             className="h-9 w-9 p-0"
                             onClick={() => setSelectedLogId(log.id)}
+                            title="Ver detalle"
                             variant="secondary"
                           >
                             <Eye className="h-4 w-4" />
@@ -419,51 +535,45 @@ export function AuditLogsPage() {
               </table>
             </TableContainer>
 
-            {!hasSpecificFilter ? (
-              <div className="flex flex-col gap-3 border-t border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
-                <label className="flex items-center gap-2 text-sm text-muted">
-                  Filas
-                  <select
-                    className="h-10 rounded-lg border border-border bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
-                    onChange={(event) => handlePageSizeChange(event.target.value)}
-                    value={pageSize}
-                  >
-                    {pageSizeOptions.map((option) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+            <div className="flex flex-col gap-3 border-t border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
+              <label className="flex items-center gap-2 text-sm text-muted">
+                Filas
+                <select
+                  className="h-10 rounded-lg border border-border bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-primary focus:ring-2 focus:ring-blue-100"
+                  onChange={(event) => handlePageSizeChange(event.target.value)}
+                  value={pageSize}
+                >
+                  {pageSizeOptions.map((option) => (
+                    <option key={option} value={option}>
+                      {option}
+                    </option>
+                  ))}
+                </select>
+              </label>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <p className="text-sm text-muted">
-                    Página {generalQuery.data?.pageNumber ?? pageNumber} de {generalQuery.data?.totalPages ?? 1} ·{' '}
-                    {formatNumber(generalQuery.data?.totalCount ?? 0)} registros
-                  </p>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      disabled={!generalQuery.data?.hasPreviousPage}
-                      onClick={() => setPageNumber((current) => Math.max(current - 1, 1))}
-                      variant="secondary"
-                    >
-                      Anterior
-                    </Button>
-                    <Button
-                      disabled={!generalQuery.data?.hasNextPage}
-                      onClick={() => setPageNumber((current) => current + 1)}
-                      variant="secondary"
-                    >
-                      Siguiente
-                    </Button>
-                  </div>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <p className="text-sm text-muted">
+                  Página {auditLogsQuery.data?.pageNumber ?? pageNumber} de {auditLogsQuery.data?.totalPages ?? 1} ·{' '}
+                  {formatNumber(auditLogsQuery.data?.totalCount ?? 0)} registros
+                </p>
+                <div className="flex items-center gap-2">
+                  <Button
+                    disabled={!auditLogsQuery.data?.hasPreviousPage}
+                    onClick={() => setPageNumber((current) => Math.max(current - 1, 1))}
+                    variant="secondary"
+                  >
+                    Anterior
+                  </Button>
+                  <Button
+                    disabled={!auditLogsQuery.data?.hasNextPage}
+                    onClick={() => setPageNumber((current) => current + 1)}
+                    variant="secondary"
+                  >
+                    Siguiente
+                  </Button>
                 </div>
               </div>
-            ) : (
-              <div className="border-t border-border px-5 py-4 text-sm text-muted">
-                Los filtros específicos usan endpoints de consulta sin paginación.
-              </div>
-            )}
+            </div>
           </CardContent>
         </Card>
       )}

@@ -8,6 +8,8 @@ public class AuditLogResponse
 
     public string? UserId { get; set; }
 
+    public string? IpAddress { get; set; }
+
     public AuditAction Action { get; set; }
 
     public string EntityName { get; set; } = string.Empty;

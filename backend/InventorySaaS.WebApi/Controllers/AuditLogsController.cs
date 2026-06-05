@@ -5,6 +5,7 @@ using InventorySaaS.Domain.Enums;
 using InventorySaaS.WebApi.Common;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Text;
 
 namespace InventorySaaS.WebApi.Controllers;
 
@@ -15,12 +16,26 @@ public class AuditLogsController(IAuditLogService auditLogService) : ControllerB
 {
     [HttpGet]
     public async Task<ActionResult<PagedResponse<AuditLogResponse>>> GetAll(
-        [FromQuery] PagedRequest request,
+        [FromQuery] AuditLogFilterRequest request,
         CancellationToken cancellationToken)
     {
         var auditLogs = await auditLogService.GetAllAsync(request, cancellationToken);
 
         return Ok(auditLogs);
+    }
+
+    [HttpGet("export")]
+    public async Task<IActionResult> ExportCsv(
+        [FromQuery] AuditLogFilterRequest request,
+        CancellationToken cancellationToken)
+    {
+        var csv = await auditLogService.ExportCsvAsync(request, cancellationToken);
+        var fileName = $"audit-logs-{DateTime.UtcNow:yyyyMMddHHmmss}.csv";
+
+        return File(
+            Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv)).ToArray(),
+            "text/csv; charset=utf-8",
+            fileName);
     }
 
     [HttpGet("{id:guid}")]

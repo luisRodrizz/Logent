@@ -7,10 +7,14 @@ namespace InventorySaaS.Application.AuditLogs.Interfaces;
 public interface IAuditLogService
 {
     Task<PagedResponse<AuditLogResponse>> GetAllAsync(
-        PagedRequest request,
+        AuditLogFilterRequest request,
         CancellationToken cancellationToken = default);
 
     Task<AuditLogResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken = default);
+
+    Task<string> ExportCsvAsync(
+        AuditLogFilterRequest request,
+        CancellationToken cancellationToken = default);
 
     Task<IReadOnlyList<AuditLogResponse>> GetByUserAsync(
         string userId,
